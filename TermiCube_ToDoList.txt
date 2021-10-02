@@ -1,0 +1,13 @@
+TermiCube:
+
+- Add different game screens (Main Menu, Game Screen, Options, Inventory, etc)
+    - Could have inventory as a customizable option where either it has its own
+      screen or it can be toggled to appear next to the game screen
+
+- A map can have multiple different floors
+
+- Multiplayer function???
+
+2D Flat Game like Pokemon
+- Everything is PRNG (Pseudo Random Number Generated)
+- Players explore things as they venture into new areas
