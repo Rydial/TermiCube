@@ -1,80 +1,60 @@
-#ifndef TERMICUBE_H
-#define TERMICUBE_H
+#ifndef __TERMICUBE_H__
+#define __TERMICUBE_H__
 
-#include <string>
+
 #include <vector>
-#include <map>
-#include <functional>
+#include <memory>
 
-
-/* Forward Declarations */
-
-
-/* Type Aliases */
-using Commands = std::map<std::string, std::function<void()>>;
-
-
-/* Enumerated Types */
-enum class GameState : int {
-    END, START
+enum class ScreenType {
+    MAINMENU, /*SETTINGS,*/ GAME, /*INVENTORY*/
 };
 
 
-/* Structures */
-struct Coords {
-    int x;
-    int y;
-    /* Methods */
-    Coords(int x=0, int y=0);
-    Coords &operator=(const Coords &a);
-    Coords &operator+=(const Coords &a);
-    Coords operator+(const Coords &a) const;
-};
+/////////////////////// Screens ///////////////////////
 
-struct Map {
-    std::vector<std::vector<int>> floor;
-    size_t size;
-};
-
-namespace ent { // Entities
-
-    struct Entity {
-        std::string emoji;  // Emoji
-        Coords pos;         // Position
-        /* Methods */
-        Entity(std::string emoji, int x, int y);
-    };
-
-    struct Player : Entity {
-        Coords vel; // Velocity
-        /* Methods */
-        Player(int x, int y);
-    };
-
-    struct Tree : Entity {
-        
-    };
-
-}
-
-
-/* Classes */
-class Game {
-    private:
-        Commands cmds;      // Commands
-        GameState state;    // Game State
-        Map map;            // Map
-        std::string msg;    // Message 
-        ent::Player p1;     // Player       
-        /* Methods */
-        void generateCommands();
-        void generateMap();
+class Screen {
     public:
-        Game(size_t mapSize=255);
+        virtual void drawGraphics() = 0;
+        virtual void updateScreen() = 0;
+        virtual void userInput() = 0;
+        virtual ~Screen() = default;
+};
+
+class MainMenuScreen : public Screen {
+    public:
         void drawGraphics();
-        GameState getState() {return state;}
-        void updateGame();
+        void updateScreen();
         void userInput();
 };
 
-#endif // TERMICUBE_H
+class GameScreen : public Screen {
+    public:
+        void drawGraphics();
+        void updateScreen();
+        void userInput();
+};
+
+///////////////////////////////////////////////////////
+
+class GameWindow {
+    private:
+        std::vector<std::unique_ptr<Screen>> screenList;
+        ScreenType screen;
+        bool exit;
+    public:
+        GameWindow() :
+            screenList{},
+            screen{ScreenType::MAINMENU},
+            exit{false}
+        { /* unique_ptr are not copyable, and initializer lists only use copy semantics */
+            screenList.emplace_back(std::make_unique<MainMenuScreen>());
+            screenList.emplace_back(std::make_unique<GameScreen>());
+        }
+        bool gameEnded() const {return exit;}
+        void pollEvents();
+        void terminate() {exit = true;}
+        void updateWindow();
+};
+
+
+#endif // __TERMICUBE_H__
