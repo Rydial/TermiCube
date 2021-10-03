@@ -36,9 +36,10 @@ ifeq ($(shell uname), Linux)
 	MAIN		:= $(OUTPUT)/$(EXEC)
 	SOURCEDIRS	:= $(shell find $(SRC) -type d)
 	INCLUDEDIRS	:= $(shell find $(INCLUDE) -type d)
-	LIBS		:= -lglfw -lGL
+	LIBS		:= -lglfw -lGL -lncurses
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
     # Commands
+	MKDIR		:= mkdir -p
 	RM 			:= rm -f
 	DISPLAY		:= echo
 	CLEAR		:= clear
@@ -54,6 +55,7 @@ ifeq ($(shell uname), Darwin)
 	LIBS		:= -lglfw
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
 	# Commands
+	MKDIR		:= mkdir -p
 	RM 			:= rm -f
 	DISPLAY		:= echo
 	CLEAR		:= clear
@@ -73,6 +75,7 @@ OUTPUTS		:= $(MAIN)
 
 compile:
 	@$(CLEAR)
+	@$(MKDIR) $(OUTPUT)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(SRCS) $(LIBS) -o $(OUTPUTS)
 	@$(DISPLAY) "\033[38;5;15m[ \033[38;5;46mCompiled\033[38;5;15m ]\033[0m\n"
 
@@ -92,6 +95,7 @@ build: clean compile run
 
 debug:
 	@$(CLEAR)
+	@$(MKDIR) $(OUTPUT)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(DEBUG) $(SRCS) $(LIBS) -o $(OUTPUTS)
 	@$(DISPLAY) "\033[38;5;15m[ \033[38;5;46mDebug Compiled\033[38;5;15m ]\033[0m\n"
 
