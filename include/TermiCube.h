@@ -41,12 +41,17 @@ class GameWindow {
         std::vector<std::unique_ptr<Screen>> screenList;
         ScreenType screen;
         bool exit;
+
+        void initCurses();
     public:
         GameWindow() :
             screenList{},
             screen{ScreenType::MAINMENU},
             exit{false}
-        { /* unique_ptr are not copyable, and initializer lists only use copy semantics */
+        {
+            initCurses();
+            /* unique_ptr are not copyable, and initializer lists only use copy semantics
+               so emplace_back had to be used instead */
             screenList.emplace_back(std::make_unique<MainMenuScreen>());
             screenList.emplace_back(std::make_unique<GameScreen>());
         }
