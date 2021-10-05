@@ -7,8 +7,8 @@
 void GameWindow::initCurses()
 {
     initscr(); /* Start curses mode */
-    // cbreak();
-    // noecho();
+    cbreak();
+    noecho();
 }
 
 void GameWindow::pollEvents() 

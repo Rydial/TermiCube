@@ -1,31 +1,35 @@
 # CPP Compiler
-CXX 		:= g++
+CXX 			:= g++
 
 # Compile-time Flags
-CXXFLAGS	:= -std=c++20 -Wall -Wextra -Wvla -Weffc++ -Wsign-conversion -Werror
+CXXFLAGS		:= -std=c++20 -Wall -Wextra -Wvla -Weffc++ -Wsign-conversion -Werror
 
 # Source Directory
-SRC	:= src
+SOURCE			:= src
 
 # Include Directory
-INCLUDE	:= include
+INCLUDE			:= include
+
+# Build Directory
+BUILDDIR		:= build
 
 # Output Directory
-OUTPUT	:= output
+OUTPUT			:= output
 
 # Program command-line arguments
-ARGS		:=
+ARGS			:=
 
 # Debugging Flags
-DEBUG		:= -g -DDEBUG
+DEBUG			:= -g -DDEBUG
 
 # Program Executable
-EXEC		:= App
+MAIN			:= App
 
 
 # Windows OS
 ifeq ($(OS),Windows_NT)
-	MAIN		:= $(OUTPUT)/$(EXEC).exe
+	FIXPATH = $(subst /,\,$1)
+	MAIN		:= $(OUTPUT)/$(MAIN).exe
 	LIBS		:= -lglfw3 -lopengl32 -lglew32
   	#LIBS		+= -lgdi32
     #LIBS		+= -lglu32
@@ -33,9 +37,11 @@ endif
 
 # Linux OS
 ifeq ($(shell uname), Linux)
-	MAIN		:= $(OUTPUT)/$(EXEC)
-	SOURCEDIRS	:= $(shell find $(SRC) -type d)
-	INCLUDEDIRS	:= $(shell find $(INCLUDE) -type d)
+	SOURCEDIR	:= $(shell find $(SOURCE) -type d)
+	INCLUDEDIR	:= $(shell find $(INCLUDE) -type d)
+	OUTPUTDIR	:= $(BUILDDIR)/$(OUTPUT)
+	OUTPUTMAIN	:= $(OUTPUTDIR)/$(MAIN)
+    # Compiler Flags
 	LIBS		:= -lglfw -lGL -lncurses
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
     # Commands
@@ -44,14 +50,17 @@ ifeq ($(shell uname), Linux)
 	DISPLAY		:= echo
 	CLEAR		:= clear
 	TIME_FORMAT	:= "Real Time:\t\t%e sec\nKernal Time:\t\t%S sec\nUser Time:\t\t%U sec\n"
-	SH			:= time -f $(TIME_FORMAT) ./$(MAIN) > /dev/null
+	TIME		:= time -f $(TIME_FORMAT) ./$(OUTPUTMAIN) > /dev/null
 endif
 
 # Mac OS - Darwin
 ifeq ($(shell uname), Darwin)
-	MAIN		:= $(OUTPUT)/$(EXEC)
-	SOURCEDIRS	:= $(SRC)
-	INCLUDEDIRS	:= $(INCLUDE)
+	FIXPATH 	:= $1
+	SOURCEDIR	:= $(SOURCE)
+	INCLUDEDIR	:= $(INCLUDE)
+	OUTPUTDIR	:= $(BUILDDIR)/$(OUTPUT)
+	OUTPUTMAIN	:= $(OUTPUTDIR)/$(MAIN)
+    # Compiler Flags
 	LIBS		:= -lglfw
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
 	# Commands
@@ -60,24 +69,33 @@ ifeq ($(shell uname), Darwin)
 	DISPLAY		:= echo
 	CLEAR		:= clear
 	TIME_FORMAT	:= "Real Time:\t\t%e sec\nKernal Time:\t\t%S sec\nUser Time:\t\t%U sec\n"
-	SH			:= time -f $(TIME_FORMAT) ./$(MAIN) > /dev/null
+	TIME		:= time -f $(TIME_FORMAT) ./$(OUTPUTMAIN) > /dev/null
 endif
 
 
 # Source Files
-SRCS		:= $(wildcard $(patsubst %,%/*.cpp, $(SOURCEDIRS)))
+SOURCES			:= $(wildcard $(patsubst %,%/*.cpp, $(SOURCEDIR)))
 
 # Include Directories
-INCLUDES	:= $(patsubst %,-I%, $(INCLUDEDIRS:%/=%))
+INCLUDES		:= $(patsubst %,-I%, $(INCLUDEDIR:%/=%))
 
-# Output Files
-OUTPUTS		:= $(MAIN)
+# Object Files
+OBJECTS			:= $(addprefix $(BUILDDIR)/, $(SOURCES:.cpp=.o))
 
-compile:
-	@$(CLEAR)
-	@$(MKDIR) $(OUTPUT)
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(SRCS) $(LIBS) -o $(OUTPUTS)
+
+compile: $(OUTPUT) $(MAIN)
 	@$(DISPLAY) "\033[38;5;15m[ \033[38;5;46mCompiled\033[38;5;15m ]\033[0m\n"
+
+$(OUTPUT):
+	@$(MKDIR) $(BUILDDIR)/$(SOURCEDIR)
+	@$(MKDIR) $(OUTPUTDIR)
+
+$(MAIN): $(OBJECTS)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIBS) -o $(OUTPUTMAIN) $(OBJECTS)
+
+$(BUILDDIR)/%.o: %.cpp
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+	
 
 .PHONY: help build debug clean run time
 
@@ -91,24 +109,22 @@ help:
 	@$(DISPLAY) "\033[0;0;0mmake \033[38;5;15mrun\033[0;0;0m : Runs program.\n"
 	@$(DISPLAY) "\033[0;0;0mmake \033[38;5;15mtime\033[0;0;0m : Measures program execution time.\n"
 
-build: clean compile run
+build: compile run
 
-debug:
+debug: # Need fixing
 	@$(CLEAR)
-	@$(MKDIR) $(OUTPUT)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(DEBUG) $(SRCS) $(LIBS) -o $(OUTPUTS)
 	@$(DISPLAY) "\033[38;5;15m[ \033[38;5;46mDebug Compiled\033[38;5;15m ]\033[0m\n"
 
 
 clean:
-	@$(CLEAR)
-	@$(RM) $(OUTPUTS)
+	@$(RM) $(OUTPUTMAIN) $(OBJECTS)
 	@$(DISPLAY) "\033[38;5;15m[ \033[38;5;46mCleaned\033[38;5;15m ]\033[0m\n"
 
 run:
 	@$(CLEAR)
 	@$(DISPLAY) "\033[38;5;15m[ \033[38;5;46mRunning Program\033[38;5;15m ]\033[0m\n"
-	@$(MAIN) $(ARGS)
+	@./$(OUTPUTDIR)/$(MAIN) $(ARGS)
 	@$(DISPLAY) "\n\033[38;5;15m[ \033[38;5;46mProgram Finished\033[38;5;15m ]\033[0m\n"
 
 time:
