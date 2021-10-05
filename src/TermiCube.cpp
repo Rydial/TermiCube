@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <curses.h>
 #include "TermiCube.h"
 
 
@@ -21,6 +20,14 @@ void GameWindow::updateWindow()
 {
     screenList[static_cast<size_t>(screen)]->updateScreen();
     screenList[static_cast<size_t>(screen)]->drawGraphics();
+}
+
+//////////////////////////////////////////////////////////////
+
+Screen::Screen()
+    : window{newwin(0,0,0,0)}
+{
+
 }
 
 //////////////////////////////////////////////////////////////

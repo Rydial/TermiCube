@@ -4,20 +4,30 @@
 
 #include <vector>
 #include <memory>
+#include <curses.h>
+
 
 enum class ScreenType {
     MAINMENU, /*SETTINGS,*/ GAME, /*INVENTORY*/
+};
+
+/* Need a custom deleter function to use unique_ptr with an incomplete type */
+struct WINDOWDeleter {
+    void operator()(WINDOW *ptr) {delwin(ptr);}
 };
 
 
 /////////////////////// Screens ///////////////////////
 
 class Screen {
+    private:
+        std::unique_ptr<WINDOW, WINDOWDeleter> window;
     public:
+        Screen();
+        virtual ~Screen() = default;
         virtual void drawGraphics() = 0;
         virtual void updateScreen() = 0;
         virtual void userInput() = 0;
-        virtual ~Screen() = default;
 };
 
 class MainMenuScreen : public Screen {

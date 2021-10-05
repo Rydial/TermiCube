@@ -61,7 +61,7 @@ ifeq ($(shell uname), Darwin)
 	OUTPUTDIR	:= $(BUILDDIR)/$(OUTPUT)
 	OUTPUTMAIN	:= $(OUTPUTDIR)/$(MAIN)
     # Compiler Flags
-	LIBS		:= -lglfw
+	LIBS		:= -lglfw -lncurses
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
 	# Commands
 	MKDIR		:= mkdir -p
@@ -84,7 +84,7 @@ OBJECTS			:= $(addprefix $(BUILDDIR)/, $(SOURCES:.cpp=.o))
 
 
 compile: $(OUTPUT) $(MAIN)
-	@$(DISPLAY) "\033[38;5;15m[ \033[38;5;46mCompiled\033[38;5;15m ]\033[0m\n"
+	@$(DISPLAY) "\n\033[38;5;15m[ \033[38;5;46mCompiled\033[38;5;15m ]\033[0m\n"
 
 $(OUTPUT):
 	@$(MKDIR) $(BUILDDIR)/$(SOURCEDIR)
@@ -119,7 +119,7 @@ debug: # Need fixing
 
 clean:
 	@$(RM) $(OUTPUTMAIN) $(OBJECTS)
-	@$(DISPLAY) "\033[38;5;15m[ \033[38;5;46mCleaned\033[38;5;15m ]\033[0m\n"
+	@$(DISPLAY) "\n\033[38;5;15m[ \033[38;5;46mCleaned\033[38;5;15m ]\033[0m\n"
 
 run:
 	@$(CLEAR)
@@ -129,5 +129,5 @@ run:
 
 time:
 	@$(CLEAR)
-	@$(DISPLAY) "\033[38;5;15m[ \033[38;5;46mProgram Analysis\033[38;5;15m ]\033[0m\n"
+	@$(DISPLAY) "\n\033[38;5;15m[ \033[38;5;46mProgram Analysis\033[38;5;15m ]\033[0m\n"
 	@$(SH)
