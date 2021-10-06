@@ -1,5 +1,5 @@
-#ifndef __TERMICUBE_H__
-#define __TERMICUBE_H__
+#ifndef TERMICUBE_H
+#define TERMICUBE_H
 
 
 #include <vector>
@@ -11,18 +11,19 @@ enum class ScreenType {
     MAINMENU, /*SETTINGS,*/ GAME, /*INVENTORY*/
 };
 
-/* Need a custom deleter function to use unique_ptr with an incomplete type */
-struct WINDOWDeleter {
-    void operator()(WINDOW *ptr) {delwin(ptr);}
-};
-
 
 /////////////////////// Screens ///////////////////////
 
 class Screen {
-    private:
+    protected:
+        /* Need a custom deleter function to use unique_ptr with an incomplete type */
+        struct WINDOWDeleter {
+            void operator()(WINDOW *ptr) {delwin(ptr);}
+        };
         std::unique_ptr<WINDOW, WINDOWDeleter> window;
+        static constexpr int rows {35}, cols {70};
     public:
+        /* all four 0 means full screen */
         Screen();
         virtual ~Screen() = default;
         virtual void drawGraphics() = 0;
@@ -32,6 +33,8 @@ class Screen {
 
 class MainMenuScreen : public Screen {
     public:
+        /* Inherit Constructor from Screen */
+        using Screen::Screen;
         void drawGraphics();
         void updateScreen();
         void userInput();
@@ -39,6 +42,7 @@ class MainMenuScreen : public Screen {
 
 class GameScreen : public Screen {
     public:
+        using Screen::Screen;
         void drawGraphics();
         void updateScreen();
         void userInput();
@@ -51,8 +55,9 @@ class GameWindow {
         std::vector<std::unique_ptr<Screen>> screenList;
         ScreenType screen;
         bool exit;
-
+        /* Private Methods */
         void initCurses();
+        void initScreens();
     public:
         GameWindow() :
             screenList{},
@@ -60,10 +65,7 @@ class GameWindow {
             exit{false}
         {
             initCurses();
-            /* unique_ptr are not copyable, and initializer lists only use copy semantics
-               so emplace_back had to be used instead */
-            screenList.emplace_back(std::make_unique<MainMenuScreen>());
-            screenList.emplace_back(std::make_unique<GameScreen>());
+            initScreens();
         }
         bool gameEnded() const {return exit;}
         void pollEvents();
@@ -72,4 +74,4 @@ class GameWindow {
 };
 
 
-#endif // __TERMICUBE_H__
+#endif // TERMICUBE_H

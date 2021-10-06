@@ -8,6 +8,16 @@ void GameWindow::initCurses()
     initscr(); /* Start curses mode */
     cbreak();
     noecho();
+    /* Stcscr needs to be updated everytime new window is created */
+    refresh(); 
+}
+
+void GameWindow::initScreens()
+{
+    /* unique_ptr are not copyable, and initializer lists only use copy
+    semantics so emplace_back had to be used instead */
+    screenList.emplace_back(std::make_unique<MainMenuScreen>());
+    screenList.emplace_back(std::make_unique<GameScreen>());
 }
 
 void GameWindow::pollEvents() 
@@ -24,8 +34,8 @@ void GameWindow::updateWindow()
 
 //////////////////////////////////////////////////////////////
 
-Screen::Screen()
-    : window{newwin(0,0,0,0)}
+Screen::Screen() :
+    window{newwin(rows, cols, (LINES - rows) / 2, (COLS - cols) / 2)}
 {
 
 }
@@ -34,18 +44,10 @@ Screen::Screen()
 
 void MainMenuScreen::drawGraphics() 
 {
-    
-    // std::cout << "\U00002550" << '\n';
-
-    // for (int i {0}; i < 33; i++) {
-    //     for (int j {0}; j < 33; j++) {
-
-    //     }
-    // }
-		
-	printw("Hello World !!!");	/* Print Hello World		  */
-	refresh();			/* Print it on to the real screen */
+	box(window.get(), 0 , 0);
+    wrefresh(window.get());
 	getch();			/* Wait for user input */
+    // wrefresh(window.get());
 	endwin();			/* End curses mode		  */
 }
 
