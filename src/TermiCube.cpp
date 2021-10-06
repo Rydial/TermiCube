@@ -8,6 +8,17 @@ void GameWindow::initCurses()
     initscr(); /* Start curses mode */
     cbreak();
     noecho();
+    /* Stcscr needs to be updated everytime new window is created */
+    refresh(); 
+}
+
+void GameWindow::initScreens()
+{
+    /* unique_ptr are not copyable, and initializer lists only use copy
+    semantics so emplace_back had to be used instead */
+    /* Panel stack order from bottom to top */
+    // screenList.emplace_back(std::make_unique<GameScreen>());
+    screenList.emplace_back(std::make_unique<MainMenuScreen>());
 }
 
 void GameWindow::initScreens()
@@ -32,8 +43,9 @@ void GameWindow::updateWindow()
 
 //////////////////////////////////////////////////////////////
 
-Screen::Screen(int row, int col, int y, int x)
-    : window{newwin(row, col, y, x)}
+Screen::Screen() :
+    panel{new_panel(newwin(
+        rows, cols, (LINES - rows) / 2, (COLS - cols) / 2))}
 {
 
 }
@@ -42,17 +54,9 @@ Screen::Screen(int row, int col, int y, int x)
 
 void MainMenuScreen::drawGraphics() 
 {
-    
-    // std::cout << "\U00002550" << '\n';
-
-    // for (int i {0}; i < 33; i++) {
-    //     for (int j {0}; j < 33; j++) {
-
-    //     }
-    // }
-		
-	printw("Hello World !!!");	/* Print Hello World		  */
-	refresh();			/* Print it on to the real screen */
+	box(panel_window(panel.get()), 0 , 0);
+    update_panels();
+    doupdate();
 	getch();			/* Wait for user input */
 	endwin();			/* End curses mode		  */
 }

@@ -1,10 +1,10 @@
-#ifndef __TERMICUBE_H__
-#define __TERMICUBE_H__
+#ifndef TERMICUBE_H
+#define TERMICUBE_H
 
 
 #include <vector>
 #include <memory>
-#include <curses.h>
+#include <panel.h>
 
 
 enum class ScreenType {
@@ -15,14 +15,17 @@ enum class ScreenType {
 /////////////////////// Screens ///////////////////////
 
 class Screen {
-    private:
+    protected:
         /* Need a custom deleter function to use unique_ptr with an incomplete type */
-        struct WINDOWDeleter {
-            void operator()(WINDOW *ptr) {delwin(ptr);}
+        /* Later on replace this with a pimpl-idiom */
+        struct PanelDeleter {
+            void operator()(PANEL *ptr) {del_panel(ptr);}
         };
-        std::unique_ptr<WINDOW, WINDOWDeleter> window;
+        std::unique_ptr<PANEL, PanelDeleter> panel;
+        static constexpr int rows {35}, cols {70};
     public:
-        Screen(int row=0, int col=0, int y=0, int x=0);
+        /* all four 0 means full screen */
+        Screen();
         virtual ~Screen() = default;
         virtual void drawGraphics() = 0;
         virtual void updateScreen() = 0;
@@ -31,6 +34,7 @@ class Screen {
 
 class MainMenuScreen : public Screen {
     public:
+        /* Inherit Constructor from Screen */
         using Screen::Screen;
         void drawGraphics();
         void updateScreen();
@@ -52,7 +56,7 @@ class GameWindow {
         std::vector<std::unique_ptr<Screen>> screenList;
         ScreenType screen;
         bool exit;
-
+        /* Private Methods */
         void initCurses();
         void initScreens();
     public:
@@ -71,4 +75,4 @@ class GameWindow {
 };
 
 
-#endif // __TERMICUBE_H__
+#endif // TERMICUBE_H
