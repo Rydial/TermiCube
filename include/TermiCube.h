@@ -11,19 +11,18 @@ enum class ScreenType {
     MAINMENU, /*SETTINGS,*/ GAME, /*INVENTORY*/
 };
 
-/* Need a custom deleter function to use unique_ptr with an incomplete type */
-struct WINDOWDeleter {
-    void operator()(WINDOW *ptr) {delwin(ptr);}
-};
-
 
 /////////////////////// Screens ///////////////////////
 
 class Screen {
     private:
+        /* Need a custom deleter function to use unique_ptr with an incomplete type */
+        struct WINDOWDeleter {
+            void operator()(WINDOW *ptr) {delwin(ptr);}
+        };
         std::unique_ptr<WINDOW, WINDOWDeleter> window;
     public:
-        Screen();
+        Screen(int row=0, int col=0, int y=0, int x=0);
         virtual ~Screen() = default;
         virtual void drawGraphics() = 0;
         virtual void updateScreen() = 0;
@@ -32,6 +31,7 @@ class Screen {
 
 class MainMenuScreen : public Screen {
     public:
+        using Screen::Screen;
         void drawGraphics();
         void updateScreen();
         void userInput();
@@ -39,6 +39,7 @@ class MainMenuScreen : public Screen {
 
 class GameScreen : public Screen {
     public:
+        using Screen::Screen;
         void drawGraphics();
         void updateScreen();
         void userInput();
@@ -53,6 +54,7 @@ class GameWindow {
         bool exit;
 
         void initCurses();
+        void initScreens();
     public:
         GameWindow() :
             screenList{},
@@ -60,10 +62,7 @@ class GameWindow {
             exit{false}
         {
             initCurses();
-            /* unique_ptr are not copyable, and initializer lists only use copy semantics
-               so emplace_back had to be used instead */
-            screenList.emplace_back(std::make_unique<MainMenuScreen>());
-            screenList.emplace_back(std::make_unique<GameScreen>());
+            initScreens();
         }
         bool gameEnded() const {return exit;}
         void pollEvents();

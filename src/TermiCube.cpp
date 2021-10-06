@@ -10,6 +10,14 @@ void GameWindow::initCurses()
     noecho();
 }
 
+void GameWindow::initScreens()
+{
+    /* unique_ptr are not copyable, and initializer lists only use copy semantics
+        so emplace_back had to be used instead */
+    screenList.emplace_back(std::make_unique<MainMenuScreen>());
+    screenList.emplace_back(std::make_unique<GameScreen>());
+}
+
 void GameWindow::pollEvents() 
 {
 
@@ -24,8 +32,8 @@ void GameWindow::updateWindow()
 
 //////////////////////////////////////////////////////////////
 
-Screen::Screen()
-    : window{newwin(0,0,0,0)}
+Screen::Screen(int row, int col, int y, int x)
+    : window{newwin(row, col, y, x)}
 {
 
 }
