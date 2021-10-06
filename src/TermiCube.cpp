@@ -16,8 +16,9 @@ void GameWindow::initScreens()
 {
     /* unique_ptr are not copyable, and initializer lists only use copy
     semantics so emplace_back had to be used instead */
+    /* Panel stack order from bottom to top */
+    // screenList.emplace_back(std::make_unique<GameScreen>());
     screenList.emplace_back(std::make_unique<MainMenuScreen>());
-    screenList.emplace_back(std::make_unique<GameScreen>());
 }
 
 void GameWindow::pollEvents() 
@@ -35,7 +36,8 @@ void GameWindow::updateWindow()
 //////////////////////////////////////////////////////////////
 
 Screen::Screen() :
-    window{newwin(rows, cols, (LINES - rows) / 2, (COLS - cols) / 2)}
+    panel{new_panel(newwin(
+        rows, cols, (LINES - rows) / 2, (COLS - cols) / 2))}
 {
 
 }
@@ -44,10 +46,10 @@ Screen::Screen() :
 
 void MainMenuScreen::drawGraphics() 
 {
-	box(window.get(), 0 , 0);
-    wrefresh(window.get());
+	box(panel_window(panel.get()), 0 , 0);
+    update_panels();
+    doupdate();
 	getch();			/* Wait for user input */
-    // wrefresh(window.get());
 	endwin();			/* End curses mode		  */
 }
 

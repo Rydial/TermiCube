@@ -4,7 +4,7 @@
 
 #include <vector>
 #include <memory>
-#include <curses.h>
+#include <panel.h>
 
 
 enum class ScreenType {
@@ -17,10 +17,11 @@ enum class ScreenType {
 class Screen {
     protected:
         /* Need a custom deleter function to use unique_ptr with an incomplete type */
-        struct WINDOWDeleter {
-            void operator()(WINDOW *ptr) {delwin(ptr);}
+        /* Later on replace this with a pimpl-idiom */
+        struct PanelDeleter {
+            void operator()(PANEL *ptr) {del_panel(ptr);}
         };
-        std::unique_ptr<WINDOW, WINDOWDeleter> window;
+        std::unique_ptr<PANEL, PanelDeleter> panel;
         static constexpr int rows {35}, cols {70};
     public:
         /* all four 0 means full screen */
