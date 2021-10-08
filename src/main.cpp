@@ -3,12 +3,9 @@
 
 int main() {
 
-    GameWindow window;
+    GameWindow game;
 
-    while (!window.gameEnded()) {
-        window.update();
-        break;
-    }
+    while(game.update() == 0);
 
     return 0;
 }

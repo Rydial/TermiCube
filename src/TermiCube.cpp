@@ -32,19 +32,31 @@ void GameWindow::initScreens()
     doupdate();
 }
 
+void GameWindow::terminate() {
+    endwin();
+}
 
-void GameWindow::update() 
+int GameWindow::update() 
 {
-    screenList[static_cast<size_t>(screen)]->userInput();
+    int key {getch()};
+
+    if (key == 'q') {
+        terminate();
+        return 1;
+    }
+
+    screenList[static_cast<size_t>(screen)]->userInput(key);
     screenList[static_cast<size_t>(screen)]->updateScreen();
     screenList[static_cast<size_t>(screen)]->drawGraphics();
+
+    return 0;
 }
 
 //////////////////////////////////////////////////////////////
 
 Screen::Screen() :
-    panel{new_panel(newwin(
-        rows, cols, (LINES - rows) / 2, (COLS - cols) / 2))}
+    window{newwin(rows, cols, (LINES - rows) / 2, (COLS - cols) / 2)},
+    panel{new_panel(window.get())}
 {
 
 }
@@ -54,6 +66,11 @@ void Screen::PanelDeleter::operator()(PANEL *ptr)
     del_panel(ptr);
 }
 
+void Screen::WindowDeleter::operator()(WINDOW *ptr)
+{
+    delwin(ptr);
+}
+
 void Screen::SubWindowDeleter::operator()(WINDOW *ptr)
 {
     delwin(ptr);
@@ -61,20 +78,33 @@ void Screen::SubWindowDeleter::operator()(WINDOW *ptr)
 
 //////////////////////////////////////////////////////////////
 
-MainMenuScreen::MainMenuScreen()
+MainMenuScreen::MainMenuScreen() :
+    /* Initialize buttons */
+    newGameBtn{derwin(window.get(),
+        btnSize.y, btnSize.x, btnCreatePos.y + 0, btnCreatePos.x)},
+    loadGameBtn{derwin(window.get(),
+        btnSize.y, btnSize.x, btnCreatePos.y + 6, btnCreatePos.x)},
+    settingsBtn{derwin(window.get(),
+        btnSize.y, btnSize.x, btnCreatePos.y + 12, btnCreatePos.x)},
+    creditsBtn{derwin(window.get(),
+        btnSize.y, btnSize.x, btnCreatePos.y + 18, btnCreatePos.x)}
 {
     /* Title Creation */
-    box(panel_window(panel.get()), 0 , 0);
-    std::string path {"resource/title.txt"}, line;
+    box(window.get(), 0 , 0);
+    std::string path {"resource/mainmenu/title.txt"}, line;
     std::ifstream title {path};
 
     if (!title)
         std::cerr << "File could not be opened: " << path << '\n';
     
-    for (size_t y {5}, x{4}; std::getline(title, line); y++)
-        mvwaddstr(panel_window(panel.get()), y, x, line.c_str());
-    /* New Game Button Creation */
+    for (size_t y {titlePos.y}, x{titlePos.x}; std::getline(title, line); y++)
+        mvwaddstr(window.get(), y, x, line.c_str());
 
+    /* Button Initial Border */
+    box(newGameBtn.get(), 0, 0);
+    box(loadGameBtn.get(), 0, 0);
+    box(settingsBtn.get(), 0, 0);
+    box(creditsBtn.get(), 0, 0);
 }
 
 void MainMenuScreen::drawGraphics() 
@@ -90,10 +120,9 @@ void MainMenuScreen::updateScreen()
 
 
 
-void MainMenuScreen::userInput()
+void MainMenuScreen::userInput(int /*key*/)
 {
-    getch();
-	endwin();
+	
 }
 
 
@@ -112,7 +141,7 @@ void GameScreen::updateScreen()
 
 
 
-void GameScreen::userInput()
+void GameScreen::userInput(int /*key*/)
 {
 
 }
