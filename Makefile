@@ -42,7 +42,7 @@ ifeq ($(shell uname), Linux)
 	OUTPUTDIR	:= $(BUILDDIR)/$(OUTPUT)
 	OUTPUTMAIN	:= $(OUTPUTDIR)/$(MAIN)
     # Compiler Flags
-	LIBS		:= -lglfw -lGL -lpanel -lncurses
+	LIBS		:= -lglfw -lGL -lpanelw -lncursesw
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
     # Commands
 	MKDIR		:= mkdir -p
