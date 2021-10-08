@@ -19,6 +19,7 @@ void GameWindow::initCurses()
     cbreak(); /* Disable line buffering */
     noecho(); /* Disable input echoing */
     curs_set(0); /* Set cursor invisible */
+    mousemask(ALL_MOUSE_EVENTS, NULL);
 }
 
 void GameWindow::initScreens()
@@ -54,6 +55,9 @@ int GameWindow::update()
 
 //////////////////////////////////////////////////////////////
 
+/* Static Variable Initialization */
+Screen::EventData Screen::event {};
+
 Screen::Screen() :
     window{newwin(rows, cols, (LINES - rows) / 2, (COLS - cols) / 2)},
     panel{new_panel(window.get())}
@@ -67,11 +71,6 @@ void Screen::PanelDeleter::operator()(PANEL *ptr)
 }
 
 void Screen::WindowDeleter::operator()(WINDOW *ptr)
-{
-    delwin(ptr);
-}
-
-void Screen::SubWindowDeleter::operator()(WINDOW *ptr)
 {
     delwin(ptr);
 }
@@ -120,19 +119,24 @@ void MainMenuScreen::updateScreen()
 
 
 
-void MainMenuScreen::userInput(int /*key*/)
-{
-	
+void MainMenuScreen::userInput(int key)
+{   
+	if (key == KEY_MOUSE) {
+        if (getmouse(&event.mouse) == OK) {
+            
+        } else
+            std::cerr << "MEvent not retrievable in this window\n";
+    }
+    event.key = key; /* Store key into event data */
 }
 
+//////////////////////////////////////////////////////////////
 
 void GameScreen::drawGraphics()
 {
 
 }
 
-
-//////////////////////////////////////////////////////////////
 
 void GameScreen::updateScreen()
 {
