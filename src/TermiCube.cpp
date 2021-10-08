@@ -93,11 +93,7 @@ void MainMenuScreen::updateScreen()
 void MainMenuScreen::userInput()
 {
     getch();
-<<<<<<< HEAD
 	endwin();
-=======
-    endwin();
->>>>>>> 1a925e78c24d1143aad1c6b2a8b01d468cacc19f
 }
 
 
