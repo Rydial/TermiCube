@@ -2,7 +2,7 @@
 CXX 			:= g++
 
 # Compile-time Flags
-CXXFLAGS		:= -std=c++20 -Wall -Wextra -Wvla -Weffc++ -Wsign-conversion -Werror
+CXXFLAGS		:= -std=c++20 -Wall -Wextra -Wvla -Weffc++ -Wsign-conversion
 
 # Source Directory
 SOURCE			:= src
@@ -42,7 +42,7 @@ ifeq ($(shell uname), Linux)
 	OUTPUTDIR	:= $(BUILDDIR)/$(OUTPUT)
 	OUTPUTMAIN	:= $(OUTPUTDIR)/$(MAIN)
     # Compiler Flags
-	LIBS		:= -lglfw -lGL -lpanel -lncurses
+	LIBS		:= -lglfw -lGL -lpanelw -lncursesw
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
     # Commands
 	MKDIR		:= mkdir -p
@@ -61,7 +61,7 @@ ifeq ($(shell uname), Darwin)
 	OUTPUTDIR	:= $(BUILDDIR)/$(OUTPUT)
 	OUTPUTMAIN	:= $(OUTPUTDIR)/$(MAIN)
     # Compiler Flags
-	LIBS		:= -lglfw -lpanel -lncurses
+	LIBS		:= -lglfw -lpanelw -lncursesw
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
 	# Commands
 	MKDIR		:= mkdir -p
