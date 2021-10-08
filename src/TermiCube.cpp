@@ -1,15 +1,24 @@
-#include <iostream>
 #include <string>
+#include <fstream>
 #include "TermiCube.h"
 
 
+GameWindow::GameWindow() :
+    screenList{},
+    screen{ScreenType::MAINMENU},
+    exit{false}
+{
+    initCurses();
+    initScreens();
+}
+
 void GameWindow::initCurses()
 {
+    setlocale(LC_ALL, ""); /* Set terminal locale */
     initscr(); /* Start curses mode */
-    cbreak();
-    noecho();
-    /* Stcscr needs to be updated everytime new window is created */
-    refresh(); 
+    cbreak(); /* Disable line buffering */
+    noecho(); /* Disable input echoing */
+    curs_set(0); /* Set cursor invisible */
 }
 
 void GameWindow::initScreens()
@@ -19,16 +28,14 @@ void GameWindow::initScreens()
     /* Panel stack order from bottom to top */
     // screenList.emplace_back(std::make_unique<GameScreen>());
     screenList.emplace_back(std::make_unique<MainMenuScreen>());
-}
-
-void GameWindow::pollEvents() 
-{
-
+    update_panels();
+    doupdate();
 }
 
 
-void GameWindow::updateWindow() 
+void GameWindow::update() 
 {
+    screenList[static_cast<size_t>(screen)]->userInput();
     screenList[static_cast<size_t>(screen)]->updateScreen();
     screenList[static_cast<size_t>(screen)]->drawGraphics();
 }
@@ -42,30 +49,51 @@ Screen::Screen() :
 
 }
 
+void Screen::PanelDeleter::operator()(PANEL *ptr)
+{
+    del_panel(ptr);
+}
+
+void Screen::SubWindowDeleter::operator()(WINDOW *ptr)
+{
+    delwin(ptr);
+}
+
 //////////////////////////////////////////////////////////////
+
+MainMenuScreen::MainMenuScreen()
+{
+    /* Title Creation */
+    box(panel_window(panel.get()), 0 , 0);
+    std::string path {"resource/title.txt"}, line;
+    std::ifstream title {path};
+
+    if (!title)
+        std::cerr << "File could not be opened: " << path << '\n';
+    
+    for (size_t y {5}, x{4}; std::getline(title, line); y++)
+        mvwaddstr(panel_window(panel.get()), y, x, line.c_str());
+    /* New Game Button Creation */
+
+}
 
 void MainMenuScreen::drawGraphics() 
 {
-	box(panel_window(panel.get()), 0 , 0);
-    update_panels();
-    doupdate();
-	getch();			/* Wait for user input */
-	endwin();			/* End curses mode		  */
+	// subwin
 }
 
 
 void MainMenuScreen::updateScreen()
 {
-//     printw("Test");
-//     refresh();
-//     endwin();
+
 }
 
 
 
 void MainMenuScreen::userInput()
 {
-
+    getch();
+	endwin();
 }
 
 
