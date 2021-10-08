@@ -2,7 +2,7 @@
 CXX 			:= g++
 
 # Compile-time Flags
-CXXFLAGS		:= -std=c++20 -Wall -Wextra -Wvla -Weffc++ -Wsign-conversion -Werror
+CXXFLAGS		:= -std=c++20 -Wall -Wextra -Wvla -Weffc++ -Wsign-conversion
 
 # Source Directory
 SOURCE			:= src

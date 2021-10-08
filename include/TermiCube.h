@@ -15,16 +15,16 @@
 
 class Screen {
     protected:
+        struct Coordinate {int y, x;};
         /* Need a custom deleter function to use unique_ptr with an incomplete type */
         /* Later on replace these with a pimpl-idiom */
-        struct Coordinate {int y, x;};
         struct PanelDeleter {void operator()(PANEL *ptr);};
         struct WindowDeleter {void operator()(WINDOW *ptr);};
         struct EventData {
             int key;
             MEVENT mouse;
-        } static event;
-        static constexpr int rows {40}, cols {80};
+        } static eData;
+        static constexpr int maxRows {40}, maxCols {80};
         std::unique_ptr<WINDOW, WindowDeleter> window;
         std::unique_ptr<PANEL, PanelDeleter> panel;
     public:
@@ -38,9 +38,12 @@ class Screen {
 class MainMenuScreen : public Screen {
     private:
         static constexpr Coordinate titleSize {6, 72};
-        static constexpr Coordinate titlePos {5, (cols - titleSize.x) / 2};
+        static constexpr Coordinate titlePos {5, (maxCols - titleSize.x) / 2};
         static constexpr Coordinate btnSize {5, 50};
-        static constexpr Coordinate btnCreatePos {14, (cols - btnSize.x) / 2};
+        static constexpr Coordinate newGameBtnPos {14 + 0, (maxCols - btnSize.x) / 2};
+        static constexpr Coordinate loadGameBtnPos {14 + 6, (maxCols - btnSize.x) / 2};
+        static constexpr Coordinate settingsBtnPos {14 + 12, (maxCols - btnSize.x) / 2};
+        static constexpr Coordinate creditsBtnPos {14 + 18, (maxCols - btnSize.x) / 2};
         std::unique_ptr<WINDOW, WindowDeleter> newGameBtn;
         std::unique_ptr<WINDOW, WindowDeleter> loadGameBtn;
         std::unique_ptr<WINDOW, WindowDeleter> settingsBtn;

@@ -16,10 +16,10 @@ void GameWindow::initCurses()
 {
     setlocale(LC_ALL, ""); /* Set terminal locale */
     initscr(); /* Start curses mode */
-    cbreak(); /* Disable line buffering */
+    raw(); /* Disable line buffering */
     noecho(); /* Disable input echoing */
     curs_set(0); /* Set cursor invisible */
-    mousemask(ALL_MOUSE_EVENTS, NULL);
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
 }
 
 void GameWindow::initScreens()
@@ -56,10 +56,11 @@ int GameWindow::update()
 //////////////////////////////////////////////////////////////
 
 /* Static Variable Initialization */
-Screen::EventData Screen::event {};
+Screen::EventData Screen::eData {};
 
 Screen::Screen() :
-    window{newwin(rows, cols, (LINES - rows) / 2, (COLS - cols) / 2)},
+    window{newwin(
+        maxRows, maxCols,(LINES - maxRows) / 2,(COLS - maxCols) / 2)},
     panel{new_panel(window.get())}
 {
 
@@ -80,13 +81,13 @@ void Screen::WindowDeleter::operator()(WINDOW *ptr)
 MainMenuScreen::MainMenuScreen() :
     /* Initialize buttons */
     newGameBtn{derwin(window.get(),
-        btnSize.y, btnSize.x, btnCreatePos.y + 0, btnCreatePos.x)},
+        btnSize.y, btnSize.x, newGameBtnPos.y, newGameBtnPos.x)},
     loadGameBtn{derwin(window.get(),
-        btnSize.y, btnSize.x, btnCreatePos.y + 6, btnCreatePos.x)},
+        btnSize.y, btnSize.x, loadGameBtnPos.y, loadGameBtnPos.x)},
     settingsBtn{derwin(window.get(),
-        btnSize.y, btnSize.x, btnCreatePos.y + 12, btnCreatePos.x)},
+        btnSize.y, btnSize.x, settingsBtnPos.y, settingsBtnPos.x)},
     creditsBtn{derwin(window.get(),
-        btnSize.y, btnSize.x, btnCreatePos.y + 18, btnCreatePos.x)}
+        btnSize.y, btnSize.x, creditsBtnPos.y, creditsBtnPos.x)}
 {
     /* Title Creation */
     box(window.get(), 0 , 0);
@@ -108,7 +109,7 @@ MainMenuScreen::MainMenuScreen() :
 
 void MainMenuScreen::drawGraphics() 
 {
-	// subwin
+	
 }
 
 
@@ -121,13 +122,21 @@ void MainMenuScreen::updateScreen()
 
 void MainMenuScreen::userInput(int key)
 {   
+    MEVENT event;
+
+    mvwprintw(window.get(), 1, 1, "%d", key);
+    update_panels();
+    doupdate();
+
+
 	if (key == KEY_MOUSE) {
-        if (getmouse(&event.mouse) == OK) {
-            
+        if (getmouse(&event) == OK) {
+            /* New Game Button */
+            std::cout << event.y << " " << event.x << '\n';
         } else
-            std::cerr << "MEvent not retrievable in this window\n";
+            std::cerr << "MEvent not retrievable\n";
     }
-    event.key = key; /* Store key into event data */
+    eData.key = key; /* Store key into event data */
 }
 
 //////////////////////////////////////////////////////////////
