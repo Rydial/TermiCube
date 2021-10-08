@@ -8,7 +8,8 @@
 
 
 enum class ScreenType {
-    MAINMENU, /*SETTINGS,*/ GAME, /*INVENTORY*/
+    /* Must follow order of emplace_back */
+    GAME, MAINMENU
 };
 
 
@@ -60,18 +61,10 @@ class GameWindow {
         void initCurses();
         void initScreens();
     public:
-        GameWindow() :
-            screenList{},
-            screen{ScreenType::MAINMENU},
-            exit{false}
-        {
-            initCurses();
-            initScreens();
-        }
+        GameWindow();
         bool gameEnded() const {return exit;}
-        void pollEvents();
         void terminate() {exit = true;}
-        void updateWindow();
+        void update();
 };
 
 

@@ -3,13 +3,21 @@
 #include "TermiCube.h"
 
 
+GameWindow::GameWindow() :
+    screenList{},
+    screen{ScreenType::MAINMENU},
+    exit{false}
+{
+    initCurses();
+    initScreens();
+}
+
 void GameWindow::initCurses()
 {
-    initscr(); /* Start curses mode */
+    setlocale(LC_ALL, "");
+    initscr();
     cbreak();
     noecho();
-    /* Stcscr needs to be updated everytime new window is created */
-    refresh(); 
 }
 
 void GameWindow::initScreens()
@@ -17,26 +25,13 @@ void GameWindow::initScreens()
     /* unique_ptr are not copyable, and initializer lists only use copy
     semantics so emplace_back had to be used instead */
     /* Panel stack order from bottom to top */
-    // screenList.emplace_back(std::make_unique<GameScreen>());
-    screenList.emplace_back(std::make_unique<MainMenuScreen>());
-}
-
-void GameWindow::initScreens()
-{
-    /* unique_ptr are not copyable, and initializer lists only use copy semantics
-        so emplace_back had to be used instead */
-    screenList.emplace_back(std::make_unique<MainMenuScreen>());
     screenList.emplace_back(std::make_unique<GameScreen>());
+    screenList.emplace_back(std::make_unique<MainMenuScreen>());
 }
 
-void GameWindow::pollEvents() 
+void GameWindow::update()
 {
-
-}
-
-
-void GameWindow::updateWindow() 
-{
+    screenList[static_cast<size_t>(screen)]->userInput();
     screenList[static_cast<size_t>(screen)]->updateScreen();
     screenList[static_cast<size_t>(screen)]->drawGraphics();
 }
@@ -55,6 +50,7 @@ Screen::Screen() :
 void MainMenuScreen::drawGraphics() 
 {
 	box(panel_window(panel.get()), 0 , 0);
+    mvwprintw(panel_window(panel.get()), 5, 5, "═");
     update_panels();
     doupdate();
 	getch();			/* Wait for user input */

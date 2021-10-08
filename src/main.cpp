@@ -6,8 +6,7 @@ int main() {
     GameWindow window;
 
     while (!window.gameEnded()) {
-        window.pollEvents();
-        window.updateWindow();
+        window.update();
         break;
     }
 
