@@ -16,10 +16,15 @@ void GameWindow::initCurses()
 {
     setlocale(LC_ALL, ""); /* Set terminal locale */
     initscr(); /* Start curses mode */
+    start_color(); /* Enable color functionality */
     raw(); /* Disable line buffering */
     noecho(); /* Disable input echoing */
     curs_set(0); /* Set cursor invisible */
-    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+
+    /* Enable Mouse Events */
+    // mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+    // keypad(stdscr, TRUE);
 }
 
 void GameWindow::initScreens()
@@ -56,7 +61,8 @@ int GameWindow::update()
 //////////////////////////////////////////////////////////////
 
 /* Static Variable Initialization */
-Screen::EventData Screen::eData {};
+Screen::EventData Screen::eData {0, {}};
+Screen::Controls Screen::control {'w', 'a', 's', 'd'};
 
 Screen::Screen() :
     window{newwin(
@@ -81,13 +87,13 @@ void Screen::WindowDeleter::operator()(WINDOW *ptr)
 MainMenuScreen::MainMenuScreen() :
     /* Initialize buttons */
     newGameBtn{derwin(window.get(),
-        btnSize.y, btnSize.x, newGameBtnPos.y, newGameBtnPos.x)},
+        btnSize.y, btnSize.x, newGame.yTop, newGame.xLeft)},
     loadGameBtn{derwin(window.get(),
-        btnSize.y, btnSize.x, loadGameBtnPos.y, loadGameBtnPos.x)},
+        btnSize.y, btnSize.x, loadGame.yTop, loadGame.xLeft)},
     settingsBtn{derwin(window.get(),
-        btnSize.y, btnSize.x, settingsBtnPos.y, settingsBtnPos.x)},
+        btnSize.y, btnSize.x, settings.yTop, settings.xLeft)},
     creditsBtn{derwin(window.get(),
-        btnSize.y, btnSize.x, creditsBtnPos.y, creditsBtnPos.x)}
+        btnSize.y, btnSize.x, credits.yTop, credits.xLeft)}
 {
     /* Title Creation */
     box(window.get(), 0 , 0);
@@ -100,11 +106,18 @@ MainMenuScreen::MainMenuScreen() :
     for (size_t y {titlePos.y}, x{titlePos.x}; std::getline(title, line); y++)
         mvwaddstr(window.get(), y, x, line.c_str());
 
-    /* Button Initial Border */
+    /* Create Buttons */
     box(newGameBtn.get(), 0, 0);
+    mvwaddstr(newGameBtn.get(), 1, 1, "Test");
     box(loadGameBtn.get(), 0, 0);
     box(settingsBtn.get(), 0, 0);
     box(creditsBtn.get(), 0, 0);
+    /* Start on new game button */
+    // wattron(newGameBtn.get(), COLOR_PAIR(1));
+    
+    // wattroff(newGameBtn.get(), COLOR_PAIR(1));
+    // touchwin(newGameBtn.get());
+    // wrefresh(newGameBtn.get());
 }
 
 void MainMenuScreen::drawGraphics() 
@@ -122,20 +135,25 @@ void MainMenuScreen::updateScreen()
 
 void MainMenuScreen::userInput(int key)
 {   
-    MEVENT event;
-
+    // MEVENT event;
     mvwprintw(window.get(), 1, 1, "%d", key);
     update_panels();
     doupdate();
 
+    /* Under construction */
+	// if (key == KEY_MOUSE) {
+        // if (getmouse(&event) == OK) {
+            
+        // } else
+        //     std::cerr << "MEvent not retrievable\n";
+    // }
 
-	if (key == KEY_MOUSE) {
-        if (getmouse(&event) == OK) {
-            /* New Game Button */
-            std::cout << event.y << " " << event.x << '\n';
-        } else
-            std::cerr << "MEvent not retrievable\n";
+    if (key == control.up) {
+
+    } else if (key == control.down) {
+
     }
+
     eData.key = key; /* Store key into event data */
 }
 
