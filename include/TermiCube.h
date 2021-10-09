@@ -17,11 +17,14 @@
 
 class Screen {
     protected:
+        /* Member Constants */
+        static constexpr int maxRows {40}, maxCols {80};
+
         /* Need a custom deleter function to use unique_ptr with an incomplete type */
         /* Later on replace these with a pimpl-idiom */
         struct PanelDeleter {void operator()(PANEL *ptr);};
         struct WindowDeleter {void operator()(WINDOW *ptr);};
-        /* Structs */
+        /* Member Structs */
         struct Coordinate {int y, x;};
         struct DisplayItem {};
         struct Button {
@@ -29,7 +32,8 @@ class Screen {
             int yTop, yBtm, xLeft, xRight;
             std::function<void()> click;
             // /* Public Methods */
-            Button(WINDOW *win, int y, int x, int yLen, int xLen);
+            Button(WINDOW *win, int y, int x, int yLen, int xLen,
+                    std::function<void()> func);
         };
         struct EventData {
             int key;
@@ -38,7 +42,7 @@ class Screen {
         struct Controls {
             int up, left, down, right;
         } static control;
-        static constexpr int maxRows {40}, maxCols {80};
+        /* Member Variables */
         std::unique_ptr<WINDOW, WindowDeleter> window;
         std::unique_ptr<PANEL, PanelDeleter> panel;
     public:
@@ -60,18 +64,13 @@ class MainMenuScreen : public Screen {
         enum ButtonType {
             NEWGAME, LOADGAME, SETTINGS, CREDITS
         };
-        /* Member Structs */
-        struct MainMenuButton : Button {
-            // bt
-            MainMenuButton(int x, int y);
-        };
         /* Member Classes */
         class ButtonManager {
             private:
                 std::vector<Button> button_list;
                 ButtonType current;
             public:
-                ButtonManager(int startY, int startX);
+                ButtonManager(WINDOW *win, int startY, int startX);
                 Button & operator[](int index);
                 void previous();
                 void next();
@@ -79,19 +78,6 @@ class MainMenuScreen : public Screen {
         };
         /* Member Variables */
         ButtonManager buttons;
-        int test {2};
-        // static constexpr Button newGame {14 + 0, 14 + 0 + btnSize.y,
-        //     (maxCols - btnSize.x) / 2, ((maxCols - btnSize.x) / 2) + btnSize.x};
-        // static constexpr Button loadGame {14 + 6, 14 + 6 + btnSize.y,
-        //     newGame.xLeft, newGame.xLeft + btnSize.x};
-        // static constexpr Button settings {14 + 12, 14 + 12 + btnSize.y,
-        //     newGame.xLeft, newGame.xLeft + btnSize.x};
-        // static constexpr Button credits {14 + 18, 14 + 18 + btnSize.y,
-        //     newGame.xLeft, newGame.xLeft + btnSize.x};
-        // std::unique_ptr<WINDOW, WindowDeleter> newGameBtn;
-        // std::unique_ptr<WINDOW, WindowDeleter> loadGameBtn;
-        // std::unique_ptr<WINDOW, WindowDeleter> settingsBtn;
-        // std::unique_ptr<WINDOW, WindowDeleter> creditsBtn;
     public:
         MainMenuScreen();
         void drawGraphics();

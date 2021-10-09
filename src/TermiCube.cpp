@@ -82,17 +82,18 @@ void Screen::WindowDeleter::operator()(WINDOW *ptr)
     delwin(ptr);
 }
 
-Screen::Button::Button(WINDOW *win, int y, int x, int yLen, int xLen) :
+Screen::Button::Button(WINDOW *win, int y, int x, int yLen, int xLen,
+                        std::function<void()> func) :
     btn{derwin(win, yLen, xLen, y, x)},
     yTop{y}, yBtm{y + yLen}, xLeft{x}, xRight{x + xLen},
-    click{}
+    click{func}
 {
 
 }
 //////////////////////////////////////////////////////////////
 
 MainMenuScreen::MainMenuScreen() :
-    buttons(btnStartPos.y, btnStartPos.x)
+    buttons{window.get(), btnStartPos.y, btnStartPos.x}
 {
     /* Title Creation */
     box(window.get(), 0 , 0);
@@ -122,13 +123,13 @@ MainMenuScreen::MainMenuScreen() :
 void MainMenuScreen::drawGraphics() 
 {
 	
-// }
+}
 
 
-// void MainMenuScreen::updateScreen()
-// {
+void MainMenuScreen::updateScreen()
+{
 
-// }
+}
 
 
 
@@ -156,12 +157,12 @@ void MainMenuScreen::userInput(int key)
     eData.key = key; /* Store key into event data */
 }
 
-MainMenuScreen::ButtonManager::ButtonManager(int startY, int startX) :
+MainMenuScreen::ButtonManager::ButtonManager(WINDOW *win, int startY, int startX) :
     button_list{
-        Button(startY + 0, startX), 
-        Button(startY + 6, startX),
-        Button(startY + 12, startX),
-        Button(startY + 18, startX)
+        Button(win, startY + 0, startX, btnSize.y, btnSize.x, [](){}), 
+        Button(win, startY + 6, startX, btnSize.y, btnSize.x, [](){}),
+        Button(win, startY + 12, startX, btnSize.y, btnSize.x, [](){}),
+        Button(win, startY + 18, startX, btnSize.y, btnSize.x, [](){})
     },
     current{NEWGAME}
 {
@@ -172,12 +173,6 @@ Screen::Button & MainMenuScreen::ButtonManager::operator[](int index)
 {
     /* Assuming index will always be in range */
     return button_list[current];
-}
-
-MainMenuScreen::MainMenuButton::MainMenuButton(int y, int x) :
-    Button(test)
-{
-
 }
 
 //////////////////////////////////////////////////////////////
