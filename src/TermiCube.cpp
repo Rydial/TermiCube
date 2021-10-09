@@ -89,6 +89,12 @@ Screen::Button::Button(WINDOW *win, int y, int x, int yLen, int xLen,
 {
 
 }
+
+void Screen::Button::highlight(chtype attrs, chtype color=COLOR_WHITE)
+{
+
+}
+
 //////////////////////////////////////////////////////////////
 
 MainMenuScreen::MainMenuScreen() :
@@ -106,7 +112,8 @@ MainMenuScreen::MainMenuScreen() :
         mvwaddstr(window.get(), y, x, line.c_str());
 
     /* Draw button borders */
-    buttons.initBorders();
+    for (auto &button : buttons.list)
+        box(button.ptr.get(), 0, 0);
     /* Start on new game button */
     // wattron(newGameBtn.get(), COLOR_PAIR(1));
     
@@ -132,8 +139,6 @@ void MainMenuScreen::userInput(int key)
 {   
     // MEVENT event;
     mvwprintw(window.get(), 1, 1, "%d", key);
-    update_panels();
-    doupdate();
 
     /* Under construction */
 	// if (key == KEY_MOUSE) {
@@ -144,28 +149,28 @@ void MainMenuScreen::userInput(int key)
     // }
 
     if (key == control.up) {
-
+        buttons.list[buttons.current].highlight(A_NORMAL);
+        buttons.current = (buttons.current - 1) % buttons.list.size();
+        buttons.list[buttons.current].highlight(A_STANDOUT);
     } else if (key == control.down) {
-
+        buttons.list[buttons.current].highlight(A_NORMAL);
+        buttons.current = (buttons.current + 1) % buttons.list.size();
+        buttons.list[buttons.current].highlight(A_STANDOUT, COLOR_GREEN);
     }
 
     eData.key = key; /* Store key into event data */
+    update_panels();
+    doupdate();
 }
 
 MainMenuScreen::ButtonManager::ButtonManager(WINDOW *win, int startY, int startX) :
-    buttonList{},
+    list{},
     current{NEWGAME}
 {
-    buttonList.emplace_back(win, startY + 0, startX, btnSize.y, btnSize.x, [](){});
-    buttonList.emplace_back(win, startY + 6, startX, btnSize.y, btnSize.x, [](){});
-    buttonList.emplace_back(win, startY + 12, startX, btnSize.y, btnSize.x, [](){});
-    buttonList.emplace_back(win, startY + 18, startX, btnSize.y, btnSize.x, [](){});
-}
-
-void MainMenuScreen::ButtonManager::initBorders()
-{
-    for (auto &button : buttonList)
-        box(button.ptr.get(), 0, 0);
+    list.emplace_back(win, startY + 0, startX, btnSize.y, btnSize.x, [](){});
+    list.emplace_back(win, startY + 6, startX, btnSize.y, btnSize.x, [](){});
+    list.emplace_back(win, startY + 12, startX, btnSize.y, btnSize.x, [](){});
+    list.emplace_back(win, startY + 18, startX, btnSize.y, btnSize.x, [](){});
 }
 
 //////////////////////////////////////////////////////////////

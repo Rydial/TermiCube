@@ -19,7 +19,6 @@ class Screen {
     protected:
         /* Member Constants */
         static constexpr int maxRows {40}, maxCols {80};
-
         /* Need a custom deleter function to use unique_ptr with an incomplete type */
         /* Later on replace these with a pimpl-idiom */
         struct PanelDeleter {void operator()(PANEL *ptr);};
@@ -34,14 +33,10 @@ class Screen {
             // /* Public Methods */
             Button(WINDOW *win, int y, int x, int yLen, int xLen,
                     std::function<void()> func);
+            void highlight(chtype attrs, chtype color=COLOR_WHITE);
         };
-        struct EventData {
-            int key;
-            MEVENT mouse;
-        } static eData;
-        struct Controls {
-            int up, left, down, right;
-        } static control;
+        struct EventData {int key; MEVENT mouse;} static eData;
+        struct Controls {int up, left, down, right;} static control;
         /* Member Variables */
         std::unique_ptr<WINDOW, WindowDeleter> window;
         std::unique_ptr<PANEL, PanelDeleter> panel;
@@ -64,18 +59,12 @@ class MainMenuScreen : public Screen {
         enum ButtonType {
             NEWGAME, LOADGAME, SETTINGS, CREDITS
         };
-        /* Member Classes */
-        class ButtonManager {
-            private:
-                std::vector<Button> buttonList;
-                ButtonType current;
-            public:
-                ButtonManager(WINDOW *win, int startY, int startX);
-                Button & operator[](size_t index) {return buttonList[index];};
-                void initBorders();
-                void previous();
-                void next();
-            
+        /* Member Structs */
+        struct ButtonManager {
+            std::vector<Button> list;
+            int current;
+            /* Public Methods */
+            ButtonManager(WINDOW *win, int startY, int startX);
         };
         /* Member Variables */
         ButtonManager buttons;
