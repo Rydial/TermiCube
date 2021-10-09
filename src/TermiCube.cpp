@@ -5,8 +5,7 @@
 
 GameWindow::GameWindow() :
     screenList{},
-    screen{ScreenType::MAINMENU},
-    exit{false}
+    screen{ScreenType::MAINMENU}
 {
     initCurses();
     initScreens();
@@ -84,7 +83,7 @@ void Screen::WindowDeleter::operator()(WINDOW *ptr)
 
 Screen::Button::Button(WINDOW *win, int y, int x, int yLen, int xLen,
                         std::function<void()> func) :
-    btn{derwin(win, yLen, xLen, y, x)},
+    ptr{derwin(win, yLen, xLen, y, x)},
     yTop{y}, yBtm{y + yLen}, xLeft{x}, xRight{x + xLen},
     click{func}
 {
@@ -106,12 +105,8 @@ MainMenuScreen::MainMenuScreen() :
     for (size_t y {titlePos.y}, x{titlePos.x}; std::getline(title, line); y++)
         mvwaddstr(window.get(), y, x, line.c_str());
 
-    /* Create Buttons */
-    box(newGameBtn.get(), 0, 0);
-    mvwaddstr(newGameBtn.get(), 1, 1, "Test");
-    box(loadGameBtn.get(), 0, 0);
-    box(settingsBtn.get(), 0, 0);
-    box(creditsBtn.get(), 0, 0);
+    /* Draw button borders */
+    buttons.initBorders();
     /* Start on new game button */
     // wattron(newGameBtn.get(), COLOR_PAIR(1));
     
@@ -158,29 +153,27 @@ void MainMenuScreen::userInput(int key)
 }
 
 MainMenuScreen::ButtonManager::ButtonManager(WINDOW *win, int startY, int startX) :
-    button_list{
-        Button(win, startY + 0, startX, btnSize.y, btnSize.x, [](){}), 
-        Button(win, startY + 6, startX, btnSize.y, btnSize.x, [](){}),
-        Button(win, startY + 12, startX, btnSize.y, btnSize.x, [](){}),
-        Button(win, startY + 18, startX, btnSize.y, btnSize.x, [](){})
-    },
+    buttonList{},
     current{NEWGAME}
 {
-
+    buttonList.emplace_back(win, startY + 0, startX, btnSize.y, btnSize.x, [](){});
+    buttonList.emplace_back(win, startY + 6, startX, btnSize.y, btnSize.x, [](){});
+    buttonList.emplace_back(win, startY + 12, startX, btnSize.y, btnSize.x, [](){});
+    buttonList.emplace_back(win, startY + 18, startX, btnSize.y, btnSize.x, [](){});
 }
 
-Screen::Button & MainMenuScreen::ButtonManager::operator[](int index)
+void MainMenuScreen::ButtonManager::initBorders()
 {
-    /* Assuming index will always be in range */
-    return button_list[current];
+    for (auto &button : buttonList)
+        box(button.ptr.get(), 0, 0);
 }
 
 //////////////////////////////////////////////////////////////
 
-void GameScreen::drawGraphics()
-{
+// void GameScreen::drawGraphics()
+// {
 
-}
+// }
 
 
 // void GameScreen::updateScreen()

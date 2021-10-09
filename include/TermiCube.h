@@ -28,7 +28,7 @@ class Screen {
         struct Coordinate {int y, x;};
         struct DisplayItem {};
         struct Button {
-            std::unique_ptr<WINDOW, WindowDeleter> btn;
+            std::unique_ptr<WINDOW, WindowDeleter> ptr;
             int yTop, yBtm, xLeft, xRight;
             std::function<void()> click;
             // /* Public Methods */
@@ -67,11 +67,12 @@ class MainMenuScreen : public Screen {
         /* Member Classes */
         class ButtonManager {
             private:
-                std::vector<Button> button_list;
+                std::vector<Button> buttonList;
                 ButtonType current;
             public:
                 ButtonManager(WINDOW *win, int startY, int startX);
-                Button & operator[](int index);
+                Button & operator[](size_t index) {return buttonList[index];};
+                void initBorders();
                 void previous();
                 void next();
             
@@ -104,7 +105,6 @@ class GameWindow {
         };
         std::vector<std::unique_ptr<Screen>> screenList;
         ScreenType screen;
-        bool exit;
         /* Private Methods */
         void initCurses();
         void initScreens();
