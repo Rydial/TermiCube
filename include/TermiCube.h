@@ -25,11 +25,11 @@ class Screen {
         struct Coordinate {int y, x;};
         struct DisplayItem {};
         struct Button {
-            int yTop, yBtm, xLeft, xRight;
             std::unique_ptr<WINDOW, WindowDeleter> btn;
+            int yTop, yBtm, xLeft, xRight;
             std::function<void()> click;
-            /* Public Methods */
-            Button();
+            // /* Public Methods */
+            Button(WINDOW *win, int y, int x, int yLen, int xLen);
         };
         struct EventData {
             int key;
@@ -51,29 +51,35 @@ class Screen {
 
 class MainMenuScreen : public Screen {
     private:
+        /* Member Constants */
+        static constexpr Coordinate titleSize {6, 72};
+        static constexpr Coordinate btnSize {5, 50};
+        static constexpr Coordinate titlePos {5, (maxCols - titleSize.x) / 2};
+        static constexpr Coordinate btnStartPos {14, (maxCols - btnSize.x) / 2};
+        /* Member Enums */
         enum ButtonType {
             NEWGAME, LOADGAME, SETTINGS, CREDITS
         };
+        /* Member Structs */
+        struct MainMenuButton : Button {
+            // bt
+            MainMenuButton(int x, int y);
+        };
+        /* Member Classes */
         class ButtonManager {
             private:
-                Button newGame;
-                Button loadGame;
-                Button settings;
-                Button credits;
-                std::vector<Button &> temp;
-                Button &current;
+                std::vector<Button> button_list;
+                ButtonType current;
             public:
-                WINDOW * get() {return current.btn.get();};
+                ButtonManager(int startY, int startX);
+                Button & operator[](int index);
                 void previous();
                 void next();
             
         };
-        static constexpr Coordinate titleSize {6, 72};
-        static constexpr Coordinate btnSize {5, 50};
-        static constexpr Coordinate titlePos {5, (maxCols - titleSize.x) / 2};
-
-        Button newGame, loadGame, settings, credits;
-
+        /* Member Variables */
+        ButtonManager buttons;
+        int test {2};
         // static constexpr Button newGame {14 + 0, 14 + 0 + btnSize.y,
         //     (maxCols - btnSize.x) / 2, ((maxCols - btnSize.x) / 2) + btnSize.x};
         // static constexpr Button loadGame {14 + 6, 14 + 6 + btnSize.y,
