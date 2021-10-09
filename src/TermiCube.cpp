@@ -82,18 +82,17 @@ void Screen::WindowDeleter::operator()(WINDOW *ptr)
     delwin(ptr);
 }
 
+Screen::Button::Button(WINDOW *win, int y, int x, int yLen, int xLen) :
+    btn{derwin(win, yLen, xLen, y, x)},
+    yTop{y}, yBtm{y + yLen}, xLeft{x}, xRight{x + xLen},
+    click{}
+{
+
+}
 //////////////////////////////////////////////////////////////
 
 MainMenuScreen::MainMenuScreen() :
-    /* Initialize buttons */
-    newGameBtn{derwin(window.get(),
-        btnSize.y, btnSize.x, newGame.yTop, newGame.xLeft)},
-    loadGameBtn{derwin(window.get(),
-        btnSize.y, btnSize.x, loadGame.yTop, loadGame.xLeft)},
-    settingsBtn{derwin(window.get(),
-        btnSize.y, btnSize.x, settings.yTop, settings.xLeft)},
-    creditsBtn{derwin(window.get(),
-        btnSize.y, btnSize.x, credits.yTop, credits.xLeft)}
+    buttons(btnStartPos.y, btnStartPos.x)
 {
     /* Title Creation */
     box(window.get(), 0 , 0);
@@ -157,7 +156,36 @@ void MainMenuScreen::userInput(int key)
     eData.key = key; /* Store key into event data */
 }
 
-// }
+MainMenuScreen::ButtonManager::ButtonManager(int startY, int startX) :
+    button_list{
+        Button(startY + 0, startX), 
+        Button(startY + 6, startX),
+        Button(startY + 12, startX),
+        Button(startY + 18, startX)
+    },
+    current{NEWGAME}
+{
+
+}
+
+Screen::Button & MainMenuScreen::ButtonManager::operator[](int index)
+{
+    /* Assuming index will always be in range */
+    return button_list[current];
+}
+
+MainMenuScreen::MainMenuButton::MainMenuButton(int y, int x) :
+    Button(test)
+{
+
+}
+
+//////////////////////////////////////////////////////////////
+
+void GameScreen::drawGraphics()
+{
+
+}
 
 
 // void GameScreen::updateScreen()
