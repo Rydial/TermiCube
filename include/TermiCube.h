@@ -16,6 +16,8 @@
 class Screen {
     protected:
         struct Coordinate {int y, x;};
+        struct DisplayItem {int y, x, yLen, xLen;};
+        struct Button {int yTop, yBtm, xLeft, xRight;};
         /* Need a custom deleter function to use unique_ptr with an incomplete type */
         /* Later on replace these with a pimpl-idiom */
         struct PanelDeleter {void operator()(PANEL *ptr);};
@@ -38,8 +40,11 @@ class Screen {
 class MainMenuScreen : public Screen {
     private:
         static constexpr Coordinate titleSize {6, 72};
-        static constexpr Coordinate titlePos {5, (maxCols - titleSize.x) / 2};
         static constexpr Coordinate btnSize {5, 50};
+        static constexpr DisplayItem title {6, 72, 5, (maxCols - titleSize.x) / 2};
+        // static constexpr Button newGame {
+        //     14 + 0, 14 + 0 + btnSize.y, }
+        
         static constexpr Coordinate newGameBtnPos {14 + 0, (maxCols - btnSize.x) / 2};
         static constexpr Coordinate loadGameBtnPos {14 + 6, (maxCols - btnSize.x) / 2};
         static constexpr Coordinate settingsBtnPos {14 + 12, (maxCols - btnSize.x) / 2};
