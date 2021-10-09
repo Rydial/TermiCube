@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <iostream>
+#include <functional>
 #include <panel.h>
 
 /* Things to do:
@@ -11,21 +12,32 @@
     - Reorganize entities with a sparse-set system (like EnTT)
 */
 
+
 /////////////////////// Screens ///////////////////////
 
 class Screen {
     protected:
-        struct Coordinate {int y, x;};
-        struct DisplayItem {int y, x, yLen, xLen;};
-        struct Button {int yTop, yBtm, xLeft, xRight;};
         /* Need a custom deleter function to use unique_ptr with an incomplete type */
         /* Later on replace these with a pimpl-idiom */
         struct PanelDeleter {void operator()(PANEL *ptr);};
         struct WindowDeleter {void operator()(WINDOW *ptr);};
+        /* Structs */
+        struct Coordinate {int y, x;};
+        struct DisplayItem {};
+        struct Button {
+            int yTop, yBtm, xLeft, xRight;
+            std::unique_ptr<WINDOW, WindowDeleter> btn;
+            std::function<void()> click;
+            /* Public Methods */
+            Button();
+        };
         struct EventData {
             int key;
             MEVENT mouse;
         } static eData;
+        struct Controls {
+            int up, left, down, right;
+        } static control;
         static constexpr int maxRows {40}, maxCols {80};
         std::unique_ptr<WINDOW, WindowDeleter> window;
         std::unique_ptr<PANEL, PanelDeleter> panel;
@@ -39,20 +51,41 @@ class Screen {
 
 class MainMenuScreen : public Screen {
     private:
+        enum ButtonType {
+            NEWGAME, LOADGAME, SETTINGS, CREDITS
+        };
+        class ButtonManager {
+            private:
+                Button newGame;
+                Button loadGame;
+                Button settings;
+                Button credits;
+                std::vector<Button &> temp;
+                Button &current;
+            public:
+                WINDOW * get() {return current.btn.get();};
+                void previous();
+                void next();
+            
+        };
         static constexpr Coordinate titleSize {6, 72};
         static constexpr Coordinate btnSize {5, 50};
-        static constexpr DisplayItem title {6, 72, 5, (maxCols - titleSize.x) / 2};
-        // static constexpr Button newGame {
-        //     14 + 0, 14 + 0 + btnSize.y, }
-        
-        static constexpr Coordinate newGameBtnPos {14 + 0, (maxCols - btnSize.x) / 2};
-        static constexpr Coordinate loadGameBtnPos {14 + 6, (maxCols - btnSize.x) / 2};
-        static constexpr Coordinate settingsBtnPos {14 + 12, (maxCols - btnSize.x) / 2};
-        static constexpr Coordinate creditsBtnPos {14 + 18, (maxCols - btnSize.x) / 2};
-        std::unique_ptr<WINDOW, WindowDeleter> newGameBtn;
-        std::unique_ptr<WINDOW, WindowDeleter> loadGameBtn;
-        std::unique_ptr<WINDOW, WindowDeleter> settingsBtn;
-        std::unique_ptr<WINDOW, WindowDeleter> creditsBtn;
+        static constexpr Coordinate titlePos {5, (maxCols - titleSize.x) / 2};
+
+        Button newGame, loadGame, settings, credits;
+
+        // static constexpr Button newGame {14 + 0, 14 + 0 + btnSize.y,
+        //     (maxCols - btnSize.x) / 2, ((maxCols - btnSize.x) / 2) + btnSize.x};
+        // static constexpr Button loadGame {14 + 6, 14 + 6 + btnSize.y,
+        //     newGame.xLeft, newGame.xLeft + btnSize.x};
+        // static constexpr Button settings {14 + 12, 14 + 12 + btnSize.y,
+        //     newGame.xLeft, newGame.xLeft + btnSize.x};
+        // static constexpr Button credits {14 + 18, 14 + 18 + btnSize.y,
+        //     newGame.xLeft, newGame.xLeft + btnSize.x};
+        // std::unique_ptr<WINDOW, WindowDeleter> newGameBtn;
+        // std::unique_ptr<WINDOW, WindowDeleter> loadGameBtn;
+        // std::unique_ptr<WINDOW, WindowDeleter> settingsBtn;
+        // std::unique_ptr<WINDOW, WindowDeleter> creditsBtn;
     public:
         MainMenuScreen();
         void drawGraphics();
