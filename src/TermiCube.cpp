@@ -73,7 +73,7 @@ Screen::Screen() :
 
 Screen::Button::Button(WINDOW *win, int y, int x, int yLen, int xLen,
         std::function<void()> click, std::function<void()> draw) :
-    ptr{derwin(win, yLen, xLen, y, x)},
+    ptr{win},
     yTop{y}, yBtm{y + yLen}, xLeft{x}, xRight{x + xLen},
     click{click}, draw{draw}
 {
@@ -83,10 +83,8 @@ Screen::Button::Button(WINDOW *win, int y, int x, int yLen, int xLen,
 void Screen::Button::highlight(int attrs)
 {
     wattron(ptr.get(), attrs);
-    box(ptr.get(), 0, 0);
+    draw();
     wattroff(ptr.get(), attrs);
-    touchwin(ptr.get());
-    wrefresh(ptr.get());
 }
 
 //////////////////////////////////////////////////////////////
@@ -110,11 +108,11 @@ void MainMenuScreen::initScreen()
     for (size_t y {titlePos.y}, x{titlePos.x}; std::getline(title, line); y++)
         mvwaddstr(window.get(), y, x, line.c_str());
 
-    /* Draw button borders */
-    for (auto &button : buttons.list)
-        box(button.ptr.get(), 0, 0);
-    /* Start on new game button */
+    /* Draw NEWGAME with current focus */
     buttons.list[buttons.index].highlight(COLOR_PAIR(1));
+    /* Draw rest of the buttons */
+    for (size_t i {1}; i < buttons.list.size(); i++)
+        buttons.list[i].draw();
 }
 
 void MainMenuScreen::drawGraphics() 
@@ -153,14 +151,46 @@ MainMenuScreen::ButtonManager::ButtonManager(WINDOW *win, int startY, int startX
     list{},
     index{NEWGAME}
 {
-    list.emplace_back(win, startY + 0, startX, btnSize.y, btnSize.x,
-        [](){}, [](){});
-    list.emplace_back(win, startY + 6, startX, btnSize.y, btnSize.x,
-        [](){}, [](){});
-    list.emplace_back(win, startY + 12, startX, btnSize.y, btnSize.x,
-        [](){}, [](){});
-    list.emplace_back(win, startY + 18, startX, btnSize.y, btnSize.x,
-        [](){}, [](){});
+    /* NEWGAME */
+    WINDOW *newGame {derwin(win, btnSize.y, btnSize.x, startY + 0, startX)};
+    list.emplace_back(newGame, startY + 0, startX, btnSize.y, btnSize.x,
+        []() {},
+        [newGame]() {
+            box(newGame, 0, 0);
+            touchwin(newGame);
+            wrefresh(newGame);
+        }
+    );
+    /* LOADGAME */
+    WINDOW *loadGame {derwin(win, btnSize.y, btnSize.x, startY + 6, startX)};
+    list.emplace_back(loadGame, startY + 6, startX, btnSize.y, btnSize.x,
+        []() {},
+        [loadGame]() {
+            box(loadGame, 0, 0);
+            touchwin(loadGame);
+            wrefresh(loadGame);
+        }
+    );
+    /* SETTINGS */
+    WINDOW *settings {derwin(win, btnSize.y, btnSize.x, startY + 12, startX)};
+    list.emplace_back(settings, startY + 12, startX, btnSize.y, btnSize.x,
+        []() {},
+        [settings]() {
+            box(settings, 0, 0);
+            touchwin(settings);
+            wrefresh(settings);
+        }
+    );
+    /* CREDITS */
+    WINDOW *credits {derwin(win, btnSize.y, btnSize.x, startY + 18, startX)};
+    list.emplace_back(credits, startY + 18, startX, btnSize.y, btnSize.x,
+        []() {},
+        [credits]() {
+            box(credits, 0, 0);
+            touchwin(credits);
+            wrefresh(credits);
+        }
+    );
 }
 
 //////////////////////////////////////////////////////////////
