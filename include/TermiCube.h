@@ -21,8 +21,8 @@ class Screen {
         static constexpr int maxRows {40}, maxCols {80};
         /* Need a custom deleter function to use unique_ptr with an incomplete type */
         /* Later on replace these with a pimpl-idiom */
-        struct PanelDeleter {void operator()(PANEL *ptr);};
-        struct WindowDeleter {void operator()(WINDOW *ptr);};
+        struct PanelDeleter {void operator()(PANEL *ptr) {del_panel(ptr);}};
+        struct WindowDeleter {void operator()(WINDOW *ptr) {delwin(ptr);}};
         /* Member Structs */
         struct Coordinate {int y, x;};
         struct DisplayItem {};
@@ -30,16 +30,19 @@ class Screen {
             std::unique_ptr<WINDOW, WindowDeleter> ptr;
             int yTop, yBtm, xLeft, xRight;
             std::function<void()> click;
+            std::function<void()> draw;
             // /* Public Methods */
             Button(WINDOW *win, int y, int x, int yLen, int xLen,
-                    std::function<void()> func);
-            void highlight(chtype attrs, chtype color=COLOR_WHITE);
+                    std::function<void()> click, std::function<void()> draw);
+            void highlight(int attrs);
         };
         struct EventData {int key; MEVENT mouse;} static eData;
         struct Controls {int up, left, down, right;} static control;
         /* Member Variables */
         std::unique_ptr<WINDOW, WindowDeleter> window;
         std::unique_ptr<PANEL, PanelDeleter> panel;
+        /* Private Methods */
+        virtual void initScreen() = 0;
     public:
         Screen();
         virtual ~Screen() = default;
@@ -62,12 +65,14 @@ class MainMenuScreen : public Screen {
         /* Member Structs */
         struct ButtonManager {
             std::vector<Button> list;
-            int current;
+            size_t index;
             /* Public Methods */
             ButtonManager(WINDOW *win, int startY, int startX);
         };
         /* Member Variables */
         ButtonManager buttons;
+        /* Private Member Methods */
+        void initScreen();
     public:
         MainMenuScreen();
         void drawGraphics();
@@ -76,6 +81,9 @@ class MainMenuScreen : public Screen {
 };
 
 class GameScreen : public Screen {
+    private:
+        /* Private Member Methods */
+        void initScreen();
     public:
         /* Inherit Constructor from Screen */
         using Screen::Screen;

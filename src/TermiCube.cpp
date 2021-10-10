@@ -71,34 +71,33 @@ Screen::Screen() :
 
 }
 
-void Screen::PanelDeleter::operator()(PANEL *ptr)
-{
-    del_panel(ptr);
-}
-
-void Screen::WindowDeleter::operator()(WINDOW *ptr)
-{
-    delwin(ptr);
-}
-
 Screen::Button::Button(WINDOW *win, int y, int x, int yLen, int xLen,
-                        std::function<void()> func) :
+        std::function<void()> click, std::function<void()> draw) :
     ptr{derwin(win, yLen, xLen, y, x)},
     yTop{y}, yBtm{y + yLen}, xLeft{x}, xRight{x + xLen},
-    click{func}
+    click{click}, draw{draw}
 {
 
 }
 
-void Screen::Button::highlight(chtype attrs, chtype color=COLOR_WHITE)
+void Screen::Button::highlight(int attrs)
 {
-
+    wattron(ptr.get(), attrs);
+    box(ptr.get(), 0, 0);
+    wattroff(ptr.get(), attrs);
+    touchwin(ptr.get());
+    wrefresh(ptr.get());
 }
 
 //////////////////////////////////////////////////////////////
 
 MainMenuScreen::MainMenuScreen() :
     buttons{window.get(), btnStartPos.y, btnStartPos.x}
+{
+    initScreen();
+}
+
+void MainMenuScreen::initScreen()
 {
     /* Title Creation */
     box(window.get(), 0 , 0);
@@ -115,11 +114,7 @@ MainMenuScreen::MainMenuScreen() :
     for (auto &button : buttons.list)
         box(button.ptr.get(), 0, 0);
     /* Start on new game button */
-    // wattron(newGameBtn.get(), COLOR_PAIR(1));
-    
-    // wattroff(newGameBtn.get(), COLOR_PAIR(1));
-    // touchwin(newGameBtn.get());
-    // wrefresh(newGameBtn.get());
+    buttons.list[buttons.index].highlight(COLOR_PAIR(1));
 }
 
 void MainMenuScreen::drawGraphics() 
@@ -137,25 +132,16 @@ void MainMenuScreen::updateScreen()
 
 void MainMenuScreen::userInput(int key)
 {   
-    // MEVENT event;
-    mvwprintw(window.get(), 1, 1, "%d", key);
-
-    /* Under construction */
-	// if (key == KEY_MOUSE) {
-        // if (getmouse(&event) == OK) {
-            
-        // } else
-        //     std::cerr << "MEvent not retrievable\n";
-    // }
+    // mvwprintw(window.get(), 1, 1, "%d", key);
 
     if (key == control.up) {
-        buttons.list[buttons.current].highlight(A_NORMAL);
-        buttons.current = (buttons.current - 1) % buttons.list.size();
-        buttons.list[buttons.current].highlight(A_STANDOUT);
+        buttons.list[buttons.index].highlight(A_NORMAL);
+        buttons.index = (buttons.index - 1) % buttons.list.size();
+        buttons.list[buttons.index].highlight(COLOR_PAIR(1));
     } else if (key == control.down) {
-        buttons.list[buttons.current].highlight(A_NORMAL);
-        buttons.current = (buttons.current + 1) % buttons.list.size();
-        buttons.list[buttons.current].highlight(A_STANDOUT, COLOR_GREEN);
+        buttons.list[buttons.index].highlight(A_NORMAL);
+        buttons.index = (buttons.index + 1) % buttons.list.size();
+        buttons.list[buttons.index].highlight(COLOR_PAIR(1));
     }
 
     eData.key = key; /* Store key into event data */
@@ -165,15 +151,24 @@ void MainMenuScreen::userInput(int key)
 
 MainMenuScreen::ButtonManager::ButtonManager(WINDOW *win, int startY, int startX) :
     list{},
-    current{NEWGAME}
+    index{NEWGAME}
 {
-    list.emplace_back(win, startY + 0, startX, btnSize.y, btnSize.x, [](){});
-    list.emplace_back(win, startY + 6, startX, btnSize.y, btnSize.x, [](){});
-    list.emplace_back(win, startY + 12, startX, btnSize.y, btnSize.x, [](){});
-    list.emplace_back(win, startY + 18, startX, btnSize.y, btnSize.x, [](){});
+    list.emplace_back(win, startY + 0, startX, btnSize.y, btnSize.x,
+        [](){}, [](){});
+    list.emplace_back(win, startY + 6, startX, btnSize.y, btnSize.x,
+        [](){}, [](){});
+    list.emplace_back(win, startY + 12, startX, btnSize.y, btnSize.x,
+        [](){}, [](){});
+    list.emplace_back(win, startY + 18, startX, btnSize.y, btnSize.x,
+        [](){}, [](){});
 }
 
 //////////////////////////////////////////////////////////////
+
+// void GameScreen::initScreen()
+// {
+    
+// }
 
 // void GameScreen::drawGraphics()
 // {
