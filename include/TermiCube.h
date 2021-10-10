@@ -7,7 +7,11 @@
 #include <functional>
 #include <panel.h>
 
-/* Things to do:
+/*
+Things to Remember:
+    - Enums are ordered for a specific reason each
+
+Things to do:
     - Replace deletor functor usage with pimpl-idioms
     - Reorganize entities with a sparse-set system (like EnTT)
 */
@@ -30,10 +34,10 @@ class Screen {
             std::unique_ptr<WINDOW, WindowDeleter> ptr;
             int yTop, yBtm, xLeft, xRight;
             std::function<void()> click;
-            std::function<void()> draw;
+            std::function<void(WINDOW *)> draw;
             // /* Public Methods */
             Button(WINDOW *win, int y, int x, int yLen, int xLen,
-                    std::function<void()> click, std::function<void()> draw);
+                    std::function<void()> click, std::function<void(WINDOW *)> draw);
             void highlight(int attrs);
         };
         struct EventData {int key; MEVENT mouse;} static eData;
@@ -59,7 +63,7 @@ class MainMenuScreen : public Screen {
         static constexpr Coordinate titlePos {5, (maxCols - titleSize.x) / 2};
         static constexpr Coordinate btnStartPos {14, (maxCols - btnSize.x) / 2};
         /* Member Enums */
-        enum ButtonType {
+        enum class ButtonType {
             NEWGAME, LOADGAME, SETTINGS, CREDITS
         };
         /* Member Structs */
@@ -80,7 +84,7 @@ class MainMenuScreen : public Screen {
         void userInput(int key);
 };
 
-class GameScreen : public Screen {
+class NewGameScreen : public Screen {
     private:
         /* Private Member Methods */
         void initScreen();
@@ -92,13 +96,25 @@ class GameScreen : public Screen {
         void userInput(int key);
 };
 
+// class GameScreen : public Screen {
+//     private:
+//         /* Private Member Methods */
+//         void initScreen();
+//     public:
+//         /* Inherit Constructor from Screen */
+//         using Screen::Screen;
+//         void drawGraphics();
+//         void updateScreen();
+//         void userInput(int key);
+// };
+
 ///////////////////////////////////////////////////////
 
 class GameWindow {
     private:
         enum class ScreenType {
-            /* Order must follow initScreens() emplace_back order */
-            MAINMENU
+            /* Add to the left */ 
+            NEWGAME, MAINMENU
         };
         std::vector<std::unique_ptr<Screen>> screenList;
         ScreenType screen;
