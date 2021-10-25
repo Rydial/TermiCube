@@ -30,9 +30,12 @@ void GameWindow::initScreens()
 {
     /* unique_ptr are not copyable, and initializer lists only use copy
     semantics so emplace_back had to be used instead */
-    /* First Emplace = Bottom of Stack, Last Emplace = Top of Stack */
-    screenList.emplace_back(std::make_unique<NewGameScreen>());
     screenList.emplace_back(std::make_unique<MainMenuScreen>());
+    screenList.emplace_back(std::make_unique<GameScreen>());
+    /* Hide every screen except for starting screen (Main Menu) */
+    for (size_t i {1}; i < screenList.size(); i++)
+        hide_panel(screenList[i]->getPanel());
+        
     update_panels();
     doupdate();
 }
@@ -194,25 +197,25 @@ MainMenuScreen::ButtonManager::ButtonManager(WINDOW *win, int startY, int startX
 
 //////////////////////////////////////////////////////////////
 
-void NewGameScreen::initScreen()
+void GameScreen::initScreen()
 {
     
 }
 
-void NewGameScreen::drawGraphics()
+void GameScreen::drawGraphics()
 {
 
 }
 
 
-void NewGameScreen::updateScreen()
+void GameScreen::updateScreen()
 {
 
 }
 
 
 
-void NewGameScreen::userInput(int /*key*/)
+void GameScreen::userInput(int /*key*/)
 {
 
 }

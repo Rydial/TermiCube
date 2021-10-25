@@ -53,6 +53,7 @@ class Screen {
         virtual void drawGraphics() = 0;
         virtual void updateScreen() = 0;
         virtual void userInput(int key) = 0;
+        PANEL * getPanel() {return panel.get();}
 };
 
 class MainMenuScreen : public Screen {
@@ -84,19 +85,7 @@ class MainMenuScreen : public Screen {
         void userInput(int key);
 };
 
-class NewGameScreen : public Screen {
-    private:
-        /* Private Member Methods */
-        void initScreen();
-    public:
-        /* Inherit Constructor from Screen */
-        using Screen::Screen;
-        void drawGraphics();
-        void updateScreen();
-        void userInput(int key);
-};
-
-// class GameScreen : public Screen {
+// class NewGameScreen : public Screen {
 //     private:
 //         /* Private Member Methods */
 //         void initScreen();
@@ -108,13 +97,25 @@ class NewGameScreen : public Screen {
 //         void userInput(int key);
 // };
 
+class GameScreen : public Screen {
+    private:
+        /* Private Member Methods */
+        void initScreen();
+    public:
+        /* Inherit Constructor from Screen */
+        using Screen::Screen;
+        void drawGraphics();
+        void updateScreen();
+        void userInput(int key);
+};
+
 ///////////////////////////////////////////////////////
 
 class GameWindow {
     private:
         enum class ScreenType {
             /* Add to the left */ 
-            NEWGAME, MAINMENU
+            MAINMENU, GAME
         };
         std::vector<std::unique_ptr<Screen>> screenList;
         ScreenType screen;
