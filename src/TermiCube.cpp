@@ -112,7 +112,7 @@ void MainMenuScreen::initScreen()
 
     /* Draw NEWGAME with current focus */
     buttons.list[buttons.btn].highlight(COLOR_PAIR(1));
-    
+
     /* Draw rest of the buttons */
     for (size_t i {1}; i < buttons.list.size(); i++)
         buttons.list[i].draw();
@@ -126,9 +126,16 @@ void MainMenuScreen::parseTxt(std::vector<std::string> &txt, std::string path)
         std::cerr << "File could not be opened: " << path << '\n';
     
     std::string line;
+    // std::string newLine;
+    // const WCHAR* wc = L"Hello World" ;
+    // _bstr_t b(wc);
+    // const char* c = b;
+    // printf("Output: %s", c);
     
-    while (std::getline(file, line))
+    while (std::getline(file, line)) {
         txt.emplace_back(line);
+    }
+        
 }
 
 void MainMenuScreen::drawGraphics() 
@@ -165,36 +172,23 @@ MainMenuScreen::ButtonManager::ButtonManager(
     list{},
     btn{static_cast<size_t>(ButtonType::NEWGAME)}
 {
-    /* NEWGAME */
-    WINDOW *newGame {derwin(win, btnSize.y, btnSize.x, startY + 0, startX)};
-    list.emplace_back(newGame, startY + 0, startX, btnSize.y, btnSize.x,
-        genClickFunction(win), genDrawFunction(newGame)
-    );
-    /* LOADGAME */
-    WINDOW *loadGame {derwin(win, btnSize.y, btnSize.x, startY + 6, startX)};
-    list.emplace_back(loadGame, startY + 6, startX, btnSize.y, btnSize.x,
-        genClickFunction(win), genDrawFunction(loadGame)
-    );
-    /* SETTINGS */
-    // WINDOW *settings {derwin(win, btnSize.y, btnSize.x, startY + 12, startX)};
-    // list.emplace_back(settings, startY + 12, startX, btnSize.y, btnSize.x,
-    //     []() {},
-    //     [] (WINDOW *win) {
-    //         box(win, 0, 0);
-    //         touchwin(win);
-    //         wrefresh(win);
-    //     }
-    // );
-    // /* CREDITS */
-    // WINDOW *credits {derwin(win, btnSize.y, btnSize.x, startY + 18, startX)};
-    // list.emplace_back(credits, startY + 18, startX, btnSize.y, btnSize.x,
-    //     []() {},
-    //     [] (WINDOW *win) {
-    //         box(win, 0, 0);
-    //         touchwin(win);
-    //         wrefresh(win);
-    //     }
-    // );
+    std::vector<std::string> paths {
+        "resource/mainmenu/NewGameBtn.txt", "resource/mainmenu/LoadGameBtn.txt"
+    };
+    // size_t count {static_cast<size_t>(ButtonType::COUNT)};
+    size_t count {2};
+    int y {0};
+
+    for (size_t i {0}; i < count; i++, y += 6) {
+        /* Parse Button Txt Files */
+        std::vector<std::string> txt;
+        parseTxt(txt, paths[i]);
+        /* Generate Button + Subwindow */
+        WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
+        list.emplace_back(btnWin, startY + 0, startX, btnSize.y, btnSize.x,
+            genClickFunction(win), genDrawFunction(btnWin, txt)
+        );
+    }
 }
 
 std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(WINDOW *win)
@@ -204,13 +198,25 @@ std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(WINDOW *wi
     };
 }
 
-std::function<void()> MainMenuScreen::ButtonManager::genDrawFunction(WINDOW *win)
+std::function<void()> MainMenuScreen::ButtonManager::genDrawFunction(
+    WINDOW *win, std::vector<std::string> &txt)
 {
-    return [win] () {
+    return [win, txt] () {
         box(win, 0, 0);
-        mvwaddstr(win, 1, 7, "▄  ▄ ▄▄▄ ▄   ▄   ▄▄▄▄  ▄▄  ▄   ▄ ▄▄▄");
-        mvwaddstr(win, 2, 7, "█▀▄█ █￭  █ ▄ █   █  ▄ █▄▄█ █▀▄▀█ █￭ ");
-        mvwaddstr(win, 3, 7, "▀  ▀ ▀▀▀  ▀▀▀    ▀▀▀▀ ▀  ▀ ▀   ▀ ▀▀▀");
+
+        for (size_t i {0}; i < txt.size(); i++) {
+            mvwaddstr(win, i + 1,
+                (btnSize.x - txt[i].length()) / 2, txt[i].c_str());
+        }
+        
+        mvwaddstr(win, 4, 1, txt[0].c_str());
+        printf("  Diff: %ld", btnSize.x - txt[0].length());
+        printf("  BtnSize: %d", btnSize.x);
+        printf("  Length: %ld", txt[0].length());
+        printf("  Size: %ld", txt[0].size());
+        // mvwaddstr(win, 1, 7, "▄  ▄ ▄▄▄ ▄   ▄   ▄▄▄▄  ▄▄  ▄   ▄ ▄▄▄");
+        // mvwaddstr(win, 2, 7, "█▀▄█ █￭  █ ▄ █   █  ▄ █▄▄█ █▀▄▀█ █￭ ");
+        // mvwaddstr(win, 3, 7, "▀  ▀ ▀▀▀  ▀▀▀    ▀▀▀▀ ▀  ▀ ▀   ▀ ▀▀▀");
         touchwin(win);
         wrefresh(win);
     };

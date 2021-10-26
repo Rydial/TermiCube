@@ -72,13 +72,14 @@ class MainMenuScreen : public Screen {
         static constexpr Coordinate btnStartPos {14, (maxCols - btnSize.x) / 2};
         /* Member Enums */
         enum class ButtonType {
-            NEWGAME, LOADGAME, SETTINGS, CREDITS
+            NEWGAME, LOADGAME, SETTINGS, CREDITS, COUNT
         };
         /* Member Structs */
         struct ButtonManager {
             private:
                 std::function<void()> genClickFunction(WINDOW *win);
-                std::function<void()> genDrawFunction(WINDOW *win);
+                std::function<void()> genDrawFunction(
+                    WINDOW *win, std::vector<std::string> &txt);
             public:
                 std::vector<Button> list;
                 size_t btn;
