@@ -111,6 +111,10 @@ help:
 
 build: compile run
 
+remake: clean compile
+
+rebuild: clean compile run
+
 debug: # Need fixing
 	@$(CLEAR)
 	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(DEBUG) $(SRCS) $(LIBS) -o $(OUTPUTS)

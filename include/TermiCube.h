@@ -27,6 +27,11 @@ class Screen {
         /* Later on replace these with a pimpl-idiom */
         struct PanelDeleter {void operator()(PANEL *ptr) {del_panel(ptr);}};
         struct WindowDeleter {void operator()(WINDOW *ptr) {delwin(ptr);}};
+        /* Member Enums */
+        enum class ScreenType {
+            /* Follow the order of emplace_back in screenList */ 
+            MAINMENU, GAME
+        };
         /* Member Structs */
         struct Coordinate {int y, x;};
         struct DisplayItem {};
@@ -34,10 +39,10 @@ class Screen {
             std::unique_ptr<WINDOW, WindowDeleter> ptr;
             int yTop, yBtm, xLeft, xRight;
             std::function<void()> click;
-            std::function<void(WINDOW *)> draw;
-            // /* Public Methods */
+            std::function<void()> draw;
+            /* Public Methods */
             Button(WINDOW *win, int y, int x, int yLen, int xLen,
-                    std::function<void()> click, std::function<void(WINDOW *)> draw);
+                    std::function<void()> click, std::function<void()> draw);
             void highlight(int attrs);
         };
         struct EventData {int key; MEVENT mouse;} static eData;
@@ -48,11 +53,13 @@ class Screen {
         /* Private Methods */
         virtual void initScreen() = 0;
     public:
-        Screen();
-        virtual ~Screen() = default;
+        Screen(); /* Constructor */
+        virtual ~Screen() = default; /* Virtual Destructor */
+        /* Virtual Methods */
         virtual void drawGraphics() = 0;
         virtual void updateScreen() = 0;
         virtual void userInput(int key) = 0;
+        /* Public Methods */
         PANEL * getPanel() {return panel.get();}
 };
 
@@ -69,17 +76,22 @@ class MainMenuScreen : public Screen {
         };
         /* Member Structs */
         struct ButtonManager {
-            std::vector<Button> list;
-            size_t index;
-            /* Public Methods */
-            ButtonManager(WINDOW *win, int startY, int startX);
+            private:
+                std::function<void()> genClickFunction(WINDOW *win);
+                std::function<void()> genDrawFunction(WINDOW *win);
+            public:
+                std::vector<Button> list;
+                size_t btn;
+                /* Public Methods */
+                ButtonManager(WINDOW *win, int startY, int startX, size_t &curScreen);
         };
         /* Member Variables */
         ButtonManager buttons;
         /* Private Member Methods */
         void initScreen();
+        static void parseTxt(std::vector<std::string> &txt, std::string path);
     public:
-        MainMenuScreen();
+        MainMenuScreen(size_t &curScreen);
         void drawGraphics();
         void updateScreen();
         void userInput(int key);
@@ -109,16 +121,12 @@ class GameScreen : public Screen {
         void userInput(int key);
 };
 
-///////////////////////////////////////////////////////
+/////////////////////// Game Window ///////////////////////
 
 class GameWindow {
     private:
-        enum class ScreenType {
-            /* Add to the left */ 
-            MAINMENU, GAME
-        };
+        size_t screen;
         std::vector<std::unique_ptr<Screen>> screenList;
-        ScreenType screen;
         /* Private Methods */
         void initCurses();
         void initScreens();
