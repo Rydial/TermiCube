@@ -104,10 +104,10 @@ void MainMenuScreen::initScreen()
     box(window.get(), 0 , 0);
 
     std::vector<std::string> title;
-    parseUTF8(title, "resource/mainmenu/title.txt");
+    size_t xLen {parseUTF8(title, "resource/mainmenu/title.txt")};
 
-    for (size_t i {0}, y {titlePos.y}, x{titlePos.x}; i < title.size(); y++, i++)
-        mvwaddstr(window.get(), y, x, title[i].c_str());
+    for (size_t i {0}, y {titlePosY}; i < title.size(); y++, i++)
+        mvwaddstr(window.get(), y, (maxCols - xLen) / 2, title[i].c_str());
 
     /* Draw NEWGAME with current focus */
     buttons.list[buttons.btn].highlight(COLOR_PAIR(1));
@@ -161,11 +161,11 @@ MainMenuScreen::ButtonManager::ButtonManager(
     for (size_t i {0}; i < count; i++, y += 6) {
         /* Parse Button Txt Files */
         std::vector<std::string> txt;
-        parseUTF8(txt, paths[i]);
+        size_t maxLineLen {parseUTF8(txt, paths[i])};
         /* Generate Button + Subwindow */
         WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
         list.emplace_back(btnWin, startY + 0, startX, btnSize.y, btnSize.x,
-            genClickFunction(win), genDrawFunction(btnWin, txt)
+            genClickFunction(win), genDrawFunction(btnWin, txt, maxLineLen)
         );
     }
 }
@@ -178,24 +178,14 @@ std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(WINDOW *wi
 }
 
 std::function<void()> MainMenuScreen::ButtonManager::genDrawFunction(
-    WINDOW *win, std::vector<std::string> &txt)
+    WINDOW *win, std::vector<std::string> &txt, size_t maxLen)
 {
-    return [win, txt] () {
+    return [win, txt, maxLen] () {
         box(win, 0, 0);
 
-        for (size_t i {0}; i < txt.size(); i++) {
-            mvwaddstr(win, i + 1,
-                (btnSize.x - txt[i].length()) / 2, txt[i].c_str());
-        }
+        for (size_t i {0}; i < txt.size(); i++)
+            mvwaddstr(win, i + 1, (btnSize.x - maxLen) / 2, txt[i].c_str());
         
-        mvwaddstr(win, 4, 1, txt[0].c_str());
-        // printf("  Diff: %ld", btnSize.x - txt[0].length());
-        // printf("  BtnSize: %d", btnSize.x);
-        // printf("  Length: %ld", txt[0].length());
-        // printf("  Size: %ld", txt[0].size());
-        // mvwaddstr(win, 1, 7, "▄  ▄ ▄▄▄ ▄   ▄   ▄▄▄▄  ▄▄  ▄   ▄ ▄▄▄");
-        // mvwaddstr(win, 2, 7, "█▀▄█ █￭  █ ▄ █   █  ▄ █▄▄█ █▀▄▀█ █￭ ");
-        // mvwaddstr(win, 3, 7, "▀  ▀ ▀▀▀  ▀▀▀    ▀▀▀▀ ▀  ▀ ▀   ▀ ▀▀▀");
         touchwin(win);
         wrefresh(win);
     };

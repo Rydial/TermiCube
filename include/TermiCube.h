@@ -64,9 +64,8 @@ class Screen {
 class MainMenuScreen : public Screen {
     private:
         /* Member Constants */
-        static constexpr Coordinate titleSize {6, 72};
+        static constexpr int titlePosY {5};
         static constexpr Coordinate btnSize {5, 50};
-        static constexpr Coordinate titlePos {5, (maxCols - titleSize.x) / 2};
         static constexpr Coordinate btnStartPos {14, (maxCols - btnSize.x) / 2};
         /* Member Enums */
         enum class ButtonType {
@@ -77,7 +76,7 @@ class MainMenuScreen : public Screen {
             private:
                 std::function<void()> genClickFunction(WINDOW *win);
                 std::function<void()> genDrawFunction(
-                    WINDOW *win, std::vector<std::string> &txt);
+                    WINDOW *win, std::vector<std::string> &txt, size_t maxLen);
             public:
                 std::vector<Button> list;
                 size_t btn;

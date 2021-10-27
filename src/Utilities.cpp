@@ -5,7 +5,7 @@
 #include <vector>
 #include "Utilites.h"
 
-int parseUTF8(std::vector<std::string> &dst, std::string path)
+size_t parseUTF8(std::vector<std::string> &dst, std::string path)
 {
     std::ifstream file {path};
 
