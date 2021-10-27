@@ -20,7 +20,7 @@ Things to do:
 class Screen {
     protected:
         /* Member Constants */
-        static constexpr int maxRows {40}, maxCols {80};
+        static constexpr int maxRows {41}, maxCols {81};
         /* Need a custom deleter function to use unique_ptr with an incomplete type */
         /* Later on replace these with a pimpl-idiom */
         struct PanelDeleter {void operator()(PANEL *ptr) {del_panel(ptr);}};
@@ -65,7 +65,7 @@ class MainMenuScreen : public Screen {
     private:
         /* Member Constants */
         static constexpr int titlePosY {5};
-        static constexpr Coordinate btnSize {5, 50};
+        static constexpr Coordinate btnSize {5, 51};
         static constexpr Coordinate btnStartPos {14, (maxCols - btnSize.x) / 2};
         /* Member Enums */
         enum class ButtonType {
