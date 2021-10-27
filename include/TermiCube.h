@@ -44,7 +44,10 @@ class Screen {
             void highlight(int attrs);
         };
         struct EventData {int key; MEVENT mouse;} static eData;
-        struct Controls {int up, left, down, right;} static control;
+        struct Controls {
+            int up, left, down, right;
+            int enter;
+        } static control;
         /* Member Variables */
         std::unique_ptr<WINDOW, WindowDeleter> window;
         std::unique_ptr<PANEL, PanelDeleter> panel;
@@ -74,14 +77,15 @@ class MainMenuScreen : public Screen {
         /* Member Structs */
         struct ButtonManager {
             private:
-                std::function<void()> genClickFunction(WINDOW *win);
+                std::function<void()> genClickFunction(
+                    PANEL *panel, size_t &curScreen, int index);
                 std::function<void()> genDrawFunction(
                     WINDOW *win, std::vector<std::string> &txt, size_t maxLen);
             public:
                 std::vector<Button> list;
                 size_t btn;
                 /* Public Methods */
-                ButtonManager(WINDOW *win, int startY, int startX, size_t &curScreen);
+                ButtonManager(PANEL *panel, int startY, int startX, size_t &curScreen);
         };
         /* Member Variables */
         ButtonManager buttons;

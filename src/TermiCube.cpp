@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 #include "TermiCube.h"
 #include "Utilites.h"
 
@@ -64,7 +65,7 @@ int GameWindow::update()
 
 /* Static Variable Initialization */
 Screen::EventData Screen::eData {0, {}};
-Screen::Controls Screen::control {'w', 'a', 's', 'd'};
+Screen::Controls Screen::control {'w', 'a', 's', 'd', '\n'};
 
 Screen::Screen() :
     window{newwin(maxRows, maxCols, (LINES - maxRows) / 2, (COLS - maxCols) / 2)},
@@ -92,7 +93,7 @@ void Screen::Button::highlight(int attrs)
 //////////////////////////////////////////////////////////////
 
 MainMenuScreen::MainMenuScreen(size_t &curScreen) :
-    buttons{window.get(), btnStartPos.y, btnStartPos.x, curScreen}
+    buttons{panel.get(), btnStartPos.y, btnStartPos.x, curScreen}
 {
     initScreen();
 }
@@ -137,13 +138,14 @@ void MainMenuScreen::userInput(int key)
         buttons.list[buttons.btn].highlight(A_NORMAL);
         buttons.btn = (buttons.btn + 1) % buttons.list.size();
         buttons.list[buttons.btn].highlight(COLOR_PAIR(1));
-    }
+    } else if (key == control.enter)
+        buttons.list[buttons.btn].click();       
 
     eData.key = key; /* Store key into event data */
 }
 
 MainMenuScreen::ButtonManager::ButtonManager(
-  WINDOW *win, int startY, int startX, size_t &/*curScreen*/) :
+  PANEL *panel, int startY, int startX, size_t &curScreen) :
     list{},
     btn{static_cast<size_t>(ButtonType::NEWGAME)}
 {
@@ -158,18 +160,24 @@ MainMenuScreen::ButtonManager::ButtonManager(
         std::vector<std::string> txt;
         size_t maxLineLen {parseUTF8(txt, paths[static_cast<size_t>(i)])};
         /* Generate Button + Subwindow */
-        WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
-        list.emplace_back(btnWin, startY + 0, startX, btnSize.y, btnSize.x,
-            genClickFunction(win), genDrawFunction(btnWin, txt, maxLineLen)
+        WINDOW *btnWin {derwin(panel_window(panel), btnSize.y, btnSize.x, startY + y, startX)};
+        list.emplace_back(btnWin, startY + y, startX, btnSize.y, btnSize.x,
+            genClickFunction(panel, curScreen, i), genDrawFunction(btnWin, txt, maxLineLen)
         );
     }
 }
 
-std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(WINDOW *win)
+std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(
+    PANEL */*panel*/, size_t &/*curScreen*/, int index)
 {
-    return [win] () {
-        
-    };
+    switch(index) {
+        case static_cast<int>(ButtonType::NEWGAME):
+            return [/*win, &curScreen*/] () {
+                std::cout << "YAY";
+            };
+        default:
+            return nullptr;
+    }
 }
 
 std::function<void()> MainMenuScreen::ButtonManager::genDrawFunction(
