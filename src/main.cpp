@@ -1,87 +1,62 @@
 #include "TermiCube.h"
 
 
-// int main() {
+int main() {
 
-//     GameWindow game;
+    GameWindow game;
 
-//     while(game.update() == 0);
+    while(game.update() == 0);
 
-//     return 0;
-// }
+    return 0;
+}
   
 
 
 // #include <iostream>
-// #include <stdlib.h>
 // #include <string>
 // #include <cstring>
-
-// // #include "atlbase.h"
-// // #include "atlstr.h"
-// // #include "comutil.h"
-
-// using namespace std;
-// // using namespace System;
-
+// #include <bitset>
+// #include <fstream>
+ 
 // int main()
 // {
-//     // Create a string of wide characters, display it, and then
-//     // use this string to create other types of strings.
-//     wchar_t *orig = L"Test";
-//     wcout << orig << L" (wchar_t *)" << endl;
+//     setlocale(LC_ALL, "");
+//     // UTF-8 narrow multibyte encoding
+//     std::string path {"resource/mainmenu/NewGameBtn.txt"};
+//     std::ifstream file {path};
+//     std::string line;
 
-//     // Convert the wchar_t string to a char* string. Record
-//     // the length of the original string and add 1 to it to
-//     // account for the terminating null character.
-//     size_t origsize = wcslen(orig) + 1;
-//     size_t convertedChars = 0;
+//     if (!file)
+//         std::cerr << "File could not be opened: " << path << '\n';
 
-//     // Use a multibyte string to append the type of string
-//     // to the new string before displaying the result.
-//     char strConcat[] = " (char *)";
-//     size_t strConcatsize = (strlen( strConcat ) + 1)*2;
+//     while (std::getline(file, line)) {
+//         std::cout << line << '\n';
+//         size_t space {0}, count {0};
 
-//     // Allocate two bytes in the multibyte output string for every wide
-//     // character in the input string (including a wide character
-//     // null). Because a multibyte character can be one or two bytes,
-//     // you should allot two bytes for each character. Having extra
-//     // space for the new string is not an error, but having
-//     // insufficient space is a potential security problem.
-//     const size_t newsize = origsize*2;
-//     // The new string will contain a converted copy of the original
-//     // string plus the type of string appended to it.
-//     char *nstring = new char[newsize+strConcatsize];
+//         for (size_t i {0}; i < line.length(); i++) {
+//             if (line[i] == ' ')
+//                 space++;
+//             /* In Windows a newline is represented in the CR + LF format: "\r\n" */
+//             else if (line[i] != '\r') {
+//                 std::bitset<8> byte {static_cast<unsigned long long>(line[i])};
+//                 size_t bits {0};
 
-//     // Put a copy of the converted string into nstring
-//     wcstombs_s(&convertedChars, nstring, newsize, orig, _TRUNCATE);
-//     // append the type of string to the new string.
-//     // _mbscat_s((unsigned char*)nstring, newsize+strConcatsize, (unsigned char*)strConcat);
-//     // Display the result.
-//     cout << nstring << endl;
+//                 for (size_t j {0}; j < 8 && byte.test(7 - j); j++, bits++);
 
+//                 if (bits == 3 || bits == 4) {
+//                     i += bits - 1;
+//                 } else if (bits == 2) {
+//                     std::bitset<8> nextByte {static_cast<unsigned long long>(line[++i])};
+
+//                     if (!nextByte.test(7) || nextByte.test(6)) {
+//                         std::cerr << "No continuation byte found\n";
+//                         exit(1);
+//                     }
+//                 }
+//                 count++;
+//             }
+//         }
+//         std::cout << "\nSpaces : " << space << '\n';
+//         std::cout << "\nUnicode Chars : " << count << "\n\n";
+//     }
 // }
-
-#include <iostream>
-#include <string>
-#include <cstring>
-// #include <clocale>
-// #include <cstdlib>
- 
-int main()
-{
-    setlocale(LC_ALL, "");
-    // UTF-8 narrow multibyte encoding
-    const wchar_t wstr[] = L"▄  ▄ ▄▄▄ ▄   ▄   ▄▄▄▄  ▄▄  ▄   ▄ ▄▄▄";
-    std::wstring str {wstr};
-
-    char mbstr[100];
-    std::wcstombs(mbstr, wstr, 100);
-    std::cout << "multibyte string: " << mbstr << '\n';
-    std::cout << wcslen(wstr) << '\n';
-    std::cout << wcslen(str.c_str()) << '\n';
-    std::cout << sizeof(wstr) << '\n';
-    std::cout << wcstombs(nullptr, wstr, 0) << '\n';
-    std::cout << str.length() << '\n';
-    std::cout << str.size() << '\n';
-}

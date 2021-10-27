@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <memory>
-#include <iostream>
 #include <functional>
 #include <panel.h>
 
@@ -15,7 +14,6 @@ Things to do:
     - Replace deletor functor usage with pimpl-idioms
     - Reorganize entities with a sparse-set system (like EnTT)
 */
-
 
 /////////////////////// Screens ///////////////////////
 
@@ -90,7 +88,6 @@ class MainMenuScreen : public Screen {
         ButtonManager buttons;
         /* Private Member Methods */
         void initScreen();
-        static void parseTxt(std::vector<std::string> &txt, std::string path);
     public:
         MainMenuScreen(size_t &curScreen);
         void drawGraphics();

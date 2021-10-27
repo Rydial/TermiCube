@@ -1,5 +1,4 @@
 #include <string>
-#include <fstream>
 #include "TermiCube.h"
 #include "Utilites.h"
 
@@ -105,7 +104,7 @@ void MainMenuScreen::initScreen()
     box(window.get(), 0 , 0);
 
     std::vector<std::string> title;
-    parseTxt(title, "resource/mainmenu/title.txt");
+    parseUTF8(title, "resource/mainmenu/title.txt");
 
     for (size_t i {0}, y {titlePos.y}, x{titlePos.x}; i < title.size(); y++, i++)
         mvwaddstr(window.get(), y, x, title[i].c_str());
@@ -116,26 +115,6 @@ void MainMenuScreen::initScreen()
     /* Draw rest of the buttons */
     for (size_t i {1}; i < buttons.list.size(); i++)
         buttons.list[i].draw();
-}
-
-void MainMenuScreen::parseTxt(std::vector<std::string> &txt, std::string path)
-{
-    std::ifstream file {path};
-
-    if (!file)
-        std::cerr << "File could not be opened: " << path << '\n';
-    
-    std::string line;
-    // std::string newLine;
-    // const WCHAR* wc = L"Hello World" ;
-    // _bstr_t b(wc);
-    // const char* c = b;
-    // printf("Output: %s", c);
-    
-    while (std::getline(file, line)) {
-        txt.emplace_back(line);
-    }
-        
 }
 
 void MainMenuScreen::drawGraphics() 
@@ -182,7 +161,7 @@ MainMenuScreen::ButtonManager::ButtonManager(
     for (size_t i {0}; i < count; i++, y += 6) {
         /* Parse Button Txt Files */
         std::vector<std::string> txt;
-        parseTxt(txt, paths[i]);
+        parseUTF8(txt, paths[i]);
         /* Generate Button + Subwindow */
         WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
         list.emplace_back(btnWin, startY + 0, startX, btnSize.y, btnSize.x,
@@ -210,10 +189,10 @@ std::function<void()> MainMenuScreen::ButtonManager::genDrawFunction(
         }
         
         mvwaddstr(win, 4, 1, txt[0].c_str());
-        printf("  Diff: %ld", btnSize.x - txt[0].length());
-        printf("  BtnSize: %d", btnSize.x);
-        printf("  Length: %ld", txt[0].length());
-        printf("  Size: %ld", txt[0].size());
+        // printf("  Diff: %ld", btnSize.x - txt[0].length());
+        // printf("  BtnSize: %d", btnSize.x);
+        // printf("  Length: %ld", txt[0].length());
+        // printf("  Size: %ld", txt[0].size());
         // mvwaddstr(win, 1, 7, "▄  ▄ ▄▄▄ ▄   ▄   ▄▄▄▄  ▄▄  ▄   ▄ ▄▄▄");
         // mvwaddstr(win, 2, 7, "█▀▄█ █￭  █ ▄ █   █  ▄ █▄▄█ █▀▄▀█ █￭ ");
         // mvwaddstr(win, 3, 7, "▀  ▀ ▀▀▀  ▀▀▀    ▀▀▀▀ ▀  ▀ ▀   ▀ ▀▀▀");

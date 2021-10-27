@@ -16,6 +16,9 @@ BUILDDIR		:= build
 # Output Directory
 OUTPUT			:= output
 
+# Error Directory
+ERROR			:= error
+
 # Program command-line arguments
 ARGS			:=
 
@@ -41,6 +44,7 @@ ifeq ($(shell uname), Linux)
 	INCLUDEDIR	:= $(shell find $(INCLUDE) -type d)
 	OUTPUTDIR	:= $(BUILDDIR)/$(OUTPUT)
 	OUTPUTMAIN	:= $(OUTPUTDIR)/$(MAIN)
+	ERRORLOG	:= $(BUILDDIR)/$(ERROR)/err.log
     # Compiler Flags
 	LIBS		:= -lglfw -lGL -lpanelw -lncursesw
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
@@ -60,10 +64,11 @@ ifeq ($(shell uname), Darwin)
 	INCLUDEDIR	:= $(INCLUDE)
 	OUTPUTDIR	:= $(BUILDDIR)/$(OUTPUT)
 	OUTPUTMAIN	:= $(OUTPUTDIR)/$(MAIN)
+	ERRORLOG	:= $(BUILDDIR)/$(ERROR)/err.log
     # Compiler Flags
 	LIBS		:= -lglfw -lpanel -lncurses
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
-	# Commands
+    # Commands
 	MKDIR		:= mkdir -p
 	RM 			:= rm -f
 	DISPLAY		:= echo
@@ -91,10 +96,10 @@ $(OUTPUT):
 	@$(MKDIR) $(OUTPUTDIR)
 
 $(MAIN): $(OBJECTS)
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIBS) -o $(OUTPUTMAIN) $(OBJECTS)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIBS) -o $(OUTPUTMAIN) $(OBJECTS) 2> $(ERRORLOG)
 
 $(BUILDDIR)/%.o: %.cpp
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@ 2> $(ERRORLOG)
 	
 
 .PHONY: help build debug clean run time
@@ -117,7 +122,7 @@ rebuild: clean compile run
 
 debug: # Need fixing
 	@$(CLEAR)
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(DEBUG) $(SRCS) $(LIBS) -o $(OUTPUTS)
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $(DEBUG) $(SRCS) $(LIBS) -o $(OUTPUTS) 2> $(ERRORLOG)
 	@$(DISPLAY) "\033[38;5;15m[ \033[38;5;46mDebug Compiled\033[38;5;15m ]\033[0m\n"
 
 
@@ -128,7 +133,7 @@ clean:
 run:
 	@$(CLEAR)
 	@$(DISPLAY) "\033[38;5;15m[ \033[38;5;46mRunning Program\033[38;5;15m ]\033[0m\n"
-	@./$(OUTPUTDIR)/$(MAIN) $(ARGS)
+	@./$(OUTPUTDIR)/$(MAIN) $(ARGS) 2> $(ERRORLOG)
 	@$(DISPLAY) "\n\033[38;5;15m[ \033[38;5;46mProgram Finished\033[38;5;15m ]\033[0m\n"
 
 time:
