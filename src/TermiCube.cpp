@@ -1,5 +1,5 @@
 #include <string>
-#include <fstream>
+#include <iostream>
 #include "TermiCube.h"
 #include "Utilites.h"
 
@@ -65,11 +65,10 @@ int GameWindow::update()
 
 /* Static Variable Initialization */
 Screen::EventData Screen::eData {0, {}};
-Screen::Controls Screen::control {'w', 'a', 's', 'd'};
+Screen::Controls Screen::control {'w', 'a', 's', 'd', '\n'};
 
 Screen::Screen() :
-    window{newwin(
-        maxRows, maxCols,(LINES - maxRows) / 2,(COLS - maxCols) / 2)},
+    window{newwin(maxRows, maxCols, (LINES - maxRows) / 2, (COLS - maxCols) / 2)},
     panel{new_panel(window.get())}
 {
 
@@ -94,7 +93,7 @@ void Screen::Button::highlight(int attrs)
 //////////////////////////////////////////////////////////////
 
 MainMenuScreen::MainMenuScreen(size_t &curScreen) :
-    buttons{window.get(), btnStartPos.y, btnStartPos.x, curScreen}
+    buttons{panel.get(), btnStartPos.y, btnStartPos.x, curScreen}
 {
     initScreen();
 }
@@ -105,10 +104,10 @@ void MainMenuScreen::initScreen()
     box(window.get(), 0 , 0);
 
     std::vector<std::string> title;
-    parseTxt(title, "resource/mainmenu/Title.txt");
+    size_t xLen {parseUTF8(title, "resource/mainmenu/title.txt")};
 
-    for (size_t i {0}, y {titlePos.y}, x{titlePos.x}; i < title.size(); y++, i++)
-        mvwaddstr(window.get(), y, x, title[i].c_str());
+    for (size_t i {0}, y {titlePosY}; i < title.size(); y++, i++)
+        mvwaddstr(window.get(), y, (maxCols - xLen) / 2, title[i].c_str());
 
     /* Draw NEWGAME with current focus */
     buttons.list[buttons.btn].highlight(COLOR_PAIR(1));
@@ -118,45 +117,16 @@ void MainMenuScreen::initScreen()
         buttons.list[i].draw();
 }
 
-size_t MainMenuScreen::parseTxt(std::vector<std::string> &txt, std::string path)
-{ /* If possible try to convert UTF-16 to UTF-8, or continue using two streams */
-    std::ifstream file {path};
-    std::wifstream wFile {path};
-
-    if (!file)
-        std::cerr << "File could not be opened: " << path << '\n';
-    
-    std::string line;
-    std::wstring wLine;
-    size_t length, maxLength {0};
-    
-    while (std::getline(file, line) && std::getline(wFile, wLine)) {
-        std::cerr << "wLine: " << wcslen(wLine.c_str()) << '\n';
-        std::cerr << "Line: " << line.size() << '\n';
-        if ((length = wLine.size()) > maxLength)
-            maxLength = length;
-        txt.emplace_back(line);
-    }
-    std::cerr << maxLength << '\n';
-    std::cerr << wcslen(L"▄  ▄ ▄▄▄ ▄   ▄   ▄▄▄▄  ▄▄  ▄   ▄ ▄▄▄") << '\n';
-    std::cerr << wcslen(L"░░░╚═╝░░░╚══════╝╚═╝░░╚═╝╚═╝░░░░░╚═╝╚═╝░╚════╝░░╚═════╝░╚═════╝░╚══════╝") << '\n';
-    std::cerr << strlen("░░░╚═╝░░░╚══════╝╚═╝░░╚═╝╚═╝░░░░░╚═╝╚═╝░╚════╝░░╚═════╝░╚═════╝░╚══════╝") << '\n';
-    return maxLength;
-}
-
 void MainMenuScreen::drawGraphics() 
 {
 	update_panels();
     doupdate();
 }
 
-
 void MainMenuScreen::updateScreen()
 {
     
 }
-
-
 
 void MainMenuScreen::userInput(int key)
 {   
@@ -169,60 +139,57 @@ void MainMenuScreen::userInput(int key)
         buttons.list[buttons.btn].highlight(A_NORMAL);
         buttons.btn = (buttons.btn + 1) % buttons.list.size();
         buttons.list[buttons.btn].highlight(COLOR_PAIR(1));
-    }
+    } else if (key == control.enter)
+        buttons.list[buttons.btn].click();       
 
     eData.key = key; /* Store key into event data */
 }
 
 MainMenuScreen::ButtonManager::ButtonManager(
-  WINDOW *win, int startY, int startX, size_t &/*curScreen*/) :
+  PANEL *panel, int startY, int startX, size_t &curScreen) :
     list{},
     btn{static_cast<size_t>(ButtonType::NEWGAME)}
 {
+    int count {static_cast<int>(ButtonType::COUNT)};
     std::vector<std::string> paths {
-        "resource/mainmenu/NewGameBtn.txt", "resource/mainmenu/LoadGameBtn.txt"
+        "resource/mainmenu/NewGameBtn.txt", "resource/mainmenu/LoadGameBtn.txt",
+        "resource/mainmenu/SettingsBtn.txt", "resource/mainmenu/CreditsBtn.txt"
     };
-    // size_t count {static_cast<size_t>(ButtonType::COUNT)};
-    size_t count {2};
-    int y {0};
 
-    for (size_t i {0}; i < count; i++, y += 6) {
+    for (int i {0}, y {0}; i < count; i++, y += 6) {
         /* Parse Button Txt Files */
         std::vector<std::string> txt;
-        size_t xLen {parseTxt(txt, paths[i])};
+        size_t maxLineLen {parseUTF8(txt, paths[static_cast<size_t>(i)])};
         /* Generate Button + Subwindow */
-        WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
-        list.emplace_back(btnWin, startY + 0, startX, btnSize.y, btnSize.x,
-            genClickFunction(win), genDrawFunction(btnWin, txt, xLen)
+        WINDOW *btnWin {derwin(panel_window(panel), btnSize.y, btnSize.x, startY + y, startX)};
+        list.emplace_back(btnWin, startY + y, startX, btnSize.y, btnSize.x,
+            genClickFunction(panel, curScreen, i), genDrawFunction(btnWin, txt, maxLineLen)
         );
     }
 }
 
-std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(WINDOW */*win*/)
+std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(
+    PANEL */*panel*/, size_t &/*curScreen*/, int index)
 {
-    return [/*win*/] () {
-        
-    };
+    switch(index) {
+        case static_cast<int>(ButtonType::NEWGAME):
+            return [/*win, &curScreen*/] () {
+                std::cout << "YAY";
+            };
+        default:
+            return nullptr;
+    }
 }
 
 std::function<void()> MainMenuScreen::ButtonManager::genDrawFunction(
-    WINDOW *win, std::vector<std::string> &txt, size_t xLen)
+    WINDOW *win, std::vector<std::string> &txt, size_t maxLen)
 {
-    return [win, txt, x{(btnSize.x - xLen) / 2}] () {
+    return [win, txt, maxLen] () {
         box(win, 0, 0);
 
-        for (size_t i {0}; i < txt.size(); i++) {
-            mvwaddstr(win, i + 1, x, txt[i].c_str());
-        }
+        for (size_t i {0}; i < txt.size(); i++)
+            mvwaddstr(win, i + 1, (btnSize.x - maxLen) / 2, txt[i].c_str());
         
-        mvwaddstr(win, 4, 1, txt[0].c_str());
-        printf("  Diff: %ld", btnSize.x - txt[0].length());
-        printf("  BtnSize: %d", btnSize.x);
-        printf("  Length: %ld", txt[0].length());
-        printf("  Size: %ld", txt[0].size());
-        // mvwaddstr(win, 1, 7, "▄  ▄ ▄▄▄ ▄   ▄   ▄▄▄▄  ▄▄  ▄   ▄ ▄▄▄");
-        // mvwaddstr(win, 2, 7, "█▀▄█ █￭  █ ▄ █   █  ▄ █▄▄█ █▀▄▀█ █￭ ");
-        // mvwaddstr(win, 3, 7, "▀  ▀ ▀▀▀  ▀▀▀    ▀▀▀▀ ▀  ▀ ▀   ▀ ▀▀▀");
         touchwin(win);
         wrefresh(win);
     };
@@ -240,13 +207,10 @@ void GameScreen::drawGraphics()
 
 }
 
-
 void GameScreen::updateScreen()
 {
 
 }
-
-
 
 void GameScreen::userInput(int /*key*/)
 {

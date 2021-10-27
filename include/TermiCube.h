@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <memory>
-#include <iostream>
 #include <functional>
 #include <panel.h>
 
@@ -16,13 +15,12 @@ Things to do:
     - Reorganize entities with a sparse-set system (like EnTT)
 */
 
-
 /////////////////////// Screens ///////////////////////
 
 class Screen {
     protected:
         /* Member Constants */
-        static constexpr int maxRows {40}, maxCols {80};
+        static constexpr int maxRows {41}, maxCols {81};
         /* Need a custom deleter function to use unique_ptr with an incomplete type */
         /* Later on replace these with a pimpl-idiom */
         struct PanelDeleter {void operator()(PANEL *ptr) {del_panel(ptr);}};
@@ -46,7 +44,10 @@ class Screen {
             void highlight(int attrs);
         };
         struct EventData {int key; MEVENT mouse;} static eData;
-        struct Controls {int up, left, down, right;} static control;
+        struct Controls {
+            int up, left, down, right;
+            int enter;
+        } static control;
         /* Member Variables */
         std::unique_ptr<WINDOW, WindowDeleter> window;
         std::unique_ptr<PANEL, PanelDeleter> panel;
@@ -66,9 +67,8 @@ class Screen {
 class MainMenuScreen : public Screen {
     private:
         /* Member Constants */
-        static constexpr Coordinate titleSize {6, 72};
-        static constexpr Coordinate btnSize {5, 50};
-        static constexpr Coordinate titlePos {5, (maxCols - titleSize.x) / 2};
+        static constexpr int titlePosY {5};
+        static constexpr Coordinate btnSize {5, 51};
         static constexpr Coordinate btnStartPos {14, (maxCols - btnSize.x) / 2};
         /* Member Enums */
         enum class ButtonType {
@@ -77,20 +77,20 @@ class MainMenuScreen : public Screen {
         /* Member Structs */
         struct ButtonManager {
             private:
-                std::function<void()> genClickFunction(WINDOW *win);
+                std::function<void()> genClickFunction(
+                    PANEL *panel, size_t &curScreen, int index);
                 std::function<void()> genDrawFunction(
-                    WINDOW *win, std::vector<std::string> &txt, size_t xLen);
+                    WINDOW *win, std::vector<std::string> &txt, size_t maxLen);
             public:
                 std::vector<Button> list;
                 size_t btn;
                 /* Public Methods */
-                ButtonManager(WINDOW *win, int startY, int startX, size_t &curScreen);
+                ButtonManager(PANEL *panel, int startY, int startX, size_t &curScreen);
         };
         /* Member Variables */
         ButtonManager buttons;
         /* Private Member Methods */
         void initScreen();
-        static size_t parseTxt(std::vector<std::string> &txt, std::string path);
     public:
         MainMenuScreen(size_t &curScreen);
         void drawGraphics();
