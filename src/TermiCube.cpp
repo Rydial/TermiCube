@@ -171,7 +171,7 @@ std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(
     PANEL */*panel*/, size_t &/*curScreen*/, int index)
 {
     switch(index) {
-        case static_cast<int>(ButtonType::NEWGAME):
+        case static_cast<int>(ButtonType::NEWGAME)
             return [/*win, &curScreen*/] () {
                 std::cout << "YAY";
             };
