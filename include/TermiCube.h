@@ -79,7 +79,7 @@ class MainMenuScreen : public Screen {
             private:
                 std::function<void()> genClickFunction(WINDOW *win);
                 std::function<void()> genDrawFunction(
-                    WINDOW *win, std::vector<std::string> &txt);
+                    WINDOW *win, std::vector<std::string> &txt, size_t xLen);
             public:
                 std::vector<Button> list;
                 size_t btn;
@@ -90,7 +90,7 @@ class MainMenuScreen : public Screen {
         ButtonManager buttons;
         /* Private Member Methods */
         void initScreen();
-        static void parseTxt(std::vector<std::string> &txt, std::string path);
+        static size_t parseTxt(std::vector<std::string> &txt, std::string path);
     public:
         MainMenuScreen(size_t &curScreen);
         void drawGraphics();

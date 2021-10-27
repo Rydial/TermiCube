@@ -105,7 +105,7 @@ void MainMenuScreen::initScreen()
     box(window.get(), 0 , 0);
 
     std::vector<std::string> title;
-    parseTxt(title, "resource/mainmenu/title.txt");
+    parseTxt(title, "resource/mainmenu/Title.txt");
 
     for (size_t i {0}, y {titlePos.y}, x{titlePos.x}; i < title.size(); y++, i++)
         mvwaddstr(window.get(), y, x, title[i].c_str());
@@ -118,24 +118,30 @@ void MainMenuScreen::initScreen()
         buttons.list[i].draw();
 }
 
-void MainMenuScreen::parseTxt(std::vector<std::string> &txt, std::string path)
-{
+size_t MainMenuScreen::parseTxt(std::vector<std::string> &txt, std::string path)
+{ /* If possible try to convert UTF-16 to UTF-8, or continue using two streams */
     std::ifstream file {path};
+    std::wifstream wFile {path};
 
     if (!file)
         std::cerr << "File could not be opened: " << path << '\n';
     
     std::string line;
-    // std::string newLine;
-    // const WCHAR* wc = L"Hello World" ;
-    // _bstr_t b(wc);
-    // const char* c = b;
-    // printf("Output: %s", c);
+    std::wstring wLine;
+    size_t length, maxLength {0};
     
-    while (std::getline(file, line)) {
+    while (std::getline(file, line) && std::getline(wFile, wLine)) {
+        std::cerr << "wLine: " << wcslen(wLine.c_str()) << '\n';
+        std::cerr << "Line: " << line.size() << '\n';
+        if ((length = wLine.size()) > maxLength)
+            maxLength = length;
         txt.emplace_back(line);
     }
-        
+    std::cerr << maxLength << '\n';
+    std::cerr << wcslen(L"▄  ▄ ▄▄▄ ▄   ▄   ▄▄▄▄  ▄▄  ▄   ▄ ▄▄▄") << '\n';
+    std::cerr << wcslen(L"░░░╚═╝░░░╚══════╝╚═╝░░╚═╝╚═╝░░░░░╚═╝╚═╝░╚════╝░░╚═════╝░╚═════╝░╚══════╝") << '\n';
+    std::cerr << strlen("░░░╚═╝░░░╚══════╝╚═╝░░╚═╝╚═╝░░░░░╚═╝╚═╝░╚════╝░░╚═════╝░╚═════╝░╚══════╝") << '\n';
+    return maxLength;
 }
 
 void MainMenuScreen::drawGraphics() 
@@ -147,13 +153,14 @@ void MainMenuScreen::drawGraphics()
 
 void MainMenuScreen::updateScreen()
 {
-
+    
 }
 
 
 
 void MainMenuScreen::userInput(int key)
 {   
+    
     if (key == control.up) {
         buttons.list[buttons.btn].highlight(A_NORMAL);
         buttons.btn = (buttons.btn - 1) % buttons.list.size();
@@ -182,31 +189,30 @@ MainMenuScreen::ButtonManager::ButtonManager(
     for (size_t i {0}; i < count; i++, y += 6) {
         /* Parse Button Txt Files */
         std::vector<std::string> txt;
-        parseTxt(txt, paths[i]);
+        size_t xLen {parseTxt(txt, paths[i])};
         /* Generate Button + Subwindow */
         WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
         list.emplace_back(btnWin, startY + 0, startX, btnSize.y, btnSize.x,
-            genClickFunction(win), genDrawFunction(btnWin, txt)
+            genClickFunction(win), genDrawFunction(btnWin, txt, xLen)
         );
     }
 }
 
-std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(WINDOW *win)
+std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(WINDOW */*win*/)
 {
-    return [win] () {
+    return [/*win*/] () {
         
     };
 }
 
 std::function<void()> MainMenuScreen::ButtonManager::genDrawFunction(
-    WINDOW *win, std::vector<std::string> &txt)
+    WINDOW *win, std::vector<std::string> &txt, size_t xLen)
 {
-    return [win, txt] () {
+    return [win, txt, x{(btnSize.x - xLen) / 2}] () {
         box(win, 0, 0);
 
         for (size_t i {0}; i < txt.size(); i++) {
-            mvwaddstr(win, i + 1,
-                (btnSize.x - txt[i].length()) / 2, txt[i].c_str());
+            mvwaddstr(win, i + 1, x, txt[i].c_str());
         }
         
         mvwaddstr(win, 4, 1, txt[0].c_str());
