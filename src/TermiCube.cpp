@@ -67,8 +67,7 @@ Screen::EventData Screen::eData {0, {}};
 Screen::Controls Screen::control {'w', 'a', 's', 'd'};
 
 Screen::Screen() :
-    window{newwin(
-        maxRows, maxCols,(LINES - maxRows) / 2,(COLS - maxCols) / 2)},
+    window{newwin(maxRows, maxCols, (LINES - maxRows) / 2, (COLS - maxCols) / 2)},
     panel{new_panel(window.get())}
 {
 
@@ -123,13 +122,10 @@ void MainMenuScreen::drawGraphics()
     doupdate();
 }
 
-
 void MainMenuScreen::updateScreen()
 {
 
 }
-
-
 
 void MainMenuScreen::userInput(int key)
 {   
@@ -151,17 +147,16 @@ MainMenuScreen::ButtonManager::ButtonManager(
     list{},
     btn{static_cast<size_t>(ButtonType::NEWGAME)}
 {
+    int count {static_cast<int>(ButtonType::COUNT)};
     std::vector<std::string> paths {
-        "resource/mainmenu/NewGameBtn.txt", "resource/mainmenu/LoadGameBtn.txt"
+        "resource/mainmenu/NewGameBtn.txt", "resource/mainmenu/LoadGameBtn.txt",
+        "resource/mainmenu/SettingsBtn.txt", "resource/mainmenu/CreditsBtn.txt"
     };
-    // size_t count {static_cast<size_t>(ButtonType::COUNT)};
-    size_t count {2};
-    int y {0};
 
-    for (size_t i {0}; i < count; i++, y += 6) {
+    for (int i {0}, y {0}; i < count; i++, y += 6) {
         /* Parse Button Txt Files */
         std::vector<std::string> txt;
-        size_t maxLineLen {parseUTF8(txt, paths[i])};
+        size_t maxLineLen {parseUTF8(txt, paths[static_cast<size_t>(i)])};
         /* Generate Button + Subwindow */
         WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
         list.emplace_back(btnWin, startY + 0, startX, btnSize.y, btnSize.x,
@@ -203,13 +198,10 @@ void GameScreen::drawGraphics()
 
 }
 
-
 void GameScreen::updateScreen()
 {
 
 }
-
-
 
 void GameScreen::userInput(int /*key*/)
 {
