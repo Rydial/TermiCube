@@ -14,9 +14,6 @@
 #include <functional>
 #include <iostream>
 
-class Game;
-static std::function<void(Game &)> func;
-static int *ref;
 
 class Game {
     private:
@@ -29,8 +26,6 @@ class Game {
         Game() :
             screen{1}
         {
-            ref = {&screen};
-            func = {&Game::foo};
         }
         void print() {
             std::cout << screen << '\n';
@@ -39,8 +34,8 @@ class Game {
 
 int main() {
     Game game;
-    func(game);
-    game.print();
-    *ref = 5;
+    // func(game);
+    // game.print();
+    // *ref = 5;
     game.print();
 }
