@@ -1,46 +1,56 @@
 #include "TermiCube.h"
 
 
-// int main() {
+int main() {
 
-//     GameWindow game;
+    GameWindow game;
 
-//     while(game.update() == 0);
+    while(game.update() == 0);
 
-//     return 0;
-// }
+    return 0;
+}
   
 
-#include <functional>
-#include <iostream>
+// #include <functional>
+// #include <iostream>
+// #include <memory>
 
-class Game;
-static std::function<void(Game &)> func;
-static int *ref;
+// class Game;
+// std::function<void(Game &)> func;
+// int *ref;
+// void *temp;
 
-class Game {
-    private:
-        int screen;
-        void foo()
-        {
-            screen = 2;
-        }
-    public:
-        Game() :
-            screen{1}
-        {
-            ref = {&screen};
-            func = {&Game::foo};
-        }
-        void print() {
-            std::cout << screen << '\n';
-        }
-};
+// struct GameInfo {
+//     int screen2;
+// };
 
-int main() {
-    Game game;
-    func(game);
-    game.print();
-    *ref = 5;
-    game.print();
-}
+// class Game {
+//     private:
+//         GameInfo info;
+//         int screen;
+//         void foo()
+//         {
+//             screen = 2;
+//         }
+//     public:
+//         Game() :
+//             info{21},
+//             screen{1}
+//         {
+//             ref = {&screen};
+//             func = {&Game::foo};
+//             temp = {&info};
+//         }
+//         void print() {
+//             std::cout << screen << '\n';
+//         }
+// };
+
+// int main() {
+//     Game game;
+//     func(game);
+//     game.print();
+//     *ref = 5;
+//     game.print();
+//     std::cout << ((GameInfo *) temp)->screen2 << '\n';
+// }
