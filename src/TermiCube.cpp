@@ -13,8 +13,12 @@ GameWindowSharedData::GameWindowSharedData(std::shared_ptr<GameWindowData> &gwDa
 void GameWindowSharedData::switchScreen(size_t index)
 {
     hide_panel(data->screenList[data->screen]->getPanel());
+    std::cout << "Current Index: " << data->screen;
     data->screen = index;
+    std::cout << "Current Index: " << data->screen;
     show_panel(data->screenList[data->screen]->getPanel());
+    update_panels();
+    doupdate();
 }
 
 //////////////////////////////////////////////////////////////
@@ -68,6 +72,14 @@ int GameWindow::update()
     if (key == 'q') {
         terminate();
         return 1;
+    }
+
+    if (key == KEY_DOWN) {
+        hide_panel(data->screenList[data->screen]->getPanel());
+        data->screen = 1;
+        show_panel(data->screenList[data->screen]->getPanel());
+    } else if (key == KEY_UP) {
+        data->screen = 0;
     }
 
     data->screenList[data->screen]->userInput(key);
@@ -190,8 +202,8 @@ std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(
 {
     switch(index) {
         case static_cast<int>(ButtonType::NEWGAME):
-            return [gwSData/*gwData*/] () {
-                std::cout << "YAY";
+            return [gwSData] () mutable {
+                gwSData.switchScreen(static_cast<size_t>(ScreenType::GAME));
             };
         default:
             return nullptr;
@@ -216,12 +228,14 @@ std::function<void(WINDOW *)> MainMenuScreen::ButtonManager::genDrawFunction(
 
 void GameScreen::initScreen()
 {
-    
+    box(window.get(), 0 , 0);
 }
 
 void GameScreen::drawGraphics()
 {
-
+    std::cout << "WHAT";
+    update_panels();
+    doupdate();
 }
 
 void GameScreen::updateScreen()
