@@ -15,6 +15,25 @@ Things to do:
     - Reorganize entities with a sparse-set system (like EnTT)
 */
 
+/////////////////////// Forward Declarations ///////////////////////
+
+class Screen;
+
+/////////////////////// Transfer Data Wrappers ///////////////////////
+
+struct GameWindowData {
+    size_t screen;
+    std::vector<std::unique_ptr<Screen>> screenList;
+};
+
+class GameWindowSharedData {
+    private:
+        std::shared_ptr<GameWindowData> data;
+    public:
+        GameWindowSharedData(std::shared_ptr<GameWindowData> &gwData);
+        void switchScreen(size_t index);
+};
+
 /////////////////////// Screens ///////////////////////
 
 class Screen {
@@ -37,10 +56,10 @@ class Screen {
             std::unique_ptr<WINDOW, WindowDeleter> ptr;
             int yTop, yBtm, xLeft, xRight;
             std::function<void()> click;
-            std::function<void()> draw;
+            std::function<void(WINDOW *)> draw;
             /* Public Methods */
             Button(WINDOW *win, int y, int x, int yLen, int xLen,
-                    std::function<void()> click, std::function<void()> draw);
+                    std::function<void()> click, std::function<void(WINDOW *)> draw);
             void highlight(int attrs);
         };
         struct EventData {int key; MEVENT mouse;} static eData;
@@ -78,21 +97,22 @@ class MainMenuScreen : public Screen {
         struct ButtonManager {
             private:
                 std::function<void()> genClickFunction(
-                    PANEL *panel, size_t &curScreen, int index);
-                std::function<void()> genDrawFunction(
-                    WINDOW *win, std::vector<std::string> &txt, size_t maxLen);
+                    GameWindowSharedData &gwSData, int index);
+                std::function<void(WINDOW *)> genDrawFunction(
+                    std::vector<std::string> &txt, size_t maxLen);
             public:
                 std::vector<Button> list;
                 size_t btn;
                 /* Public Methods */
-                ButtonManager(PANEL *panel, int startY, int startX, size_t &curScreen);
+                ButtonManager(WINDOW *win, int startY, int startX,
+                        std::shared_ptr<GameWindowData> &gwData);
         };
         /* Member Variables */
         ButtonManager buttons;
         /* Private Member Methods */
         void initScreen();
     public:
-        MainMenuScreen(size_t &curScreen);
+        MainMenuScreen(std::shared_ptr<GameWindowData> &gwData);
         void drawGraphics();
         void updateScreen();
         void userInput(int key);
@@ -116,7 +136,7 @@ class GameScreen : public Screen {
         void initScreen();
     public:
         /* Inherit Constructor from Screen */
-        using Screen::Screen;
+        GameScreen();
         void drawGraphics();
         void updateScreen();
         void userInput(int key);
@@ -126,8 +146,7 @@ class GameScreen : public Screen {
 
 class GameWindow {
     private:
-        size_t screen;
-        std::vector<std::unique_ptr<Screen>> screenList;
+        std::shared_ptr<GameWindowData> data;
         /* Private Methods */
         void initCurses();
         void initScreens();

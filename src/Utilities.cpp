@@ -28,17 +28,17 @@ size_t parseUTF8(std::vector<std::string> &dst, std::string path)
 
                 for (size_t j {0}; j < 8 && byte.test(7 - j); j++, bits++);
 
-                if (bits == 3 || bits == 4) {
-                    i += bits - 1;
-                } else if (bits == 2) {
-                    std::bitset<8> nextByte {static_cast<unsigned long long>(line[++i])};
+                if (2 <= bits && bits <= 4) {
+                    for (size_t k {0}, l {bits - 1}; k < l; k++) {
+                        std::bitset<8> nextByte {static_cast<unsigned long long>(line[++i])};
 
-                    if (!nextByte.test(7) || nextByte.test(6)) {
-                        std::cerr << "No continuation byte found\n";
-                        exit(1);
+                        if (!nextByte.test(7) || nextByte.test(6)) {
+                            std::cerr << "No continuation byte found\n";
+                            exit(1);
+                        }
                     }
+                    len++;
                 }
-                len++;
             }
         }
         dst.emplace_back(line);

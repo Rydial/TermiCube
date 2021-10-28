@@ -4,9 +4,25 @@
 #include "Utilites.h"
 
 
+GameWindowSharedData::GameWindowSharedData(std::shared_ptr<GameWindowData> &gwData) :
+    data{gwData}
+{
+
+}
+
+void GameWindowSharedData::switchScreen(size_t index)
+{
+    hide_panel(data->screenList[data->screen]->getPanel());
+    data->screen = index;
+    show_panel(data->screenList[data->screen]->getPanel());
+    update_panels();
+    doupdate();
+}
+
+//////////////////////////////////////////////////////////////
+
 GameWindow::GameWindow() :
-    screen{0},
-    screenList{}
+    data{std::make_shared<GameWindowData>(GameWindowData{0, {}})}
 {
     initCurses();
     initScreens();
@@ -31,11 +47,11 @@ void GameWindow::initScreens()
 {
     /* unique_ptr are not copyable, and initializer lists only use copy
     semantics so emplace_back had to be used instead */
-    screenList.emplace_back(std::make_unique<MainMenuScreen>(screen));
-    screenList.emplace_back(std::make_unique<GameScreen>());
+    data->screenList.emplace_back(std::make_unique<MainMenuScreen>(data));
+    data->screenList.emplace_back(std::make_unique<GameScreen>());
     /* Hide every screen except for starting screen (Main Menu) */
-    for (size_t i {1}; i < screenList.size(); i++)
-        hide_panel(screenList[i]->getPanel());
+    for (size_t i {1}; i < data->screenList.size(); i++)
+        hide_panel(data->screenList[i]->getPanel());
         
     update_panels();
     doupdate();
@@ -54,9 +70,9 @@ int GameWindow::update()
         return 1;
     }
 
-    screenList[screen]->userInput(key);
-    screenList[screen]->updateScreen();
-    screenList[screen]->drawGraphics();
+    data->screenList[data->screen]->userInput(key);
+    data->screenList[data->screen]->updateScreen();
+    data->screenList[data->screen]->drawGraphics();
 
     return 0;
 }
@@ -75,7 +91,7 @@ Screen::Screen() :
 }
 
 Screen::Button::Button(WINDOW *win, int y, int x, int yLen, int xLen,
-        std::function<void()> click, std::function<void()> draw) :
+        std::function<void()> click, std::function<void(WINDOW *)> draw) :
     ptr{win},
     yTop{y}, yBtm{y + yLen}, xLeft{x}, xRight{x + xLen},
     click{click}, draw{draw}
@@ -86,14 +102,14 @@ Screen::Button::Button(WINDOW *win, int y, int x, int yLen, int xLen,
 void Screen::Button::highlight(int attrs)
 {
     wattron(ptr.get(), attrs);
-    draw();
+    draw(ptr.get());
     wattroff(ptr.get(), attrs);
 }
 
 //////////////////////////////////////////////////////////////
 
-MainMenuScreen::MainMenuScreen(size_t &curScreen) :
-    buttons{panel.get(), btnStartPos.y, btnStartPos.x, curScreen}
+MainMenuScreen::MainMenuScreen(std::shared_ptr<GameWindowData> &gwData) :
+    buttons{window.get(), btnStartPos.y, btnStartPos.x, gwData}
 {
     initScreen();
 }
@@ -114,7 +130,7 @@ void MainMenuScreen::initScreen()
 
     /* Draw rest of the buttons */
     for (size_t i {1}; i < buttons.list.size(); i++)
-        buttons.list[i].draw();
+        buttons.list[i].draw(buttons.list[i].ptr.get());
 }
 
 void MainMenuScreen::drawGraphics() 
@@ -146,7 +162,7 @@ void MainMenuScreen::userInput(int key)
 }
 
 MainMenuScreen::ButtonManager::ButtonManager(
-  PANEL *panel, int startY, int startX, size_t &curScreen) :
+  WINDOW *win, int startY, int startX, std::shared_ptr<GameWindowData> &gwData) :
     list{},
     btn{static_cast<size_t>(ButtonType::NEWGAME)}
 {
@@ -161,30 +177,31 @@ MainMenuScreen::ButtonManager::ButtonManager(
         std::vector<std::string> txt;
         size_t maxLineLen {parseUTF8(txt, paths[static_cast<size_t>(i)])};
         /* Generate Button + Subwindow */
-        WINDOW *btnWin {derwin(panel_window(panel), btnSize.y, btnSize.x, startY + y, startX)};
+        WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
+        GameWindowSharedData gwSData {gwData};
         list.emplace_back(btnWin, startY + y, startX, btnSize.y, btnSize.x,
-            genClickFunction(panel, curScreen, i), genDrawFunction(btnWin, txt, maxLineLen)
+            genClickFunction(gwSData, i), genDrawFunction(txt, maxLineLen)
         );
     }
 }
 
 std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(
-    PANEL */*panel*/, size_t &/*curScreen*/, int index)
+    GameWindowSharedData &gwSData, int index)
 {
     switch(index) {
         case static_cast<int>(ButtonType::NEWGAME):
-            return [/*win, &curScreen*/] () {
-                std::cout << "YAY";
+            return [gwSData] () mutable {
+                gwSData.switchScreen(static_cast<size_t>(ScreenType::GAME));
             };
         default:
             return nullptr;
     }
 }
 
-std::function<void()> MainMenuScreen::ButtonManager::genDrawFunction(
-    WINDOW *win, std::vector<std::string> &txt, size_t maxLen)
+std::function<void(WINDOW *)> MainMenuScreen::ButtonManager::genDrawFunction(
+    std::vector<std::string> &txt, size_t maxLen)
 {
-    return [win, txt, maxLen] () {
+    return [txt, maxLen] (WINDOW *win) {
         box(win, 0, 0);
 
         for (size_t i {0}; i < txt.size(); i++)
@@ -197,14 +214,20 @@ std::function<void()> MainMenuScreen::ButtonManager::genDrawFunction(
 
 //////////////////////////////////////////////////////////////
 
+GameScreen::GameScreen()
+{
+    initScreen();
+}
+
 void GameScreen::initScreen()
 {
-    
+    box(window.get(), 0 , 0);
 }
 
 void GameScreen::drawGraphics()
 {
-
+    update_panels();
+    doupdate();
 }
 
 void GameScreen::updateScreen()
