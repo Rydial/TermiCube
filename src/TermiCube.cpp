@@ -25,14 +25,14 @@ void GameWindowSharedData::switchScreen(size_t index)
 
 //////////////////////////////////////////////////////////////
 
-GameWindow::GameWindow() :
+TCWindow::TermiCubeWindow() :
     data{std::make_shared<GameWindowData>(GameWindowData{0, {}})}
 {
     initCurses();
     initScreens();
 }
 
-void GameWindow::initCurses()
+void TCWindow::initCurses()
 {
     setlocale(LC_ALL, ""); /* Set terminal locale */
     initscr(); /* Start curses mode */
@@ -43,12 +43,14 @@ void GameWindow::initCurses()
     curs_set(0); /* Set cursor invisible */
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
 
+    std::cerr << curses_version();
+
     /* Enable Mouse Events */
     // mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
     // keypad(stdscr, TRUE);
 }
 
-void GameWindow::initScreens()
+void TCWindow::initScreens()
 {
     /* unique_ptr are not copyable, and initializer lists only use copy
     semantics so emplace_back had to be used instead */
@@ -62,11 +64,11 @@ void GameWindow::initScreens()
     doupdate();
 }
 
-void GameWindow::terminate() {
+void TCWindow::terminate() {
     endwin();
 }
 
-int GameWindow::update() 
+int TCWindow::update() 
 {
     int key {getch()};
 
@@ -218,14 +220,30 @@ std::function<void(WINDOW *)> MainMenuScreen::ButtonManager::genDrawFunction(
 
 //////////////////////////////////////////////////////////////
 
-GameScreen::GameScreen()
+GameScreen::GameScreen() :
+    subwins{}
 {
+    /* Generate Subwindows */
+    subwins.emplace_back(derwin(window.get(), 5, 40, 4, 4));
+    subwins.emplace_back(derwin(window.get(),
+        hotbarSize.y, hotbarSize.x, 30, (maxCols - hotbarSize.x) / 2));
+
     initScreen();
 }
 
 void GameScreen::initScreen()
 {
+    /* Screen Border */
     box(window.get(), 0 , 0);
+    /* Main Subwindow */
+
+    /* Hotbar Subwindow */
+    WINDOW *hotbarPtr {subwins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
+    box(hotbarPtr, 0, 0);
+
+    for (size_t x {6}; x < hotbarSize.x; x += 6) {
+        mvwvline(hotbarPtr, 1, x, '│', 3);
+    }    
 }
 
 void GameScreen::drawGraphics()

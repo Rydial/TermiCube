@@ -135,6 +135,15 @@ class MainMenuScreen : public Screen {
 
 class GameScreen : public Screen {
     private:
+        /* Member Constants */
+        static constexpr Coordinate mainSize {0, 0};
+        static constexpr Coordinate hotbarSize {5, 61};
+        /* Member Enums */
+        enum class SubWindowType {
+            MAIN, HOTBAR, COUNT
+        };
+        /* Member Variables */
+        std::vector<std::unique_ptr<WINDOW, WindowDeleter>> subwins;
         /* Private Member Methods */
         void initScreen();
     public:
@@ -147,7 +156,7 @@ class GameScreen : public Screen {
 
 /////////////////////// Game Window ///////////////////////
 
-class GameWindow {
+typedef class TermiCubeWindow {
     private:
         std::shared_ptr<GameWindowData> data;
         /* Private Methods */
@@ -155,9 +164,9 @@ class GameWindow {
         void initScreens();
         void terminate();
     public:
-        GameWindow();
+        TermiCubeWindow();
         int update();
-};
+} TCWindow;
 
 
 #endif // TERMICUBE_H
