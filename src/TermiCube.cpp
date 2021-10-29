@@ -75,8 +75,6 @@ int GameWindow::update()
         return 1;
     }
 
-    mvwprintw(panel_window(
-        data->screenList[data->screen]->getPanel()), 12, 10, "%d", key);
     data->screenList[data->screen]->userInput(key);
     data->screenList[data->screen]->updateScreen();
     data->screenList[data->screen]->drawGraphics();
@@ -142,8 +140,7 @@ void MainMenuScreen::initScreen()
 
 void MainMenuScreen::drawGraphics() 
 {
-	update_panels();
-    doupdate();
+
 }
 
 void MainMenuScreen::updateScreen()
@@ -233,8 +230,7 @@ void GameScreen::initScreen()
 
 void GameScreen::drawGraphics()
 {
-    update_panels();
-    doupdate();
+
 }
 
 void GameScreen::updateScreen()

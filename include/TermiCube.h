@@ -26,14 +26,6 @@ struct GameWindowData {
     std::vector<std::unique_ptr<Screen>> screenList;
 };
 
-// class GameWindowSharedData {
-//     private:
-//         std::shared_ptr<GameWindowData> data;
-//     public:
-//         GameWindowSharedData(std::shared_ptr<GameWindowData> &gwData);
-//         void switchScreen(size_t index);
-// };
-
 class GameWindowSharedData {
     private:
         /* Weak Ptr instead of Shared Ptr to prevent self-referencing */
