@@ -26,9 +26,18 @@ struct GameWindowData {
     std::vector<std::unique_ptr<Screen>> screenList;
 };
 
+// class GameWindowSharedData {
+//     private:
+//         std::shared_ptr<GameWindowData> data;
+//     public:
+//         GameWindowSharedData(std::shared_ptr<GameWindowData> &gwData);
+//         void switchScreen(size_t index);
+// };
+
 class GameWindowSharedData {
     private:
-        std::shared_ptr<GameWindowData> data;
+        /* Weak Ptr instead of Shared Ptr to prevent self-referencing */
+        std::weak_ptr<GameWindowData> data;
     public:
         GameWindowSharedData(std::shared_ptr<GameWindowData> &gwData);
         void switchScreen(size_t index);
@@ -52,21 +61,23 @@ class Screen {
         /* Member Structs */
         struct Coordinate {int y, x;};
         struct DisplayItem {};
-        struct Button {
-            std::unique_ptr<WINDOW, WindowDeleter> ptr;
-            int yTop, yBtm, xLeft, xRight;
-            std::function<void()> click;
-            std::function<void(WINDOW *)> draw;
-            /* Public Methods */
-            Button(WINDOW *win, int y, int x, int yLen, int xLen,
-                    std::function<void()> click, std::function<void(WINDOW *)> draw);
-            void highlight(int attrs);
-        };
         struct EventData {int key; MEVENT mouse;} static eData;
         struct Controls {
             int up, left, down, right;
             int enter;
         } static control;
+        /* Member Classes */
+        class Button {
+            public:
+                std::unique_ptr<WINDOW, WindowDeleter> ptr;
+                int yTop, yBtm, xLeft, xRight;
+                std::function<void()> click;
+                std::function<void(WINDOW *)> draw;
+                /* Public Methods */
+                Button(WINDOW *win, int y, int x, int yLen, int xLen,
+                        std::function<void()> click, std::function<void(WINDOW *)> draw);
+                void highlight(int attrs);
+        };
         /* Member Variables */
         std::unique_ptr<WINDOW, WindowDeleter> window;
         std::unique_ptr<PANEL, PanelDeleter> panel;

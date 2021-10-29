@@ -11,46 +11,32 @@ int main() {
 }
   
 
-// #include <functional>
 // #include <iostream>
 // #include <memory>
+// #include <functional>
 
-// class Game;
-// std::function<void(Game &)> func;
-// int *ref;
-// void *temp;
+// class Button {
+
+// };
 
 // struct GameInfo {
-//     int screen2;
+//     Button btn;
 // };
 
-// class Game {
-//     private:
-//         GameInfo info;
-//         int screen;
-//         void foo()
-//         {
-//             screen = 2;
-//         }
+// class SharedGameInfo {
 //     public:
-//         Game() :
-//             info{21},
-//             screen{1}
-//         {
-//             ref = {&screen};
-//             func = {&Game::foo};
-//             temp = {&info};
-//         }
-//         void print() {
-//             std::cout << screen << '\n';
-//         }
+//         std::shared_ptr<GameInfo> data;
 // };
 
-// int main() {
+// class Game{
+//     private:
+//         GameInfo data;
+//     public:
+//         Game() : data{} {}
+// };
+
+// int main()
+// {
 //     Game game;
-//     func(game);
-//     game.print();
-//     *ref = 5;
-//     game.print();
-//     std::cout << ((GameInfo *) temp)->screen2 << '\n';
+//     std::cout << sizeof(game) << '\n';
 // }

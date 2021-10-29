@@ -12,11 +12,15 @@ GameWindowSharedData::GameWindowSharedData(std::shared_ptr<GameWindowData> &gwDa
 
 void GameWindowSharedData::switchScreen(size_t index)
 {
-    hide_panel(data->screenList[data->screen]->getPanel());
-    data->screen = index;
-    show_panel(data->screenList[data->screen]->getPanel());
-    update_panels();
-    doupdate();
+    auto gwData {data.lock()};
+    /* Checks if object is still available */
+    if (gwData) {
+        hide_panel(gwData->screenList[gwData->screen]->getPanel());
+        gwData->screen = index;
+        show_panel(gwData->screenList[gwData->screen]->getPanel());
+        update_panels();
+        doupdate();
+    }
 }
 
 //////////////////////////////////////////////////////////////
@@ -34,6 +38,7 @@ void GameWindow::initCurses()
     initscr(); /* Start curses mode */
     start_color(); /* Enable color functionality */
     raw(); /* Disable line buffering */
+    // cbreak();
     noecho(); /* Disable input echoing */
     curs_set(0); /* Set cursor invisible */
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
@@ -70,6 +75,8 @@ int GameWindow::update()
         return 1;
     }
 
+    mvwprintw(panel_window(
+        data->screenList[data->screen]->getPanel()), 12, 10, "%d", key);
     data->screenList[data->screen]->userInput(key);
     data->screenList[data->screen]->updateScreen();
     data->screenList[data->screen]->drawGraphics();
@@ -96,7 +103,7 @@ Screen::Button::Button(WINDOW *win, int y, int x, int yLen, int xLen,
     yTop{y}, yBtm{y + yLen}, xLeft{x}, xRight{x + xLen},
     click{click}, draw{draw}
 {
-
+    
 }
 
 void Screen::Button::highlight(int attrs)
@@ -177,8 +184,8 @@ MainMenuScreen::ButtonManager::ButtonManager(
         std::vector<std::string> txt;
         size_t maxLineLen {parseUTF8(txt, paths[static_cast<size_t>(i)])};
         /* Generate Button + Subwindow */
-        WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
         GameWindowSharedData gwSData {gwData};
+        WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
         list.emplace_back(btnWin, startY + y, startX, btnSize.y, btnSize.x,
             genClickFunction(gwSData, i), genDrawFunction(txt, maxLineLen)
         );
