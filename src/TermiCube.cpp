@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <fstream>
 #include "TermiCube.h"
 #include "Utilites.h"
 
@@ -29,6 +30,7 @@ TCWindow::TermiCubeWindow() :
     data{std::make_shared<GameWindowData>(GameWindowData{0, {}})}
 {
     initCurses();
+    initColors();
     initScreens();
 }
 
@@ -36,18 +38,20 @@ void TCWindow::initCurses()
 {
     setlocale(LC_ALL, ""); /* Set terminal locale */
     initscr(); /* Start curses mode */
-    start_color(); /* Enable color functionality */
     raw(); /* Disable line buffering */
     // cbreak();
     noecho(); /* Disable input echoing */
     curs_set(0); /* Set cursor invisible */
-    init_pair(1, COLOR_GREEN, COLOR_BLACK);
-
-    std::cerr << curses_version();
 
     /* Enable Mouse Events */
     // mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
     // keypad(stdscr, TRUE);
+}
+
+void TCWindow::initColors()
+{
+    start_color(); /* Enable color functionality */
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
 }
 
 void TCWindow::initScreens()
@@ -89,6 +93,12 @@ int TCWindow::update()
 /* Static Variable Initialization */
 Screen::EventData Screen::eData {0, {}};
 Screen::Controls Screen::control {'w', 'a', 's', 'd', '\n'};
+std::unordered_map<std::wstring, cchar_t> Screen::wchars {};
+
+void Screen::drawBorder()
+{
+    wborder_set(window.get(), 0, 0, 0, 0, 0, 0, 0, 0);
+}
 
 Screen::Screen() :
     window{newwin(maxRows, maxCols, (LINES - maxRows) / 2, (COLS - maxCols) / 2)},
@@ -118,13 +128,14 @@ void Screen::Button::highlight(int attrs)
 MainMenuScreen::MainMenuScreen(std::shared_ptr<GameWindowData> &gwData) :
     buttons{window.get(), btnStartPos.y, btnStartPos.x, gwData}
 {
+    initWideChars();
     initScreen();
 }
 
 void MainMenuScreen::initScreen()
 {
     /* Title Creation */
-    box(window.get(), 0 , 0);
+    drawBorder();
 
     std::vector<std::string> title;
     size_t xLen {parseUTF8(title, "resource/mainmenu/title.txt")};
@@ -138,6 +149,21 @@ void MainMenuScreen::initScreen()
     /* Draw rest of the buttons */
     for (size_t i {1}; i < buttons.list.size(); i++)
         buttons.list[i].draw(buttons.list[i].ptr.get());
+}
+
+void MainMenuScreen::initWideChars()
+{
+    std::ifstream file {"resource/general/WideChars.txt"};
+    std::string mbChr;
+    wchar_t wChr[5];
+
+    while (file >> mbChr) {
+        mbstowcs(wChr, mbChr.c_str(), 5);
+        std::cout << mbstowcs(nullptr, mbChr.c_str(), 0) << " ";
+        cchar_t cChr {};
+        setcchar(&cChr, wChr, 0, 0, nullptr);
+        wchars.emplace(std::wstring{wChr}, cChr);
+    }
 }
 
 void MainMenuScreen::drawGraphics() 
@@ -234,7 +260,7 @@ GameScreen::GameScreen() :
 void GameScreen::initScreen()
 {
     /* Screen Border */
-    box(window.get(), 0 , 0);
+    drawBorder();
     /* Main Subwindow */
 
     /* Hotbar Subwindow */
@@ -243,6 +269,7 @@ void GameScreen::initScreen()
 
     for (size_t x {6}; x < hotbarSize.x; x += 6) {
         // mvwvline(hotbarPtr, 1, x, '│', 3);
+        // 
     }    
 }
 
