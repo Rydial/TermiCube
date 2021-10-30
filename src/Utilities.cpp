@@ -1,12 +1,8 @@
-#define NCURSES_WIDECHAR 1
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <bitset>
 #include <vector>
-#include <unordered_map>
-#include <panel.h>
 #include "Utilites.h"
 
 size_t parseUTF8(std::vector<std::string> &dst, std::string path)

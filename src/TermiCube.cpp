@@ -97,7 +97,8 @@ std::unordered_map<std::wstring, cchar_t> Screen::wchars {};
 
 void Screen::drawBorder()
 {
-    wborder_set(window.get(), 0, 0, 0, 0, 0, 0, 0, 0);
+    wborder_set(window.get(), &wchars[L"║"], &wchars[L"║"], &wchars[L"═"],
+    &wchars[L"═"], &wchars[L"╔"], &wchars[L"╗"], &wchars[L"╚"], &wchars[L"╝"]);
 }
 
 Screen::Screen() :
@@ -267,10 +268,9 @@ void GameScreen::initScreen()
     WINDOW *hotbarPtr {subwins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
     box(hotbarPtr, 0, 0);
 
-    for (size_t x {6}; x < hotbarSize.x; x += 6) {
-        // mvwvline(hotbarPtr, 1, x, '│', 3);
-        // 
-    }    
+    for (size_t x {7}; x < hotbarSize.x - 1; x += 7) {
+        mvwvline_set(hotbarPtr, 1, x, &wchars[L"║"], 3);
+    }
 }
 
 void GameScreen::drawGraphics()

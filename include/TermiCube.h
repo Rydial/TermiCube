@@ -2,7 +2,8 @@
 #define TERMICUBE_H
 
 /* Enables ncurses wide character support */
-#define NCURSES_WIDECHAR 1
+#define _XOPEN_SOURCE_EXTENDED
+// #define NCURSES_WIDECHAR 1
 
 #include <vector>
 #include <memory>
@@ -151,7 +152,7 @@ class GameScreen : public Screen {
     private:
         /* Member Constants */
         static constexpr Coordinate mainSize {0, 0};
-        static constexpr Coordinate hotbarSize {5, 61};
+        static constexpr Coordinate hotbarSize {5, 64};
         /* Member Enums */
         enum class SubWindowType {
             MAIN, HOTBAR, COUNT
