@@ -242,7 +242,7 @@ void GameScreen::initScreen()
     box(hotbarPtr, 0, 0);
 
     for (size_t x {6}; x < hotbarSize.x; x += 6) {
-        mvwvline(hotbarPtr, 1, x, '│', 3);
+        // mvwvline(hotbarPtr, 1, x, '│', 3);
     }    
 }
 
