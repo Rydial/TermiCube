@@ -1,10 +1,15 @@
 #ifndef TERMICUBE_H
 #define TERMICUBE_H
 
+/* Enables ncurses wide character support */
+#define NCURSES_WIDECHAR 1
+
 #include <vector>
 #include <memory>
 #include <functional>
-#include <panel.h>
+// #include <panel.h>
+// // #include <ncurses/panel.h>
+#include <ncursesw/panel.h>
 
 /*
 Things to Remember:
@@ -40,9 +45,10 @@ class GameWindowSharedData {
 class Screen {
     protected:
         /* Member Constants */
-        static constexpr int maxRows {41}, maxCols {81};
-        /* Need a custom deleter function to use unique_ptr with an incomplete type */
-        /* Later on replace these with a pimpl-idiom */
+        static constexpr int maxRows {42}, maxCols {82};
+        static const std::vector<std::vector<cchar_t>> wChars;
+        /* Need a custom deleter function to use unique_ptr with an incomplete type
+           Later on replace these with a pimpl-idiom */
         struct PanelDeleter {void operator()(PANEL *ptr) {del_panel(ptr);}};
         struct WindowDeleter {void operator()(WINDOW *ptr) {delwin(ptr);}};
         /* Member Enums */
@@ -50,14 +56,17 @@ class Screen {
             /* Follow the order of emplace_back in screenList */ 
             MAINMENU, GAME
         };
+        enum class WideCharType { /* Wide Char Width Type */
+            SINGLE, DOUBLE
+        };
         /* Member Structs */
         struct Coordinate {int y, x;};
         struct DisplayItem {};
-        struct EventData {int key; MEVENT mouse;} static eData;
+        struct EventData {int key; MEVENT mouse;};
         struct Controls {
             int up, left, down, right;
             int enter;
-        } static control;
+        };
         /* Member Classes */
         class Button {
             public:
@@ -70,11 +79,15 @@ class Screen {
                         std::function<void()> click, std::function<void(WINDOW *)> draw);
                 void highlight(int attrs);
         };
+        /* Static Member Variables */
+        static EventData eData;
+        static Controls control;
         /* Member Variables */
         std::unique_ptr<WINDOW, WindowDeleter> window;
         std::unique_ptr<PANEL, PanelDeleter> panel;
         /* Private Methods */
         virtual void initScreen() = 0;
+        void drawBorder();
     public:
         Screen(); /* Constructor */
         virtual ~Screen() = default; /* Virtual Destructor */
@@ -90,7 +103,7 @@ class MainMenuScreen : public Screen {
     private:
         /* Member Constants */
         static constexpr int titlePosY {5};
-        static constexpr Coordinate btnSize {5, 51};
+        static constexpr Coordinate btnSize {5, 50};
         static constexpr Coordinate btnStartPos {14, (maxCols - btnSize.x) / 2};
         /* Member Enums */
         enum class ButtonType {
@@ -161,6 +174,8 @@ typedef class TermiCubeWindow {
         std::shared_ptr<GameWindowData> data;
         /* Private Methods */
         void initCurses();
+        void initColors();
+        void initWideChars();
         void initScreens();
         void terminate();
     public:

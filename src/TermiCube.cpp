@@ -29,6 +29,8 @@ TCWindow::TermiCubeWindow() :
     data{std::make_shared<GameWindowData>(GameWindowData{0, {}})}
 {
     initCurses();
+    initColors();
+    initWideChars();
     initScreens();
 }
 
@@ -36,18 +38,25 @@ void TCWindow::initCurses()
 {
     setlocale(LC_ALL, ""); /* Set terminal locale */
     initscr(); /* Start curses mode */
-    start_color(); /* Enable color functionality */
     raw(); /* Disable line buffering */
     // cbreak();
     noecho(); /* Disable input echoing */
     curs_set(0); /* Set cursor invisible */
-    init_pair(1, COLOR_GREEN, COLOR_BLACK);
-
-    std::cerr << curses_version();
 
     /* Enable Mouse Events */
     // mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
     // keypad(stdscr, TRUE);
+}
+
+void TCWindow::initColors()
+{
+    start_color(); /* Enable color functionality */
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+}
+
+void TCWindow::initWideChars()
+{
+    // setcchar()
 }
 
 void TCWindow::initScreens()
@@ -90,6 +99,11 @@ int TCWindow::update()
 Screen::EventData Screen::eData {0, {}};
 Screen::Controls Screen::control {'w', 'a', 's', 'd', '\n'};
 
+void Screen::drawBorder()
+{
+    wborder_set(window.get(), 0, 0, 0, 0, 0, 0, 0, 0);
+}
+
 Screen::Screen() :
     window{newwin(maxRows, maxCols, (LINES - maxRows) / 2, (COLS - maxCols) / 2)},
     panel{new_panel(window.get())}
@@ -124,7 +138,7 @@ MainMenuScreen::MainMenuScreen(std::shared_ptr<GameWindowData> &gwData) :
 void MainMenuScreen::initScreen()
 {
     /* Title Creation */
-    box(window.get(), 0 , 0);
+    drawBorder();
 
     std::vector<std::string> title;
     size_t xLen {parseUTF8(title, "resource/mainmenu/title.txt")};
@@ -234,7 +248,7 @@ GameScreen::GameScreen() :
 void GameScreen::initScreen()
 {
     /* Screen Border */
-    box(window.get(), 0 , 0);
+    drawBorder();
     /* Main Subwindow */
 
     /* Hotbar Subwindow */
@@ -242,7 +256,8 @@ void GameScreen::initScreen()
     box(hotbarPtr, 0, 0);
 
     for (size_t x {6}; x < hotbarSize.x; x += 6) {
-        mvwvline(hotbarPtr, 1, x, '│', 3);
+        // mvwvline(hotbarPtr, 1, x, '│', 3);
+        // 
     }    
 }
 
