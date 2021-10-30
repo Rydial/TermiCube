@@ -7,9 +7,8 @@
 #include <vector>
 #include <memory>
 #include <functional>
-// #include <panel.h>
-// // #include <ncurses/panel.h>
-#include <ncursesw/panel.h>
+#include <unordered_map>
+#include <panel.h>
 
 /*
 Things to Remember:
@@ -44,13 +43,13 @@ class GameWindowSharedData {
 
 class Screen {
     protected:
-        /* Member Constants */
-        static constexpr int maxRows {42}, maxCols {82};
-        static const std::vector<std::vector<cchar_t>> wChars;
         /* Need a custom deleter function to use unique_ptr with an incomplete type
            Later on replace these with a pimpl-idiom */
         struct PanelDeleter {void operator()(PANEL *ptr) {del_panel(ptr);}};
         struct WindowDeleter {void operator()(WINDOW *ptr) {delwin(ptr);}};
+
+        /* Member Constants */
+        static constexpr int maxRows {42}, maxCols {82};
         /* Member Enums */
         enum class ScreenType {
             /* Follow the order of emplace_back in screenList */ 
@@ -82,6 +81,7 @@ class Screen {
         /* Static Member Variables */
         static EventData eData;
         static Controls control;
+        static std::unordered_map<std::wstring, cchar_t> wchars;
         /* Member Variables */
         std::unique_ptr<WINDOW, WindowDeleter> window;
         std::unique_ptr<PANEL, PanelDeleter> panel;
@@ -127,6 +127,7 @@ class MainMenuScreen : public Screen {
         ButtonManager buttons;
         /* Private Member Methods */
         void initScreen();
+        void initWideChars();
     public:
         MainMenuScreen(std::shared_ptr<GameWindowData> &gwData);
         void drawGraphics();
