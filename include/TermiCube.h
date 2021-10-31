@@ -2,7 +2,7 @@
 #define TERMICUBE_H
 
 /* Enables ncurses wide character support */
-#define _XOPEN_SOURCE_EXTENDED
+#define _XOPEN_SOURCE_EXTENDED 1
 // #define NCURSES_WIDECHAR 1
 
 #include <vector>
@@ -50,14 +50,11 @@ class Screen {
         struct WindowDeleter {void operator()(WINDOW *ptr) {delwin(ptr);}};
 
         /* Member Constants */
-        static constexpr int maxRows {42}, maxCols {82};
+        static constexpr int maxRows {42}, maxCols {84};
         /* Member Enums */
         enum class ScreenType {
             /* Follow the order of emplace_back in screenList */ 
             MAINMENU, GAME
-        };
-        enum class WideCharType { /* Wide Char Width Type */
-            SINGLE, DOUBLE
         };
         /* Member Structs */
         struct Coordinate {int y, x;};
@@ -151,7 +148,7 @@ class MainMenuScreen : public Screen {
 class GameScreen : public Screen {
     private:
         /* Member Constants */
-        static constexpr Coordinate mainSize {0, 0};
+        static constexpr Coordinate mainSize {28, 41};
         static constexpr Coordinate hotbarSize {5, 64};
         /* Member Enums */
         enum class SubWindowType {

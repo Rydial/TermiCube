@@ -52,6 +52,7 @@ void TCWindow::initColors()
 {
     start_color(); /* Enable color functionality */
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    init_pair(2, COLOR_BLUE, COLOR_BLACK);
 }
 
 void TCWindow::initScreens()
@@ -154,13 +155,12 @@ void MainMenuScreen::initScreen()
 
 void MainMenuScreen::initWideChars()
 {
-    std::ifstream file {"resource/general/WideChars.txt"};
+    std::ifstream file {"resource/general/Unicode.txt"};
     std::string mbChr;
     wchar_t wChr[5];
 
     while (file >> mbChr) {
         mbstowcs(wChr, mbChr.c_str(), 5);
-        std::cout << mbstowcs(nullptr, mbChr.c_str(), 0) << " ";
         cchar_t cChr {};
         setcchar(&cChr, wChr, 0, 0, nullptr);
         wchars.emplace(std::wstring{wChr}, cChr);
@@ -275,7 +275,9 @@ void GameScreen::initScreen()
 
 void GameScreen::drawGraphics()
 {
-
+    mvwhline_set(window.get(), 1, 1, &wchars[L"🌲"], 41);
+    mvwvline_set(window.get(), 2, 1, &wchars[L"🌲"], 28);
+    wrefresh(window.get());
 }
 
 void GameScreen::updateScreen()
