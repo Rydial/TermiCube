@@ -251,9 +251,9 @@ GameScreen::GameScreen() :
     subwins{}
 {
     /* Generate Subwindows */
-    subwins.emplace_back(derwin(window.get(), 5, 40, 4, 4));
-    subwins.emplace_back(derwin(window.get(),
-        hotbarSize.y, hotbarSize.x, 30, (maxCols - hotbarSize.x) / 2));
+    subwins.emplace_back(derwin(window.get(), mainSize.y, mainSize.x, 1, 1));
+    subwins.emplace_back(derwin(window.get(), hpBarSize.y, hpBarSize.x,
+        mainSize.y + 1, maxCols - hpBarSize.x - 1));
 
     initScreen();
 }
@@ -262,22 +262,28 @@ void GameScreen::initScreen()
 {
     /* Screen Border */
     drawBorder();
+    mvwadd_wch(window.get(), mainSize.y, 0, &wchars[L"╠"]);
+    mvwhline_set(window.get(), mainSize.y, 1, &wchars[L"═"], mainSize.x);
+    mvwadd_wch(window.get(), mainSize.y, maxCols - 1, &wchars[L"╣"]);
     /* Main Subwindow */
 
-    /* Hotbar Subwindow */
-    WINDOW *hotbarPtr {subwins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
-    box(hotbarPtr, 0, 0);
+    /* Healthbar Subwindow */
+    WINDOW *hpBarPtr {subwins[static_cast<size_t>(SubWindowType::HPBAR)].get()};
+    box(hpBarPtr, 0, 0);
+    touchwin(hpBarPtr);
+    wrefresh(hpBarPtr);
 
-    for (size_t x {7}; x < hotbarSize.x - 1; x += 7) {
-        mvwvline_set(hotbarPtr, 1, x, &wchars[L"║"], 3);
-    }
+    // for (size_t x {7}; x < hotbarSize.x - 1; x += 7) {
+    //     mvwvline_set(hotbarPtr, 1, x, &wchars[L"║"], 3);
+    // }
 }
 
 void GameScreen::drawGraphics()
 {
-    mvwhline_set(window.get(), 1, 1, &wchars[L"🌲"], 41);
-    mvwvline_set(window.get(), 2, 1, &wchars[L"🌲"], 28);
-    wrefresh(window.get());
+//     WINDOW *mainPtr {subwins[static_cast<size_t>(SubWindowType::MAIN)].get()};
+//     mvwhline_set(mainPtr, 0, 0, &wchars[L"🌲"], 41);
+//     mvwvline_set(mainPtr, 0, 0, &wchars[L"🌲"], 27);
+//     wrefresh(mainPtr);
 }
 
 void GameScreen::updateScreen()
