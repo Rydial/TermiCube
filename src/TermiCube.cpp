@@ -157,10 +157,10 @@ void MainMenuScreen::initWideChars()
 {
     std::ifstream file {"resource/general/Unicode.txt"};
     std::string mbChr;
-    wchar_t wChr[5];
+    wchar_t wChr[10];
 
     while (file >> mbChr) {
-        mbstowcs(wChr, mbChr.c_str(), 5);
+        mbstowcs(wChr, mbChr.c_str(), 10);
         cchar_t cChr {};
         setcchar(&cChr, wChr, 0, 0, nullptr);
         wchars.emplace(std::wstring{wChr}, cChr);
@@ -266,7 +266,7 @@ void GameScreen::initScreen()
     mvwhline_set(window.get(), mainSize.y + 1, 1, &wchars[L"═"], mainSize.x);
     mvwadd_wch(window.get(), mainSize.y + 1, maxCols - 1, &wchars[L"╣"]);
 
-    /* Main Subwindow */
+    /* Main Sprites */
     // Draw entities
 
     /* HPBar Border */
@@ -280,27 +280,32 @@ void GameScreen::initScreen()
         (maxCols - 1) - hpBarSize.x, &wchars[L"═"], hpBarSize.x);
     mvwadd_wch(window.get(), (mainSize.y + 2) + hpBarSize.y,
         maxCols - 1, &wchars[L"╣"]);
-    /* HPBar Subwindow */
+
+    /* HPBar Sprites */
     WINDOW *hpBarPtr {subwins[static_cast<size_t>(SubWindowType::HPBAR)].get()};
     /* The "Red Heart ❤️" character is 4 bytes long compared to the usual 2 bytes.
        So make sure there are at least 2 spaces between the characters */
-    for (size_t x {hpBarSize.x - 4}, i {0}; i < hp ; x -= 4, i++) {
-        std::cerr << "X: " << x << " I: " << i << '\n';
-        mvwadd_wch(hpBarPtr, 0, x, &wchars[L"❤️"]);
-    }
-        
-        
-    touchwin(hpBarPtr);
-    wrefresh(hpBarPtr);
+    // for (size_t x {hpBarSize.x - 4}, i {0}; i < hp ; x -= 4, i++) {
+    //     std::cerr << "X: " << x << " I: " << i << '\n';
+    //     mvwadd_wch(hpBarPtr, 0, x, &wchars[L"❤️"]);
+    // }
+    mvwadd_wch(hpBarPtr, 0, 11, &wchars[L"❤️"]);
+    mvwadd_wch(window.get(), 30, 10, &wchars[L"❤️"]);
+    mvwadd_wch(window.get(), 30, 11, &wchars[L"❤️"]);
+    mvwadd_wch(window.get(), 30, 12, &wchars[L"❤️"]);
+    
+    // mvwadd_wch(hpBarPtr, 0, 3, &wchars[L"❤️"]);
+    // mvwadd_wch(hpBarPtr, 0, 28, &wchars[L"🌲"]);
 
-    /* Hotbar Subwindow */
+
+    /* Hotbar Border */
 }
 
 void GameScreen::drawGraphics()
 {
 //     WINDOW *mainPtr {subwins[static_cast<size_t>(SubWindowType::MAIN)].get()};
 //     mvwhline_set(mainPtr, 0, 0, &wchars[L"🌲"], 41);
-//     mvwvline_set(mainPtr, 0, 0, &wchars[L"🌲"], 27);
+//     mvwvline_set(mainPtr, 0, 0, &wchars[L"🌲"], 27); ❤️║
 //     wrefresh(mainPtr);
 }
 
