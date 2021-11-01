@@ -3,7 +3,6 @@
 
 /* Enables ncurses wide character support */
 #define _XOPEN_SOURCE_EXTENDED 1
-// #define NCURSES_WIDECHAR 1
 
 #include <vector>
 #include <memory>
@@ -148,14 +147,15 @@ class MainMenuScreen : public Screen {
 class GameScreen : public Screen {
     private:
         /* Member Constants */
-        static constexpr Coordinate mainSize {28, 82};
-        static constexpr Coordinate hpBarSize {3, 21};
+        static constexpr Coordinate mainSize {27, 82};
+        static constexpr Coordinate hpBarSize {1, 30};
         /* Member Enums */
         enum class SubWindowType {
             MAIN, HPBAR, COUNT
         };
         /* Member Variables */
         std::vector<std::unique_ptr<WINDOW, WindowDeleter>> subwins;
+        size_t hp {7};
         /* Private Member Methods */
         void initScreen();
     public:

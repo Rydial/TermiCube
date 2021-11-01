@@ -253,7 +253,7 @@ GameScreen::GameScreen() :
     /* Generate Subwindows */
     subwins.emplace_back(derwin(window.get(), mainSize.y, mainSize.x, 1, 1));
     subwins.emplace_back(derwin(window.get(), hpBarSize.y, hpBarSize.x,
-        mainSize.y + 1, maxCols - hpBarSize.x - 1));
+        mainSize.y + 2, (maxCols - 1) - hpBarSize.x));
 
     initScreen();
 }
@@ -262,20 +262,38 @@ void GameScreen::initScreen()
 {
     /* Screen Border */
     drawBorder();
-    mvwadd_wch(window.get(), mainSize.y, 0, &wchars[L"╠"]);
-    mvwhline_set(window.get(), mainSize.y, 1, &wchars[L"═"], mainSize.x);
-    mvwadd_wch(window.get(), mainSize.y, maxCols - 1, &wchars[L"╣"]);
-    /* Main Subwindow */
+    mvwadd_wch(window.get(), mainSize.y + 1, 0, &wchars[L"╠"]);
+    mvwhline_set(window.get(), mainSize.y + 1, 1, &wchars[L"═"], mainSize.x);
+    mvwadd_wch(window.get(), mainSize.y + 1, maxCols - 1, &wchars[L"╣"]);
 
-    /* Healthbar Subwindow */
+    /* Main Subwindow */
+    // Draw entities
+
+    /* HPBar Border */
+    mvwadd_wch(window.get(), mainSize.y + 1,
+        (maxCols - 1) - hpBarSize.x - 1, &wchars[L"╦"]);
+    mvwvline_set(window.get(), mainSize.y + 2,
+        (maxCols - 1) - hpBarSize.x - 1, &wchars[L"║"], 1);
+    mvwadd_wch(window.get(), (mainSize.y + 2) + hpBarSize.y,
+        (maxCols - 1) - hpBarSize.x - 1, &wchars[L"╚"]);
+    mvwhline_set(window.get(), (mainSize.y + 2) + hpBarSize.y,
+        (maxCols - 1) - hpBarSize.x, &wchars[L"═"], hpBarSize.x);
+    mvwadd_wch(window.get(), (mainSize.y + 2) + hpBarSize.y,
+        maxCols - 1, &wchars[L"╣"]);
+    /* HPBar Subwindow */
     WINDOW *hpBarPtr {subwins[static_cast<size_t>(SubWindowType::HPBAR)].get()};
-    box(hpBarPtr, 0, 0);
+    /* The "Red Heart ❤️" character is 4 bytes long compared to the usual 2 bytes.
+       So make sure there are at least 2 spaces between the characters */
+    for (size_t x {hpBarSize.x - 4}, i {0}; i < hp ; x -= 4, i++) {
+        std::cerr << "X: " << x << " I: " << i << '\n';
+        mvwadd_wch(hpBarPtr, 0, x, &wchars[L"❤️"]);
+    }
+        
+        
     touchwin(hpBarPtr);
     wrefresh(hpBarPtr);
 
-    // for (size_t x {7}; x < hotbarSize.x - 1; x += 7) {
-    //     mvwvline_set(hotbarPtr, 1, x, &wchars[L"║"], 3);
-    // }
+    /* Hotbar Subwindow */
 }
 
 void GameScreen::drawGraphics()
