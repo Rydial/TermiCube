@@ -158,12 +158,19 @@ void MainMenuScreen::initWideChars()
     std::ifstream file {"resource/general/Unicode.txt"};
     std::string mbChr;
     wchar_t wChr[10];
-
+    /* Store file content into multibyte strings */
     while (file >> mbChr) {
-        mbstowcs(wChr, mbChr.c_str(), 10);
-        cchar_t cChr {};
-        setcchar(&cChr, wChr, 0, 0, nullptr);
-        wchars.emplace(std::wstring{wChr}, cChr);
+        /* Move to next line if comment symbol "//"" is found */
+        if (mbChr.compare("//") == 0)
+            std::getline(file, mbChr);
+        else {
+            /* Convert multibyte string to wide char string */
+            mbstowcs(wChr, mbChr.c_str(), 10);
+            /* Store wide char in cchar_t to be usable in ncurses functions */
+            cchar_t cChr {};
+            setcchar(&cChr, wChr, 0, 0, nullptr);
+            wchars.emplace(std::wstring{wChr}, cChr);
+        }
     }
 }
 
@@ -282,23 +289,20 @@ void GameScreen::initScreen()
         maxCols - 1, &wchars[L"╣"]);
 
     /* HPBar Sprites */
-    WINDOW *hpBarPtr {subwins[static_cast<size_t>(SubWindowType::HPBAR)].get()};
-    /* The "Red Heart ❤️" character is 4 bytes long compared to the usual 2 bytes.
-       So make sure there are at least 2 spaces between the characters */
-    // for (size_t x {hpBarSize.x - 4}, i {0}; i < hp ; x -= 4, i++) {
-    //     std::cerr << "X: " << x << " I: " << i << '\n';
-    //     mvwadd_wch(hpBarPtr, 0, x, &wchars[L"❤️"]);
-    // }
-    mvwadd_wch(hpBarPtr, 0, 11, &wchars[L"❤️"]);
-    mvwadd_wch(window.get(), 30, 10, &wchars[L"❤️"]);
-    mvwadd_wch(window.get(), 30, 11, &wchars[L"❤️"]);
-    mvwadd_wch(window.get(), 30, 12, &wchars[L"❤️"]);
-    
-    // mvwadd_wch(hpBarPtr, 0, 3, &wchars[L"❤️"]);
-    // mvwadd_wch(hpBarPtr, 0, 28, &wchars[L"🌲"]);
-
+    drawHPBar();
 
     /* Hotbar Border */
+}
+
+void GameScreen::drawHPBar()
+{ /***** Line 1 in Notes.txt *****/
+    WINDOW *hpBarPtr {subwins[static_cast<size_t>(SubWindowType::HPBAR)].get()};
+    /* Add heart sprites */
+    for (size_t x {hpBarSize.x - 4}, i {0}; i < hp ; x -= 4, i++)
+        mvwadd_wch(hpBarPtr, 0, x, &wchars[L"❤️"]);
+    /* Fill right side of rightmost heart with invisible characters*/
+    for (size_t x {hpBarSize.x - 3}; x < hpBarSize.x; x++)
+        mvwadd_wch(hpBarPtr, 0, x, &wchars[L" "]);
 }
 
 void GameScreen::drawGraphics()

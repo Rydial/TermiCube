@@ -155,9 +155,10 @@ class GameScreen : public Screen {
         };
         /* Member Variables */
         std::vector<std::unique_ptr<WINDOW, WindowDeleter>> subwins;
-        size_t hp {1};
+        size_t hp {3};
         /* Private Member Methods */
         void initScreen();
+        void drawHPBar();
     public:
         /* Inherit Constructor from Screen */
         GameScreen();
