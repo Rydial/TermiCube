@@ -147,18 +147,20 @@ class MainMenuScreen : public Screen {
 class GameScreen : public Screen {
     private:
         /* Member Constants */
+        static constexpr size_t spriteWidth {2};
         static constexpr Coordinate mainSize {27, 82};
-        static constexpr Coordinate hpBarSize {1, 30};
+        static constexpr Coordinate statBarSize {1, 18};
+        static constexpr Coordinate hotbarSize {5, 24};
         /* Member Enums */
         enum class SubWindowType {
-            MAIN, HPBAR, COUNT
+            MAIN, STATBAR, HOTBAR, COUNT
         };
         /* Member Variables */
         std::vector<std::unique_ptr<WINDOW, WindowDeleter>> subwins;
         size_t hp {3};
         /* Private Member Methods */
         void initScreen();
-        void drawHPBar();
+        void drawStatBar();
     public:
         /* Inherit Constructor from Screen */
         GameScreen();

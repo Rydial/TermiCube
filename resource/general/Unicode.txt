@@ -1,4 +1,5 @@
-║ ═ ╔ ╗ ╚ ╝ ╠ ╣ ╦   // Main Screen Border Character Set
-                    // Invisible Character : No-Break Space
-❤️                  // Game Screen HPBar Character Set
-🌲                  // Tree Entity Character
+║ ═ ╔ ╗ ╚ ╝ ╠ ╣ ╦       // Main Screen Border Character Set
+│ ─ ┌ ┐ └ ┘ ├ ┤ ┬ ┴ ┼   // Character Set
+                        // Invisible Character : No-Break Space
+❤️ 💔                   // Game Screen HPBar Character Set
+🌲                      // Tree Entity Character
