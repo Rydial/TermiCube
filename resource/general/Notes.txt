@@ -1,0 +1,12 @@
+/* The "Red Heart ❤️" character consists of 2 codepoints.
+   The first codepoint (U+2764) is the black heart "❤" character.
+   The second codepoint (U+FE0F) is the VARIATION SELECTOR-16 character.
+   The second codepoint is also an "unassigned" character.
+   
+   Depending on the terminal, unassigned characters may be replaced
+   by blank characters "".
+   So, it may cause a bug where all the characters to the right of the
+   rightmost red heart character shift to the left by 1.
+   
+   To avoid this, I have replaced the space to the right of the Red Heart
+   with an invisible character, which can be found in Unicode.txt */
