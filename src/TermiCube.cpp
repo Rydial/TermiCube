@@ -1,17 +1,14 @@
 #include <string>
-#include <iostream>
-#include <fstream>
 #include "TermiCube.h"
-#include "Utilites.h"
 
 
-GameWindowSharedData::GameWindowSharedData(std::shared_ptr<GameWindowData> &gwData) :
+TCWindowSharedData::TCWindowSharedData(std::shared_ptr<TCWindowData> &gwData) :
     data{gwData}
 {
 
 }
 
-void GameWindowSharedData::switchScreen(size_t index)
+void TCWindowSharedData::switchScreen(size_t index)
 {
     auto gwData {data.lock()};
     /* Checks if object is still available */
@@ -27,7 +24,7 @@ void GameWindowSharedData::switchScreen(size_t index)
 //////////////////////////////////////////////////////////////
 
 TCWindow::TermiCubeWindow() :
-    data{std::make_shared<GameWindowData>(GameWindowData{0, {}})}
+    data{std::make_shared<TCWindowData>(TCWindowData{0, {}})}
 {
     initCurses();
     initColors();
@@ -126,215 +123,3 @@ void Screen::Button::highlight(int attrs)
 }
 
 //////////////////////////////////////////////////////////////
-
-MainMenuScreen::MainMenuScreen(std::shared_ptr<GameWindowData> &gwData) :
-    buttons{window.get(), btnStartPos.y, btnStartPos.x, gwData}
-{
-    initWideChars();
-    initScreen();
-}
-
-void MainMenuScreen::initScreen()
-{
-    /* Title Creation */
-    drawBorder();
-
-    std::vector<std::string> title;
-    size_t xLen {parseUTF8(title, "resource/mainmenu/title.txt")};
-
-    for (size_t i {0}, y {titlePosY}; i < title.size(); y++, i++)
-        mvwaddstr(window.get(), y, (maxCols - xLen) / 2, title[i].c_str());
-
-    /* Draw NEWGAME with current focus */
-    buttons.list[buttons.btn].highlight(COLOR_PAIR(1));
-
-    /* Draw rest of the buttons */
-    for (size_t i {1}; i < buttons.list.size(); i++)
-        buttons.list[i].draw(buttons.list[i].ptr.get());
-}
-
-void MainMenuScreen::initWideChars()
-{
-    std::ifstream file {"resource/general/Unicode.txt"};
-    std::string mbChr;
-    wchar_t wChr[10];
-    /* Store file content into multibyte strings */
-    while (file >> mbChr) {
-        /* Move to next line if comment symbol "//"" is found */
-        if (mbChr.compare("//") == 0)
-            std::getline(file, mbChr);
-        else {
-            /* Convert multibyte string to wide char string */
-            mbstowcs(wChr, mbChr.c_str(), 10);
-            /* Store wide char in cchar_t to be usable in ncurses functions */
-            cchar_t cChr {};
-            setcchar(&cChr, wChr, 0, 0, nullptr);
-            wchars.emplace(std::wstring{wChr}, cChr);
-        }
-    }
-}
-
-void MainMenuScreen::drawGraphics() 
-{
-
-}
-
-void MainMenuScreen::updateScreen()
-{
-    
-}
-
-void MainMenuScreen::userInput(int key)
-{   
-    
-    if (key == control.up) {
-        buttons.list[buttons.btn].highlight(A_NORMAL);
-        buttons.btn = (buttons.btn - 1) % buttons.list.size();
-        buttons.list[buttons.btn].highlight(COLOR_PAIR(1));
-    } else if (key == control.down) {
-        buttons.list[buttons.btn].highlight(A_NORMAL);
-        buttons.btn = (buttons.btn + 1) % buttons.list.size();
-        buttons.list[buttons.btn].highlight(COLOR_PAIR(1));
-    } else if (key == control.enter)
-        buttons.list[buttons.btn].click();       
-
-    eData.key = key; /* Store key into event data */
-}
-
-MainMenuScreen::ButtonManager::ButtonManager(
-  WINDOW *win, int startY, int startX, std::shared_ptr<GameWindowData> &gwData) :
-    list{},
-    btn{static_cast<size_t>(ButtonType::NEWGAME)}
-{
-    int count {static_cast<int>(ButtonType::COUNT)};
-    std::vector<std::string> paths {
-        "resource/mainmenu/NewGameBtn.txt", "resource/mainmenu/LoadGameBtn.txt",
-        "resource/mainmenu/SettingsBtn.txt", "resource/mainmenu/CreditsBtn.txt"
-    };
-
-    for (int i {0}, y {0}; i < count; i++, y += 6) {
-        /* Parse Button Txt Files */
-        std::vector<std::string> txt;
-        size_t maxLineLen {parseUTF8(txt, paths[static_cast<size_t>(i)])};
-        /* Generate Button + Subwindow */
-        GameWindowSharedData gwSData {gwData};
-        WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
-        list.emplace_back(btnWin, startY + y, startX, btnSize.y, btnSize.x,
-            genClickFunction(gwSData, i), genDrawFunction(txt, maxLineLen)
-        );
-    }
-}
-
-std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(
-    GameWindowSharedData &gwSData, int index)
-{
-    switch(index) {
-        case static_cast<int>(ButtonType::NEWGAME):
-            return [gwSData] () mutable {
-                gwSData.switchScreen(static_cast<size_t>(ScreenType::GAME));
-            };
-        default:
-            return nullptr;
-    }
-}
-
-std::function<void(WINDOW *)> MainMenuScreen::ButtonManager::genDrawFunction(
-    std::vector<std::string> &txt, size_t maxLen)
-{
-    return [txt, maxLen] (WINDOW *win) {
-        box(win, 0, 0);
-
-        for (size_t i {0}; i < txt.size(); i++)
-            mvwaddstr(win, i + 1, (btnSize.x - maxLen) / 2, txt[i].c_str());
-        
-        touchwin(win);
-        wrefresh(win);
-    };
-}
-
-//////////////////////////////////////////////////////////////
-
-GameScreen::GameScreen() :
-    subwins{}
-{
-    /* Generate Subwindows */
-    subwins.emplace_back(derwin(window.get(), mainSize.y, mainSize.x, 1, 1));
-    subwins.emplace_back(derwin(window.get(), statBarSize.y, statBarSize.x,
-        mainSize.y + 2, (maxCols - 1) - statBarSize.x));
-    subwins.emplace_back(derwin(window.get(), hotbarSize.y, hotbarSize.x,
-        mainSize.y + 2, 1));
-
-    initScreen();
-}
-
-void GameScreen::initScreen()
-{
-    /* Screen Border */
-    drawBorder();
-    mvwadd_wch(window.get(), mainSize.y + 1, 0, &wchars[L"╠"]);
-    mvwhline_set(window.get(), mainSize.y + 1, 1, &wchars[L"═"], mainSize.x);
-    mvwadd_wch(window.get(), mainSize.y + 1, maxCols - 1, &wchars[L"╣"]);
-
-    /* Main Sprites */
-    // Draw entities
-
-    /* Status Bar Border */
-    mvwadd_wch(window.get(), mainSize.y + 1,
-        (maxCols - 1) - statBarSize.x - 1, &wchars[L"╦"]);
-    mvwvline_set(window.get(), mainSize.y + 2,
-        (maxCols - 1) - statBarSize.x - 1, &wchars[L"║"], statBarSize.y);
-    mvwadd_wch(window.get(), (mainSize.y + 2) + statBarSize.y,
-        (maxCols - 1) - statBarSize.x - 1, &wchars[L"╚"]);
-    mvwhline_set(window.get(), (mainSize.y + 2) + statBarSize.y,
-        (maxCols - 1) - statBarSize.x, &wchars[L"═"], statBarSize.x);
-    mvwadd_wch(window.get(), (mainSize.y + 2) + statBarSize.y,
-        maxCols - 1, &wchars[L"╣"]);
-
-
-    /* Status Bar Sprites */
-    drawStatBar();
-
-    /* Hotbar Border */
-    mvwadd_wch(window.get(), mainSize.y + 1,
-        hotbarSize.x + 1, &wchars[L"╦"]);
-    mvwvline_set(window.get(), mainSize.y + 2,
-        hotbarSize.x + 1, &wchars[L"║"], hotbarSize.y);
-    mvwadd_wch(window.get(), (mainSize.y + 2) + hotbarSize.y,
-        hotbarSize.x + 1, &wchars[L"╝"]);
-    mvwhline_set(window.get(), (mainSize.y + 2) + hotbarSize.y,
-        1, &wchars[L"═"], hotbarSize.x);
-    mvwadd_wch(window.get(), (mainSize.y + 2) + hotbarSize.y, 0, &wchars[L"╠"]);
-
-    WINDOW *hotbarPtr {subwins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
-    mvwhline_set(hotbarPtr, 0, 1,  &wchars[L"─"], )
-    // mvwaddstr(hotbarPtr, 0, 0, "Sword of Justice");
-}
-
-void GameScreen::drawStatBar()
-{ /***** Line 1 in Notes.txt *****/
-    WINDOW *statBarPtr {subwins[static_cast<size_t>(SubWindowType::STATBAR)].get()};
-    /* Draw HP sprites */
-    for (size_t x {(statBarSize.x - 1) - 2}, i {0}; i < hp; x -= spriteWidth, i++)
-        mvwadd_wch(statBarPtr, 0, x, &wchars[L"❤️"]);
-    /* Fill right side of rightmost heart with invisible characters*/
-    for (size_t x {(statBarSize.x - 1) - 1}; x < statBarSize.x; x++)
-        mvwadd_wch(statBarPtr, 0, x, &wchars[L" "]);
-}
-
-void GameScreen::drawGraphics()
-{
-//     WINDOW *mainPtr {subwins[static_cast<size_t>(SubWindowType::MAIN)].get()};
-//     mvwhline_set(mainPtr, 0, 0, &wchars[L"🌲"], 41);
-//     mvwvline_set(mainPtr, 0, 0, &wchars[L"🌲"], 27);
-//     wrefresh(mainPtr);
-}
-
-void GameScreen::updateScreen()
-{
-
-}
-
-void GameScreen::userInput(int /*key*/)
-{
-
-}

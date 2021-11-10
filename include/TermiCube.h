@@ -25,17 +25,17 @@ class Screen;
 
 /////////////////////// Transfer Data Wrappers ///////////////////////
 
-struct GameWindowData {
+struct TCWindowData {
     size_t screen;
     std::vector<std::unique_ptr<Screen>> screenList;
 };
 
-class GameWindowSharedData {
+class TCWindowSharedData {
     private:
         /* Weak Ptr instead of Shared Ptr to prevent self-referencing */
-        std::weak_ptr<GameWindowData> data;
+        std::weak_ptr<TCWindowData> data;
     public:
-        GameWindowSharedData(std::shared_ptr<GameWindowData> &gwData);
+        TCWindowSharedData(std::shared_ptr<TCWindowData> &winData);
         void switchScreen(size_t index);
 };
 
@@ -110,7 +110,7 @@ class MainMenuScreen : public Screen {
         struct ButtonManager {
             private:
                 std::function<void()> genClickFunction(
-                    GameWindowSharedData &gwSData, int index);
+                    TCWindowSharedData &winSData, int index);
                 std::function<void(WINDOW *)> genDrawFunction(
                     std::vector<std::string> &txt, size_t maxLen);
             public:
@@ -118,7 +118,7 @@ class MainMenuScreen : public Screen {
                 size_t btn;
                 /* Public Methods */
                 ButtonManager(WINDOW *win, int startY, int startX,
-                        std::shared_ptr<GameWindowData> &gwData);
+                        std::shared_ptr<TCWindowData> &winData);
         };
         /* Member Variables */
         ButtonManager buttons;
@@ -126,7 +126,7 @@ class MainMenuScreen : public Screen {
         void initScreen();
         void initWideChars();
     public:
-        MainMenuScreen(std::shared_ptr<GameWindowData> &gwData);
+        MainMenuScreen(std::shared_ptr<TCWindowData> &winData);
         void drawGraphics();
         void updateScreen();
         void userInput(int key);
@@ -173,7 +173,7 @@ class GameScreen : public Screen {
 
 typedef class TermiCubeWindow {
     private:
-        std::shared_ptr<GameWindowData> data;
+        std::shared_ptr<TCWindowData> data;
         /* Private Methods */
         void initCurses();
         void initColors();
