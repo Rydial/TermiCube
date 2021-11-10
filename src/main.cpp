@@ -1,4 +1,4 @@
-#include "TermiCube.h"
+#include "TCWindow.h"
 
 
 int main() {
