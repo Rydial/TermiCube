@@ -16,6 +16,8 @@ GameScreen::GameScreen() :
         mainSize.y + 2, (maxCols - 1) - statBarSize.x));
     subwins.emplace_back(derwin(window.get(), hotbarSize.y, hotbarSize.x,
         (maxRows - 1) - hotbarSize.y, (maxCols - 1) - hotbarSize.x));
+    subwins.emplace_back(derwin(window.get(), chatBarSize.y, chatBarSize.x,
+        (maxRows - 1) - chatBarSize.y, 1));
 
     initScreen();
 }
@@ -62,6 +64,9 @@ void GameScreen::initScreen()
     }
 
     /* Chat Bar Border */
+    mvwadd_wch(window.get(), (maxRows - 1) - 2, 0, &wchars[L"╠"]);
+    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &wchars[L"═"], chatBarSize.x);
+    mvwadd_wch(window.get(), (maxRows - 1) - 2, chatBarSize.x + 1, &wchars[L"╣"]);
 }
 
 void GameScreen::drawStatBar()
@@ -97,10 +102,7 @@ void GameScreen::hotbarSelect(size_t slot)
 
 void GameScreen::drawGraphics()
 {
-//     WINDOW *mainPtr {subwins[static_cast<size_t>(SubWindowType::MAIN)].get()};
-//     mvwhline_set(mainPtr, 0, 0, &wchars[L"🌲"], 41);
-//     mvwvline_set(mainPtr, 0, 0, &wchars[L"🌲"], 27);
-//     wrefresh(mainPtr);
+    
 }
 
 void GameScreen::updateScreen()
@@ -112,4 +114,7 @@ void GameScreen::userInput(int key)
 {
     if ('0' <= key && key <= '9')
         hotbarSelect(static_cast<size_t>(key - '0'));
+    else if (key == '/') {
+        
+    }
 }

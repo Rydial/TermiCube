@@ -13,9 +13,10 @@ class GameScreen : public Screen {
         static constexpr Coordinate mainSize {27, 82};
         static constexpr Coordinate statBarSize {1, 26};
         static constexpr Coordinate hotbarSize {10, 26};
+        static constexpr Coordinate chatBarSize {12, 55};
         /* Member Enums */
         enum class SubWindowType {
-            MAIN, STATBAR, HOTBAR, COUNT
+            MAIN, STATBAR, HOTBAR, CHATBAR, COUNT
         };
         /* Member Structs */
         struct Player {
