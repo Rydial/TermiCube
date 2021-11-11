@@ -28,6 +28,7 @@ class GameScreen : public Screen {
         };
         struct Chat {
             int cursorXPos;
+            std::string curLine;
         };
         /* Member Variables */
         std::vector<std::unique_ptr<WINDOW, WindowDeleter>> subwins;

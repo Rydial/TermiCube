@@ -7,9 +7,9 @@ GameScreen::GameScreen() :
     subwins{},
     hotbar{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
     "Eight", "Nine"},
-    p{.hp{3}, .curHotbarSlot{1}},
+    p{3, 1},
     focus{ScreenFocus::MAIN},
-    chat{0}
+    chat{0, ""}
 {
     /* Generate Subwindows */
     subwins.emplace_back(derwin(window.get(), mainSize.y, mainSize.x, 1, 1));
@@ -104,11 +104,23 @@ void GameScreen::hotbarSelect(size_t slot)
 
 void GameScreen::chatInput(int key)
 {
-    switch (key) {
-        case 27: /* Escape Key */
-            focus = ScreenFocus::MAIN;
-            curs_set(0);
-            break;
+    WINDOW *chatBarPtr {subwins[static_cast<size_t>(SubWindowType::CHATBAR)].get()};
+
+    if (key == 27) { /* Escape Key */
+        focus = ScreenFocus::MAIN;
+        curs_set(0);
+    } else if (' ' <= key && key <= '~') { /* Keyboard ASCII Characters */
+        chat.curLine += key;
+        mvwaddch(chatBarPtr, chatBarSize.y - 1, 4 + chat.cursorXPos++,
+            static_cast<chtype>(key));
+        wrefresh(chatBarPtr);
+    } else if (key == 127) { /* Delete Key */
+        if (!chat.curLine.empty()) {
+            chat.curLine.resize(chat.curLine.size() - 1);
+            mvwaddch(chatBarPtr, chatBarSize.y - 1, 4 + (--chat.cursorXPos), ' ');
+            wmove(window.get(), (maxRows - 1) - 1, 5 + chat.cursorXPos);
+            wrefresh(chatBarPtr);
+        }
     }
 }
 
