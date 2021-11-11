@@ -172,7 +172,6 @@ std::function<void(WINDOW *)> MainMenuScreen::ButtonManager::genDrawFunction(
         for (size_t i {0}; i < txt.size(); i++)
             mvwaddstr(win, i + 1, (btnSize.x - maxLen) / 2, txt[i].c_str());
         
-        touchwin(win);
         wrefresh(win);
     };
 }

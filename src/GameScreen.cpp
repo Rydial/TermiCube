@@ -7,8 +7,9 @@ GameScreen::GameScreen() :
     subwins{},
     hotbar{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
     "Eight", "Nine"},
-    // hotbar{},
-    p{.hp{3}, .curHotbarSlot{1}}
+    p{.hp{3}, .curHotbarSlot{1}},
+    focus{ScreenFocus::MAIN},
+    chat{0}
 {
     /* Generate Subwindows */
     subwins.emplace_back(derwin(window.get(), mainSize.y, mainSize.x, 1, 1));
@@ -67,6 +68,8 @@ void GameScreen::initScreen()
     mvwadd_wch(window.get(), (maxRows - 1) - 2, 0, &wchars[L"╠"]);
     mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &wchars[L"═"], chatBarSize.x);
     mvwadd_wch(window.get(), (maxRows - 1) - 2, chatBarSize.x + 1, &wchars[L"╣"]);
+    /* Chat Bar Text */
+    mvwadd_wch(window.get(), (maxRows - 1) - 1, 2, &wchars[L"➔"]);
 }
 
 void GameScreen::drawStatBar()
@@ -96,8 +99,17 @@ void GameScreen::hotbarSelect(size_t slot)
     mvwprintw(hotbarPtr, (curSlot + (size - 1)) % size, 1, "%ld", p.curHotbarSlot);
     wattroff(hotbarPtr, A_BOLD | COLOR_PAIR(2));
 
-    touchwin(hotbarPtr);
     wrefresh(hotbarPtr);
+}
+
+void GameScreen::chatInput(int key)
+{
+    switch (key) {
+        case 27: /* Escape Key */
+            focus = ScreenFocus::MAIN;
+            curs_set(0);
+            break;
+    }
 }
 
 void GameScreen::drawGraphics()
@@ -112,9 +124,23 @@ void GameScreen::updateScreen()
 
 void GameScreen::userInput(int key)
 {
-    if ('0' <= key && key <= '9')
-        hotbarSelect(static_cast<size_t>(key - '0'));
-    else if (key == '/') {
-        
+    switch (focus) {
+        case ScreenFocus::MAIN:
+            if ('0' <= key && key <= '9')
+                hotbarSelect(static_cast<size_t>(key - '0'));
+            else if (key == '/') {
+                focus = ScreenFocus::CHAT;
+                /* Place Visible Cursor in Position */
+                curs_set(1);
+                wmove(window.get(), (maxRows - 1) - 1, 5 + chat.cursorXPos);
+            }
+            break;
+
+        case ScreenFocus::CHAT:
+            chatInput(key);
+            break;
+
+        case ScreenFocus::OPTIONS:
+            break;
     }
 }

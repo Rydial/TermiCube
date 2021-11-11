@@ -18,19 +18,28 @@ class GameScreen : public Screen {
         enum class SubWindowType {
             MAIN, STATBAR, HOTBAR, CHATBAR, COUNT
         };
+        enum class ScreenFocus {
+            MAIN, CHAT, OPTIONS
+        };
         /* Member Structs */
         struct Player {
             size_t hp;
             size_t curHotbarSlot;
         };
+        struct Chat {
+            int cursorXPos;
+        };
         /* Member Variables */
         std::vector<std::unique_ptr<WINDOW, WindowDeleter>> subwins;
         std::array<std::string, 10> hotbar;
         Player p;
+        ScreenFocus focus;
+        Chat chat;
         /* Private Member Methods */
         void initScreen();
         void drawStatBar();
         void hotbarSelect(size_t slot);
+        void chatInput(int key);
     public:
         /* Inherit Constructor from Screen */
         GameScreen();

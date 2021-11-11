@@ -10,3 +10,6 @@
    
    To avoid this, I have replaced the space to the right of the rightmost red
    heart with an invisible character, which can be found in Unicode.txt */
+
+/* On some terminals, a call to refresh() is required before using curs_set(0)
+   to make the cursor invisible */

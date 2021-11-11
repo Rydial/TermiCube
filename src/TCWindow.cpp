@@ -45,6 +45,7 @@ void TCWindow::initCurses()
     raw(); /* Disable line buffering */
     // cbreak();
     noecho(); /* Disable input echoing */
+    refresh(); /* Line 14 on Notes.txt */
     curs_set(0); /* Set cursor invisible */
 
     /* Enable Mouse Events */
@@ -68,7 +69,7 @@ void TCWindow::initScreens()
     /* Hide every screen except for starting screen (Main Menu) */
     for (size_t i {1}; i < data->screenList.size(); i++)
         hide_panel(data->screenList[i]->getPanel());
-        
+    
     update_panels();
     doupdate();
 }
@@ -79,7 +80,7 @@ void TCWindow::terminate() {
 
 int TCWindow::update() 
 {
-    int key {getch()};
+    int key {wgetch(panel_window(data->screenList[data->screen]->getPanel()))};
 
     if (key == 'q') {
         terminate();
