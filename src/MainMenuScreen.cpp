@@ -110,7 +110,6 @@ void MainMenuScreen::updateScreen()
 
 void MainMenuScreen::userInput(int key)
 {   
-    
     if (key == control.up) {
         buttons.list[buttons.btn].highlight(A_NORMAL);
         buttons.btn = (buttons.btn - 1) % buttons.list.size();

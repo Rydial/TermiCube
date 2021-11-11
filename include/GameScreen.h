@@ -2,6 +2,8 @@
 #define GAMESCREEN_H
 
 #include <vector>
+#include <array>
+#include <string>
 #include "Screen.h"
 
 class GameScreen : public Screen {
@@ -9,18 +11,25 @@ class GameScreen : public Screen {
         /* Member Constants */
         static constexpr size_t spriteWidth {2};
         static constexpr Coordinate mainSize {27, 82};
-        static constexpr Coordinate statBarSize {1, 18};
-        static constexpr Coordinate hotbarSize {5, 24};
+        static constexpr Coordinate statBarSize {1, 26};
+        static constexpr Coordinate hotbarSize {10, 26};
         /* Member Enums */
         enum class SubWindowType {
             MAIN, STATBAR, HOTBAR, COUNT
         };
+        /* Member Structs */
+        struct Player {
+            size_t hp;
+            size_t curHotbarSlot;
+        };
         /* Member Variables */
         std::vector<std::unique_ptr<WINDOW, WindowDeleter>> subwins;
-        size_t hp {3};
+        std::array<std::string, 10> hotbar;
+        Player p;
         /* Private Member Methods */
         void initScreen();
         void drawStatBar();
+        void hotbarSelect(size_t slot);
     public:
         /* Inherit Constructor from Screen */
         GameScreen();
