@@ -4,8 +4,8 @@
 #define _XOPEN_SOURCE_EXTENDED 1 /* Enables ncurses wide character support */
 
 #include <panel.h>
-#include <memory>
 #include <functional>
+#include <memory>
 #include <unordered_map>
 
 class Screen {

@@ -1,6 +1,7 @@
 #ifndef MAINMENUSCREEN_H
 #define MAINMENUSCREEN_H
 
+#include <string>
 #include "TCWindow.h"
 #include "Screen.h" 
 

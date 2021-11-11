@@ -1,9 +1,8 @@
 #ifndef TCWINDOW_H
 #define TCWINDOW_H
 
-
-#include <memory>
 #include <vector>
+#include <memory>
 
 /*
 Things to Remember:

@@ -1,5 +1,5 @@
+#include <cmath>
 #include "GameScreen.h"
-#include <iostream>
 
 /////////////////////////////////////* Base Class */////////////////////////////////////
 
@@ -9,7 +9,7 @@ GameScreen::GameScreen() :
     "Eight", "Nine"},
     p{3, 1},
     focus{ScreenFocus::MAIN},
-    chat{0, ""}
+    console{0, "", {}}
 {
     /* Generate Subwindows */
     subwins.emplace_back(derwin(window.get(), mainSize.y, mainSize.x, 1, 1));
@@ -17,8 +17,8 @@ GameScreen::GameScreen() :
         mainSize.y + 2, (maxCols - 1) - statBarSize.x));
     subwins.emplace_back(derwin(window.get(), hotbarSize.y, hotbarSize.x,
         (maxRows - 1) - hotbarSize.y, (maxCols - 1) - hotbarSize.x));
-    subwins.emplace_back(derwin(window.get(), chatBarSize.y, chatBarSize.x,
-        (maxRows - 1) - chatBarSize.y, 1));
+    subwins.emplace_back(derwin(window.get(), consoleSize.y, consoleSize.x,
+        (maxRows - 1) - consoleSize.y, 1));
 
     initScreen();
 }
@@ -64,11 +64,11 @@ void GameScreen::initScreen()
         mvwprintw(hotbarPtr, i, 1, "%ld", (i + 1) % 10);
     }
 
-    /* Chat Bar Border */
+    /* Console Border */
     mvwadd_wch(window.get(), (maxRows - 1) - 2, 0, &wchars[L"╠"]);
-    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &wchars[L"═"], chatBarSize.x);
-    mvwadd_wch(window.get(), (maxRows - 1) - 2, chatBarSize.x + 1, &wchars[L"╣"]);
-    /* Chat Bar Text */
+    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &wchars[L"═"], consoleSize.x);
+    mvwadd_wch(window.get(), (maxRows - 1) - 2, consoleSize.x + 1, &wchars[L"╣"]);
+    /* Console Text */
     mvwadd_wch(window.get(), (maxRows - 1) - 1, 2, &wchars[L"➔"]);
 }
 
@@ -102,25 +102,39 @@ void GameScreen::hotbarSelect(size_t slot)
     wrefresh(hotbarPtr);
 }
 
-void GameScreen::chatInput(int key)
+void GameScreen::consoleInput(int key)
 {
-    WINDOW *chatBarPtr {subwins[static_cast<size_t>(SubWindowType::CHATBAR)].get()};
+    WINDOW *consolePtr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
 
     if (key == 27) { /* Escape Key */
         focus = ScreenFocus::MAIN;
         curs_set(0);
-    } else if (' ' <= key && key <= '~') { /* Keyboard ASCII Characters */
-        chat.curLine += key;
-        mvwaddch(chatBarPtr, chatBarSize.y - 1, 4 + chat.cursorXPos++,
+    } else if (' ' <= key && key <= '~') { /* Non-Escape ASCII Characters */
+        console.curLine += key;
+        mvwaddch(consolePtr, consoleSize.y - 1, 4 + console.cursorXPos++,
             static_cast<chtype>(key));
-        wrefresh(chatBarPtr);
+        wrefresh(consolePtr);
     } else if (key == 127) { /* Delete Key */
-        if (!chat.curLine.empty()) {
-            chat.curLine.resize(chat.curLine.size() - 1);
-            mvwaddch(chatBarPtr, chatBarSize.y - 1, 4 + (--chat.cursorXPos), ' ');
-            wmove(window.get(), (maxRows - 1) - 1, 5 + chat.cursorXPos);
-            wrefresh(chatBarPtr);
+        if (!console.curLine.empty()) {
+            console.curLine.resize(console.curLine.size() - 1);
+            mvwaddch(consolePtr, consoleSize.y - 1, 4 + (--console.cursorXPos), ' ');
+            wmove(window.get(), (maxRows - 1) - 1, 5 + console.cursorXPos);
+            wrefresh(consolePtr);
         }
+    } else if (key == control.enter) { /* Enter Key */
+        console.record.emplace_back(console.curLine);
+        size_t i {console.record.size() - 1};
+        int lineNum {consoleSize.y - 2};
+        float maxLenX {static_cast<float>(consoleSize.x - 2)};
+
+        while (i < console.record.size() && lineNum >= 0) {
+            
+            float linesLeft {console.record[i].size() / maxLenx};
+            // console.curLine.substr()
+        }
+        
+
+        console.curLine.clear();
     }
 }
 
@@ -141,15 +155,15 @@ void GameScreen::userInput(int key)
             if ('0' <= key && key <= '9')
                 hotbarSelect(static_cast<size_t>(key - '0'));
             else if (key == '/') {
-                focus = ScreenFocus::CHAT;
+                focus = ScreenFocus::CONSOLE;
                 /* Place Visible Cursor in Position */
                 curs_set(1);
-                wmove(window.get(), (maxRows - 1) - 1, 5 + chat.cursorXPos);
+                wmove(window.get(), (maxRows - 1) - 1, 5 + console.cursorXPos);
             }
             break;
 
-        case ScreenFocus::CHAT:
-            chatInput(key);
+        case ScreenFocus::CONSOLE:
+            consoleInput(key);
             break;
 
         case ScreenFocus::OPTIONS:

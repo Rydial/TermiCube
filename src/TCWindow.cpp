@@ -1,11 +1,8 @@
-#define _XOPEN_SOURCE_EXTENDED 1 /* Enables ncurses wide character support */
-
-#include <panel.h>
-#include <locale>
 #include "TCWindow.h"
 #include "Screen.h"
 #include "MainMenuScreen.h"
 #include "GameScreen.h"
+
 
 //////////////////////////////////* Transferrable Data *//////////////////////////////////
 
