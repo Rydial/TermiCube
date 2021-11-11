@@ -110,31 +110,33 @@ void GameScreen::consoleInput(int key)
         focus = ScreenFocus::MAIN;
         curs_set(0);
     } else if (' ' <= key && key <= '~') { /* Non-Escape ASCII Characters */
-        console.curLine += key;
-        mvwaddch(consolePtr, consoleSize.y - 1, 4 + console.cursorXPos++,
+        mvwaddch(consolePtr, consoleSize.y - 1, 4 + console.curLine.size(),
             static_cast<chtype>(key));
+        console.curLine += key;
         wrefresh(consolePtr);
     } else if (key == 127) { /* Delete Key */
         if (!console.curLine.empty()) {
             console.curLine.resize(console.curLine.size() - 1);
-            mvwaddch(consolePtr, consoleSize.y - 1, 4 + (--console.cursorXPos), ' ');
-            wmove(window.get(), (maxRows - 1) - 1, 5 + console.cursorXPos);
+            mvwaddch(consolePtr, consoleSize.y - 1, 4 + console.curLine.size(), ' ');
+            wmove(window.get(), (maxRows - 1) - 1, 5 + console.curLine.size());
             wrefresh(consolePtr);
         }
     } else if (key == control.enter) { /* Enter Key */
         console.record.emplace_back(console.curLine);
-        size_t i {console.record.size() - 1};
-        int lineNum {consoleSize.y - 2};
-        float maxLenX {static_cast<float>(consoleSize.x - 2)};
+        // size_t i {console.record.size() - 1};
+        // int lineNum {consoleSize.y - 2};
+        // float maxLenX {static_cast<float>(consoleSize.x - 2)};
 
-        while (i < console.record.size() && lineNum >= 0) {
+        // while (i < console.record.size() && lineNum >= 0) {
             
-            float linesLeft {console.record[i].size() / maxLenx};
-            // console.curLine.substr()
-        }
+        //     float linesLeft {console.record[i].size() / maxLenX};
+            
+        // }
         
-
         console.curLine.clear();
+        wmove(consolePtr, consoleSize.y - 1, 4);
+        wclrtoeol(consolePtr);
+        wrefresh(consolePtr);
     }
 }
 

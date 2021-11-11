@@ -1,3 +1,4 @@
+#include <locale>
 #include "TCWindow.h"
 #include "Screen.h"
 #include "MainMenuScreen.h"

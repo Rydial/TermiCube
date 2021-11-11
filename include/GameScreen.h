@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <array>
 #include "Screen.h"
 
 class GameScreen : public Screen {
