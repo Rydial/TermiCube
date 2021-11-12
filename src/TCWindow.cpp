@@ -56,6 +56,7 @@ void TCWindow::initColors()
     start_color(); /* Enable color functionality */
     init_pair(1, COLOR_GREEN, COLOR_BLACK);
     init_pair(2, COLOR_BLUE, COLOR_BLACK);
+    init_pair(3, COLOR_WHITE, COLOR_YELLOW); /* Text Background */
 }
 
 void TCWindow::initScreens()

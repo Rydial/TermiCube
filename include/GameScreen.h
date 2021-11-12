@@ -29,10 +29,14 @@ class GameScreen : public Screen {
             size_t curHotbarSlot;
         };
         struct Console {
-            int cursorXPos;
-            std::string curLine;
+            struct Input {
+                std::string str;
+                size_t cursPos;
+                int highlight;
+            } input;
             std::vector<std::pair<std::string, std::wstring>> record;
             std::ofstream file;
+            int highlight;
         };
         /* Member Variables */
         std::vector<std::unique_ptr<WINDOW, WindowDeleter>> subwins;

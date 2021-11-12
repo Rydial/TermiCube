@@ -10,7 +10,7 @@ GameScreen::GameScreen() :
     "Eight", "Nine"},
     p{3, 1},
     focus{ScreenFocus::MAIN},
-    console{0, "", {}, {}}
+    console{{"", 5, 0}, {}, {}, 0}
 {
     /* Setup Unbuffered File Stream for Console Output */
     std::string path {"build/log/test.log"};
@@ -119,37 +119,51 @@ void GameScreen::consoleInput(int key)
         focus = ScreenFocus::MAIN;
         curs_set(0);
     } else if (' ' <= key && key <= '~') { /* Non-Escape ASCII Characters */
-        console.curLine += key;
+        console.input.str += key;
         /* Check if current line exceeds max line length */
-        if (console.curLine.size() > consoleSize.x - 5) {
-            mvwaddstr(consolePtr, consoleSize.y - 1, 4, console.curLine.substr(
-                console.curLine.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
+        if (console.input.str.size() > consoleSize.x - 5) {
+            mvwaddstr(consolePtr, consoleSize.y - 1, 4, console.input.str.substr(
+                console.input.str.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
         } else {
-            mvwaddch(consolePtr, consoleSize.y - 1, 4 + console.curLine.size() - 1,
+            mvwaddch(consolePtr, consoleSize.y - 1, console.input.cursPos++ - 1,
                 static_cast<chtype>(key));
         }
         wrefresh(consolePtr);
-    } else if (key == 127) { /* DEL Key */
-        if (!console.curLine.empty()) {
-            console.curLine.resize(console.curLine.size() - 1);
-            /* Check if current line exceeds max line length */
-            if (console.curLine.size() >= consoleSize.x - 5) {
-                mvwaddstr(consolePtr, consoleSize.y - 1, 4, console.curLine.substr(
-                    console.curLine.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
-            } else {
-                mvwaddch(consolePtr, consoleSize.y - 1, 4 + console.curLine.size(), ' ');
-                wmove(window.get(), (maxRows - 1) - 1, 5 + console.curLine.size());
-            }
-            wrefresh(consolePtr);
+    } else if (key == 127 && !console.input.str.empty()) { /* DEL Key */
+        int del {!console.input.highlight ? 1 : console.input.highlight};
+        int pos {del > 0 ? console.input.cursPos - del : console.input.cursPos};
+        console.input.str.erase(static_cast<size_t>(pos), del);
+        console.highlight = 0;
+        /* Check if current line exceeds max line length */
+        // if (console.input.str.size() >= consoleSize.x - 5) {
+        //     mvwaddstr(consolePtr, consoleSize.y - 1, 4, console.input.str.substr(
+        //         console.input.str.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
+        // } else {
+        //     mvwaddch(consolePtr, consoleSize.y - 1, --console.input.cursPos - 1, ' ');
+        //     wmove(window.get(), (maxRows - 1) - 1, console.input.cursPos);
+        // }
+
+        if (console.input.str.size() < consoleSize.x - 5 && del == 1) {
+            mvwaddch(consolePtr, consoleSize.y - 1, --console.input.cursPos - 1, ' ');
+            wmove(window.get(), (maxRows - 1) - 1, console.input.cursPos);
+        } else {
+            mvwaddstr(consolePtr, consoleSize.y - 1, 4, console.input.str.substr(
+                console.input.str.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
+            wclrtoeol(consolePtr);
+            console.input.cursPos -= del;
+            wmove(consolePtr, consoleSize.y - 1, console.input.cursPos);
         }
+
+        wrefresh(consolePtr);
     } else if (key == control.enter) { /* ENTER Key */
         /* Reformat Current Line and Add to Console Record */
-        sendToConsole(console.curLine, L"➔");
+        sendToConsole(console.input.str, L"➔");
         /* Update Console Display */
         updateConsole();
         /* Clear Current Line on Console */
-        console.curLine.clear();
-        wmove(consolePtr, consoleSize.y - 1, 4);
+        console.input.str.clear();
+        console.input.cursPos = 5;
+        wmove(consolePtr, consoleSize.y - 1, console.input.cursPos - 1);
         wclrtoeol(consolePtr);
         wrefresh(consolePtr);
     }
@@ -226,9 +240,13 @@ void GameScreen::userInput(int key)
                 hotbarSelect(static_cast<size_t>(key - '0'));
             else if (key == '/') {
                 focus = ScreenFocus::CONSOLE;
-                /* Place Visible Cursor in Position */
+                /* Highlight Current Line */
+                console.input.highlight = 0 - static_cast<int>(console.input.str.size());
+                wattron(window.get(), COLOR_PAIR(3));
+                mvwaddstr(window.get(), (maxRows - 1) - 1, 5, console.input.str.c_str());
+                wattroff(window.get(), COLOR_PAIR(3));
+                /* Turn Cursor Visible */
                 curs_set(1);
-                wmove(window.get(), (maxRows - 1) - 1, 5 + console.cursorXPos);
             }
             break;
 
