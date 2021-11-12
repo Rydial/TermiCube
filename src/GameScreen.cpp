@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iostream>
 #include "GameScreen.h"
 
 /////////////////////////////////////* Base Class */////////////////////////////////////
@@ -110,19 +111,42 @@ void GameScreen::consoleInput(int key)
         focus = ScreenFocus::MAIN;
         curs_set(0);
     } else if (' ' <= key && key <= '~') { /* Non-Escape ASCII Characters */
-        mvwaddch(consolePtr, consoleSize.y - 1, 4 + console.curLine.size(),
-            static_cast<chtype>(key));
         console.curLine += key;
+        /* Check if current line exceeds max line length */
+        if (console.curLine.size() > consoleSize.x - 5) {
+            mvwaddstr(consolePtr, consoleSize.y - 1, 4, console.curLine.substr(
+                console.curLine.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
+        } else {
+            mvwaddch(consolePtr, consoleSize.y - 1, 4 + console.curLine.size() - 1,
+                static_cast<chtype>(key));
+        }
         wrefresh(consolePtr);
     } else if (key == 127) { /* Delete Key */
         if (!console.curLine.empty()) {
             console.curLine.resize(console.curLine.size() - 1);
-            mvwaddch(consolePtr, consoleSize.y - 1, 4 + console.curLine.size(), ' ');
-            wmove(window.get(), (maxRows - 1) - 1, 5 + console.curLine.size());
+            /* Check if current line exceeds max line length */
+            if (console.curLine.size() >= consoleSize.x - 5) {
+                mvwaddstr(consolePtr, consoleSize.y - 1, 4, console.curLine.substr(
+                    console.curLine.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
+            } else {
+                mvwaddch(consolePtr, consoleSize.y - 1, 4 + console.curLine.size(), ' ');
+                wmove(window.get(), (maxRows - 1) - 1, 5 + console.curLine.size());
+            }
             wrefresh(consolePtr);
         }
     } else if (key == control.enter) { /* Enter Key */
+        /* Add formatted line to console record */
+        size_t pos {0}, newPos {0};
+
+        while ((newPos = console.curLine.find(" ", pos)) != std::string::npos) {
+            /* Place newline to prevent word cut off at max line length */
+            if (pos % (consoleSize.x - 2) > newPos % (consoleSize.x - 2))
+                console.curLine.replace(pos, 1, "\n");
+            pos = newPos + 1;
+        }
         console.record.emplace_back(console.curLine);
+
+        /* Update Console Display */
         // size_t i {console.record.size() - 1};
         // int lineNum {consoleSize.y - 2};
         // float maxLenX {static_cast<float>(consoleSize.x - 2)};
@@ -132,7 +156,7 @@ void GameScreen::consoleInput(int key)
         //     float linesLeft {console.record[i].size() / maxLenX};
             
         // }
-        
+        /* Clear Current Line on Console */
         console.curLine.clear();
         wmove(consolePtr, consoleSize.y - 1, 4);
         wclrtoeol(consolePtr);
