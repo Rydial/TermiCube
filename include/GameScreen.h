@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <fstream>
+#include <utility>
 #include "Screen.h"
 
 class GameScreen : public Screen {
@@ -29,8 +31,8 @@ class GameScreen : public Screen {
         struct Console {
             int cursorXPos;
             std::string curLine;
-            std::vector<std::string> record;
-            // std::ifstream test;
+            std::vector<std::pair<std::string, std::wstring>> record;
+            std::ofstream file;
         };
         /* Member Variables */
         std::vector<std::unique_ptr<WINDOW, WindowDeleter>> subwins;
@@ -43,6 +45,8 @@ class GameScreen : public Screen {
         void drawStatBar();
         void hotbarSelect(size_t slot);
         void consoleInput(int key);
+        void sendToConsole(std::string str, const std::wstring &icon); /* Intentional String Copy */
+        void updateConsole();
     public:
         /* Inherit Constructor from Screen */
         GameScreen();

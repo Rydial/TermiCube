@@ -10,8 +10,16 @@ GameScreen::GameScreen() :
     "Eight", "Nine"},
     p{3, 1},
     focus{ScreenFocus::MAIN},
-    console{0, "", {}}
+    console{0, "", {}, {}}
 {
+    /* Setup Unbuffered File Stream for Console Output */
+    std::string path {"build/log/test.log"};
+    console.file.rdbuf()->pubsetbuf(0, 0);
+    console.file.open(path); /* Write (Overwrite) Mode */
+    // console.file.open(path, std::ios::app); /* Append Mode */
+
+    if (!console.file)
+        std::cerr << "File " << path << " could not be opened.\n";
     /* Generate Subwindows */
     subwins.emplace_back(derwin(window.get(), mainSize.y, mainSize.x, 1, 1));
     subwins.emplace_back(derwin(window.get(), statBarSize.y, statBarSize.x,
@@ -107,7 +115,7 @@ void GameScreen::consoleInput(int key)
 {
     WINDOW *consolePtr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
 
-    if (key == 27) { /* Escape Key */
+    if (key == 27) { /* ESC Key */
         focus = ScreenFocus::MAIN;
         curs_set(0);
     } else if (' ' <= key && key <= '~') { /* Non-Escape ASCII Characters */
@@ -121,7 +129,7 @@ void GameScreen::consoleInput(int key)
                 static_cast<chtype>(key));
         }
         wrefresh(consolePtr);
-    } else if (key == 127) { /* Delete Key */
+    } else if (key == 127) { /* DEL Key */
         if (!console.curLine.empty()) {
             console.curLine.resize(console.curLine.size() - 1);
             /* Check if current line exceeds max line length */
@@ -134,33 +142,69 @@ void GameScreen::consoleInput(int key)
             }
             wrefresh(consolePtr);
         }
-    } else if (key == control.enter) { /* Enter Key */
-        /* Add formatted line to console record */
-        size_t pos {0}, newPos {0};
-
-        while ((newPos = console.curLine.find(" ", pos)) != std::string::npos) {
-            /* Place newline to prevent word cut off at max line length */
-            if (pos % (consoleSize.x - 2) > newPos % (consoleSize.x - 2))
-                console.curLine.replace(pos, 1, "\n");
-            pos = newPos + 1;
-        }
-        console.record.emplace_back(console.curLine);
-
+    } else if (key == control.enter) { /* ENTER Key */
+        /* Reformat Current Line and Add to Console Record */
+        sendToConsole(console.curLine, L"➔");
         /* Update Console Display */
-        // size_t i {console.record.size() - 1};
-        // int lineNum {consoleSize.y - 2};
-        // float maxLenX {static_cast<float>(consoleSize.x - 2)};
-
-        // while (i < console.record.size() && lineNum >= 0) {
-            
-        //     float linesLeft {console.record[i].size() / maxLenX};
-            
-        // }
+        updateConsole();
         /* Clear Current Line on Console */
         console.curLine.clear();
         wmove(consolePtr, consoleSize.y - 1, 4);
         wclrtoeol(consolePtr);
         wrefresh(consolePtr);
+    }
+}
+
+void GameScreen::sendToConsole(std::string str, const std::wstring &icon)
+{
+    size_t pos {0}, newPos {0};
+    /* Place newline to prevent cutoff words at max line length */
+    while (true) {
+        if ((newPos = str.find(" ", newPos)) == std::string::npos) {
+            if (pos % (consoleSize.x - 5) > (str.size() - 1) % (consoleSize.x - 5))
+                str.replace(pos, 1, "\n");
+            break;
+        } else {
+            if (pos % (consoleSize.x - 5) > newPos % (consoleSize.x - 5))
+                str.replace(pos, 1, "\n");
+            pos = newPos++;
+        }
+    }
+    /* Append Line to Console Record */
+    console.record.emplace_back(std::make_pair(str, icon));
+    /* Append Line to Console Log File */
+    for (size_t i {0}; (i = str.find('\n', i)) != std::string::npos;)
+        str.insert(++i, 4, ' ');
+
+    char arr[10];
+    wcstombs(arr, icon.c_str(), 10);
+    console.file << ' ' << arr << ' ' << str << '\n';
+}
+
+void GameScreen::updateConsole()
+{
+    WINDOW *consolePtr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
+
+    for (size_t i {0}, lineNum {0}, pos {}, newPos {}; i < console.record.size(); i++) {
+        auto &line {console.record[console.record.size() - 1 - i]};
+        pos = line.first.size() - 1;
+
+        while (lineNum < consoleSize.y - 2) {
+            newPos = line.first.find_last_of('\n', pos);
+            wmove(consolePtr, (consoleSize.y - 3) - lineNum, 1);
+            wclrtoeol(consolePtr);
+
+            if (newPos == std::string::npos) {
+                mvwaddwstr(consolePtr, (consoleSize.y - 3) - lineNum, 1, line.second.c_str());
+                mvwaddstr(consolePtr, (consoleSize.y - 3) - lineNum++, 4,
+                    line.first.substr(0, pos + 1).c_str());
+                break;
+            } else {
+                mvwaddstr(consolePtr, (consoleSize.y - 3) - lineNum++, 4,
+                    line.first.substr(newPos + 1, pos - newPos).c_str());
+                pos = newPos - 1;
+            }
+        }
     }
 }
 
