@@ -10,7 +10,7 @@ GameScreen::GameScreen() :
     "Eight", "Nine"},
     p{3, 1},
     focus{ScreenFocus::MAIN},
-    cnsl{{"", 5, 0}, {}, {}}
+    cnsl{Console::Mode::INTEGRATED, {"", 5, 0}, {}, {}}
 {
     /* Setup Unbuffered File Stream for Console Output */
     std::string path {"build/log/test.log"};
@@ -162,31 +162,44 @@ void GameScreen::consoleInput(int key)
         wclrtoeol(consolePtr);
         wrefresh(consolePtr);
     } else if (key == KEY_RIGHT) {
-        std::cerr << "RIGHT\n";
+        
     } else if (key == KEY_LEFT) {
-        std::cerr << "LEFT\n";
+        
     } else if (key == KEY_UP) {
-        std::cerr << "UP\n";
+        
     } else if (key == KEY_DOWN) {
-        std::cerr << "DOWN\n";
+        
     }
 }
 
+// void GameScreen::sendToConsole(std::string str, const std::wstring &icon)
+// {
+//     size_t pos {0}, newPos {0};
+//     /* Place newline to prevent cutoff words at max line length */
+//     while (true) {
+//         if ((newPos = str.find(" ", newPos)) == std::string::npos) {
+//             if (pos % (consoleSize.x - 5) > (str.size() - 1) % (consoleSize.x - 5))
+//                 str.replace(pos, 1, "\n");
+//             break;
+//         } else {
+//             if (pos % (consoleSize.x - 5) > newPos % (consoleSize.x - 5))
+//                 str.replace(pos, 1, "\n");
+//             pos = newPos++;
+//         }
+//     }
+//     /* Append Line to Console Record */
+//     cnsl.record.emplace_back(std::make_pair(str, icon));
+//     /* Append Line to Console Log File */
+//     for (size_t i {0}; (i = str.find('\n', i)) != std::string::npos;)
+//         str.insert(++i, 4, ' ');
+
+//     char arr[10];
+//     wcstombs(arr, icon.c_str(), 10);
+//     cnsl.file << ' ' << arr << ' ' << str << '\n';
+// }
+
 void GameScreen::sendToConsole(std::string str, const std::wstring &icon)
 {
-    size_t pos {0}, newPos {0};
-    /* Place newline to prevent cutoff words at max line length */
-    while (true) {
-        if ((newPos = str.find(" ", newPos)) == std::string::npos) {
-            if (pos % (consoleSize.x - 5) > (str.size() - 1) % (consoleSize.x - 5))
-                str.replace(pos, 1, "\n");
-            break;
-        } else {
-            if (pos % (consoleSize.x - 5) > newPos % (consoleSize.x - 5))
-                str.replace(pos, 1, "\n");
-            pos = newPos++;
-        }
-    }
     /* Append Line to Console Record */
     cnsl.record.emplace_back(std::make_pair(str, icon));
     /* Append Line to Console Log File */
@@ -254,7 +267,6 @@ void GameScreen::userInput(int key)
             break;
 
         case ScreenFocus::CONSOLE:
-            std::cerr << "Key: " << key << '\n';
             consoleInput(key);
             break;
 

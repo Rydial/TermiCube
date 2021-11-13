@@ -29,6 +29,9 @@ class GameScreen : public Screen {
             size_t curHotbarSlot;
         };
         struct Console {
+            enum class Mode {
+                INTEGRATED, POPUP
+            } mode;
             struct Input {
                 std::string str;
                 size_t cursPos;
