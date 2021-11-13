@@ -130,11 +130,7 @@ void GameScreen::consoleInput(int key)
         }
         wrefresh(consolePtr);
     } else if (key == 127 && !console.input.str.empty()) { /* DEL Key */
-        int del {!console.input.highlight ? 1 : console.input.highlight};
-        int pos {del > 0 ? console.input.cursPos - del : console.input.cursPos};
-        console.input.str.erase(static_cast<size_t>(pos), del);
-        console.highlight = 0;
-        /* Check if current line exceeds max line length */
+        // /* Check if current line exceeds max line length */
         // if (console.input.str.size() >= consoleSize.x - 5) {
         //     mvwaddstr(consolePtr, consoleSize.y - 1, 4, console.input.str.substr(
         //         console.input.str.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
@@ -143,15 +139,19 @@ void GameScreen::consoleInput(int key)
         //     wmove(window.get(), (maxRows - 1) - 1, console.input.cursPos);
         // }
 
-        if (console.input.str.size() < consoleSize.x - 5 && del == 1) {
-            mvwaddch(consolePtr, consoleSize.y - 1, --console.input.cursPos - 1, ' ');
-            wmove(window.get(), (maxRows - 1) - 1, console.input.cursPos);
-        } else {
+        /* Delete specified line */
+        int del {!console.input.highlight ? 1 : console.input.highlight};
+        int cursPos {static_cast<int>(console.input.str.size())};
+        int pos {del > 0 ? cursPos - del : cursPos};
+        console.input.str.erase(static_cast<size_t>(pos), static_cast<size_t>(del));
+        console.highlight = 0;
+
+        if (console.input.str.size() >= consoleSize.x - 5) { /* Over Buffer Delete */
             mvwaddstr(consolePtr, consoleSize.y - 1, 4, console.input.str.substr(
                 console.input.str.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
-            wclrtoeol(consolePtr);
-            console.input.cursPos -= del;
-            wmove(consolePtr, consoleSize.y - 1, console.input.cursPos);
+        } else if (del == 1) { /* Under Buffer Single Delete */
+            mvwaddch(consolePtr, consoleSize.y - 1, --console.input.cursPos - 1, ' ');
+                wmove(window.get(), (maxRows - 1) - 1, console.input.cursPos);
         }
 
         wrefresh(consolePtr);
