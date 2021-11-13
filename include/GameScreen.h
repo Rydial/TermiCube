@@ -36,14 +36,13 @@ class GameScreen : public Screen {
             } input;
             std::vector<std::pair<std::string, std::wstring>> record;
             std::ofstream file;
-            int highlight;
         };
         /* Member Variables */
         std::vector<std::unique_ptr<WINDOW, WindowDeleter>> subwins;
         std::array<std::string, 10> hotbar;
         Player p;
         ScreenFocus focus;
-        Console console;
+        Console cnsl;
         /* Private Member Methods */
         void initScreen();
         void drawStatBar();

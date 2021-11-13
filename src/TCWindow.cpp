@@ -41,14 +41,12 @@ void TCWindow::initCurses()
     setlocale(LC_ALL, ""); /* Set terminal locale */
     initscr(); /* Start curses mode */
     raw(); /* Disable line buffering */
-    // cbreak();
     noecho(); /* Disable input echoing */
     refresh(); /* Line 14 on Notes.txt */
     curs_set(0); /* Set cursor invisible */
 
     /* Enable Mouse Events */
     // mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
-    // keypad(stdscr, TRUE);
 }
 
 void TCWindow::initColors()
@@ -79,16 +77,37 @@ void TCWindow::terminate() {
 
 int TCWindow::update() 
 {
-    int key {wgetch(panel_window(data->screenList[data->screen]->getPanel()))};
+    const auto &scr {data->screenList[data->screen]};
+    const auto &winPtr {panel_window(scr->getPanel())};
+    wtimeout(winPtr, -1); /* Blocking Mode */
+    int key {wgetch(winPtr)};
 
     if (key == 'q') {
         terminate();
         return 1;
+    } else if (key == 27) { /* ESC Key */
+        /* Non-Blocking Mode */
+        wtimeout(winPtr, 0);
+        /* Filter out disabled function keys */
+        if ((key = wgetch(winPtr)) == ERR)
+            key = 27;
+        else if (key == 91) { /* Function Keys (Consider making key map) */
+            if ((key = wgetch(winPtr)) == 67)
+                key = KEY_RIGHT;
+            else if (key == 68)
+                key = KEY_LEFT;
+            else if (key == 65)
+                key = KEY_UP;
+            else if (key == 66)
+                key = KEY_DOWN;
+            else
+                return 0;
+        } else
+            return 0;
     }
-
-    data->screenList[data->screen]->userInput(key);
-    data->screenList[data->screen]->updateScreen();
-    data->screenList[data->screen]->drawGraphics();
+    scr->userInput(key);
+    scr->updateScreen();
+    scr->drawGraphics();
 
     return 0;
 }

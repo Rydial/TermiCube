@@ -10,15 +10,15 @@ GameScreen::GameScreen() :
     "Eight", "Nine"},
     p{3, 1},
     focus{ScreenFocus::MAIN},
-    console{{"", 5, 0}, {}, {}, 0}
+    cnsl{{"", 5, 0}, {}, {}}
 {
     /* Setup Unbuffered File Stream for Console Output */
     std::string path {"build/log/test.log"};
-    console.file.rdbuf()->pubsetbuf(0, 0);
-    console.file.open(path); /* Write (Overwrite) Mode */
-    // console.file.open(path, std::ios::app); /* Append Mode */
+    cnsl.file.rdbuf()->pubsetbuf(0, 0);
+    cnsl.file.open(path); /* Write (Overwrite) Mode */
+    // cnsl.file.open(path, std::ios::app); /* Append Mode */
 
-    if (!console.file)
+    if (!cnsl.file)
         std::cerr << "File " << path << " could not be opened.\n";
     /* Generate Subwindows */
     subwins.emplace_back(derwin(window.get(), mainSize.y, mainSize.x, 1, 1));
@@ -118,54 +118,57 @@ void GameScreen::consoleInput(int key)
     if (key == 27) { /* ESC Key */
         focus = ScreenFocus::MAIN;
         curs_set(0);
-    } else if (' ' <= key && key <= '~') { /* Non-Escape ASCII Characters */
-        console.input.str += key;
+    } else if (' ' <= key && key <= '~') { /* Printable ASCII Characters */
+        cnsl.input.str += key;
         /* Check if current line exceeds max line length */
-        if (console.input.str.size() > consoleSize.x - 5) {
-            mvwaddstr(consolePtr, consoleSize.y - 1, 4, console.input.str.substr(
-                console.input.str.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
+        if (cnsl.input.str.size() > consoleSize.x - 5) {
+            mvwaddstr(consolePtr, consoleSize.y - 1, 4, cnsl.input.str.substr(
+                cnsl.input.str.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
         } else {
-            mvwaddch(consolePtr, consoleSize.y - 1, console.input.cursPos++ - 1,
+            mvwaddch(consolePtr, consoleSize.y - 1, cnsl.input.cursPos++ - 1,
                 static_cast<chtype>(key));
         }
         wrefresh(consolePtr);
-    } else if (key == 127 && !console.input.str.empty()) { /* DEL Key */
-        // /* Check if current line exceeds max line length */
-        // if (console.input.str.size() >= consoleSize.x - 5) {
-        //     mvwaddstr(consolePtr, consoleSize.y - 1, 4, console.input.str.substr(
-        //         console.input.str.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
-        // } else {
-        //     mvwaddch(consolePtr, consoleSize.y - 1, --console.input.cursPos - 1, ' ');
-        //     wmove(window.get(), (maxRows - 1) - 1, console.input.cursPos);
-        // }
-
-        /* Delete specified line */
-        int del {!console.input.highlight ? 1 : console.input.highlight};
-        int cursPos {static_cast<int>(console.input.str.size())};
+    } else if (key == 127 && !cnsl.input.str.empty()) { /* DEL Key */
+        int del {!cnsl.input.highlight ? 1 : cnsl.input.highlight};
+        int cursPos {static_cast<int>(cnsl.input.str.size())};
         int pos {del > 0 ? cursPos - del : cursPos};
-        console.input.str.erase(static_cast<size_t>(pos), static_cast<size_t>(del));
-        console.highlight = 0;
-
-        if (console.input.str.size() >= consoleSize.x - 5) { /* Over Buffer Delete */
-            mvwaddstr(consolePtr, consoleSize.y - 1, 4, console.input.str.substr(
-                console.input.str.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
-        } else if (del == 1) { /* Under Buffer Single Delete */
-            mvwaddch(consolePtr, consoleSize.y - 1, --console.input.cursPos - 1, ' ');
-                wmove(window.get(), (maxRows - 1) - 1, console.input.cursPos);
+        cnsl.input.str.erase(static_cast<size_t>(pos), static_cast<size_t>(del));
+        cnsl.input.highlight = 0;
+        /* Delete specified substring */
+        if (cnsl.input.str.size() >= consoleSize.x - 5) { /* Overlength Delete */
+            mvwaddstr(consolePtr, consoleSize.y - 1, 4, cnsl.input.str.substr(
+                cnsl.input.str.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
+        } else if (del == 1) { /* Underlength Single Delete */
+            mvwaddch(consolePtr, consoleSize.y - 1, --cnsl.input.cursPos - 1, ' ');
+            wmove(window.get(), (maxRows - 1) - 1, cnsl.input.cursPos);
+        } else { /* Underlength Highlight Delete */
+            cnsl.input.cursPos = static_cast<size_t>(pos) + 5;
+            const auto &subStr {cnsl.input.str.substr(static_cast<size_t>(pos))};
+            mvwaddstr(consolePtr, consoleSize.y - 1, cnsl.input.cursPos - 1, subStr.c_str());
+            wclrtoeol(consolePtr);
+            wmove(consolePtr, consoleSize.y - 1, cnsl.input.cursPos - 1);
         }
-
         wrefresh(consolePtr);
     } else if (key == control.enter) { /* ENTER Key */
         /* Reformat Current Line and Add to Console Record */
-        sendToConsole(console.input.str, L"➔");
+        sendToConsole(cnsl.input.str, L"➔");
         /* Update Console Display */
         updateConsole();
         /* Clear Current Line on Console */
-        console.input.str.clear();
-        console.input.cursPos = 5;
-        wmove(consolePtr, consoleSize.y - 1, console.input.cursPos - 1);
+        cnsl.input.str.clear();
+        cnsl.input.cursPos = 5;
+        wmove(consolePtr, consoleSize.y - 1, cnsl.input.cursPos - 1);
         wclrtoeol(consolePtr);
         wrefresh(consolePtr);
+    } else if (key == KEY_RIGHT) {
+        std::cerr << "RIGHT\n";
+    } else if (key == KEY_LEFT) {
+        std::cerr << "LEFT\n";
+    } else if (key == KEY_UP) {
+        std::cerr << "UP\n";
+    } else if (key == KEY_DOWN) {
+        std::cerr << "DOWN\n";
     }
 }
 
@@ -185,22 +188,22 @@ void GameScreen::sendToConsole(std::string str, const std::wstring &icon)
         }
     }
     /* Append Line to Console Record */
-    console.record.emplace_back(std::make_pair(str, icon));
+    cnsl.record.emplace_back(std::make_pair(str, icon));
     /* Append Line to Console Log File */
     for (size_t i {0}; (i = str.find('\n', i)) != std::string::npos;)
         str.insert(++i, 4, ' ');
 
     char arr[10];
     wcstombs(arr, icon.c_str(), 10);
-    console.file << ' ' << arr << ' ' << str << '\n';
+    cnsl.file << ' ' << arr << ' ' << str << '\n';
 }
 
 void GameScreen::updateConsole()
 {
     WINDOW *consolePtr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
 
-    for (size_t i {0}, lineNum {0}, pos {}, newPos {}; i < console.record.size(); i++) {
-        auto &line {console.record[console.record.size() - 1 - i]};
+    for (size_t i {0}, lineNum {0}, pos {}, newPos {}; i < cnsl.record.size(); i++) {
+        auto &line {cnsl.record[cnsl.record.size() - 1 - i]};
         pos = line.first.size() - 1;
 
         while (lineNum < consoleSize.y - 2) {
@@ -241,9 +244,9 @@ void GameScreen::userInput(int key)
             else if (key == '/') {
                 focus = ScreenFocus::CONSOLE;
                 /* Highlight Current Line */
-                console.input.highlight = 0 - static_cast<int>(console.input.str.size());
+                cnsl.input.highlight = static_cast<int>(cnsl.input.str.size());
                 wattron(window.get(), COLOR_PAIR(3));
-                mvwaddstr(window.get(), (maxRows - 1) - 1, 5, console.input.str.c_str());
+                mvwaddstr(window.get(), (maxRows - 1) - 1, 5, cnsl.input.str.c_str());
                 wattroff(window.get(), COLOR_PAIR(3));
                 /* Turn Cursor Visible */
                 curs_set(1);
@@ -251,6 +254,7 @@ void GameScreen::userInput(int key)
             break;
 
         case ScreenFocus::CONSOLE:
+            std::cerr << "Key: " << key << '\n';
             consoleInput(key);
             break;
 
