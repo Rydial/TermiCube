@@ -22,9 +22,12 @@ class Screen {
             /* Follow the order of emplace_back in screenList */ 
             MAINMENU, GAME
         };
+        /* Template Members */
+        template <typename T = int>
+        struct Point {T y, x;};
+        template <typename T = size_t>
+        struct Size {T y, x;};
         /* Member Structs */
-        struct Coordinate {int y, x;};
-        struct DisplayItem {};
         struct EventData {int key; MEVENT mouse;};
         struct Controls {
             int up, left, down, right;

@@ -4,6 +4,8 @@
 
 /////////////////////////////////////* Base Class */////////////////////////////////////
 
+
+
 GameScreen::GameScreen() :
     subwins{},
     hotbar{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
@@ -26,8 +28,9 @@ GameScreen::GameScreen() :
         mainSize.y + 2, (maxCols - 1) - statBarSize.x));
     subwins.emplace_back(derwin(window.get(), hotbarSize.y, hotbarSize.x,
         (maxRows - 1) - hotbarSize.y, (maxCols - 1) - hotbarSize.x));
-    subwins.emplace_back(derwin(window.get(), consoleSize.y, consoleSize.x,
-        (maxRows - 1) - consoleSize.y, 1));
+    const auto &cnslSize {cnsl.size[static_cast<size_t>(cnsl.mode)]};
+    subwins.emplace_back(derwin(window.get(), cnslSize.y, cnslSize.x,
+        (maxRows - 1) - cnslSize.y, 1));
 
     initScreen();
 }
@@ -75,45 +78,47 @@ void GameScreen::initScreen()
 
     /* Console Border */
     mvwadd_wch(window.get(), (maxRows - 1) - 2, 0, &wchars[L"╠"]);
-    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &wchars[L"═"], consoleSize.x);
-    mvwadd_wch(window.get(), (maxRows - 1) - 2, consoleSize.x + 1, &wchars[L"╣"]);
+    const auto &consoleXLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
+    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &wchars[L"═"], consoleXLen);
+    mvwadd_wch(window.get(), (maxRows - 1) - 2, consoleXLen + 1, &wchars[L"╣"]);
     /* Console Text */
     mvwadd_wch(window.get(), (maxRows - 1) - 1, 2, &wchars[L"➔"]);
 }
 
 void GameScreen::drawStatBar()
 { /***** Line 1 in Notes.txt *****/
-    WINDOW *statBarPtr {subwins[static_cast<size_t>(SubWindowType::STATBAR)].get()};
+    WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::STATBAR)].get()};
     /* Draw HP sprites */
     for (size_t x {(statBarSize.x - 1) - 2}, i {0}; i < p.hp; x -= spriteWidth, i++)
-        mvwadd_wch(statBarPtr, 0, x, &wchars[L"❤️"]);
+        mvwadd_wch(ptr, 0, x, &wchars[L"❤️"]);
     /* Fill right side of rightmost heart with invisible characters*/
     for (size_t x {(statBarSize.x - 1) - 1}; x < statBarSize.x; x++)
-        mvwadd_wch(statBarPtr, 0, x, &wchars[L" "]);
+        mvwadd_wch(ptr, 0, x, &wchars[L" "]);
 }
 
 void GameScreen::hotbarSelect(size_t slot)
 { /* Select which hotbar slot to focus on (mimics keyboard arrangement) */
-    WINDOW *hotbarPtr {subwins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
+    WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
     size_t &curSlot {p.curHotbarSlot}, size {hotbar.size()};
 
-    wattron(hotbarPtr, A_NORMAL);
-    mvwaddstr(hotbarPtr, (curSlot + (size - 1)) % size, 5, hotbar[p.curHotbarSlot].c_str());
-    mvwprintw(hotbarPtr, (curSlot + (size - 1)) % size, 1, "%ld", p.curHotbarSlot);
-    wattroff(hotbarPtr, A_NORMAL);
+    wattron(ptr, A_NORMAL);
+    mvwaddstr(ptr, (curSlot + (size - 1)) % size, 5, hotbar[p.curHotbarSlot].c_str());
+    mvwprintw(ptr, (curSlot + (size - 1)) % size, 1, "%ld", p.curHotbarSlot);
+    wattroff(ptr, A_NORMAL);
 
     p.curHotbarSlot = slot;
-    wattron(hotbarPtr, A_BOLD | COLOR_PAIR(2));
-    mvwaddstr(hotbarPtr, (curSlot + (size - 1)) % size, 5, hotbar[p.curHotbarSlot].c_str());
-    mvwprintw(hotbarPtr, (curSlot + (size - 1)) % size, 1, "%ld", p.curHotbarSlot);
-    wattroff(hotbarPtr, A_BOLD | COLOR_PAIR(2));
+    wattron(ptr, A_BOLD | COLOR_PAIR(2));
+    mvwaddstr(ptr, (curSlot + (size - 1)) % size, 5, hotbar[p.curHotbarSlot].c_str());
+    mvwprintw(ptr, (curSlot + (size - 1)) % size, 1, "%ld", p.curHotbarSlot);
+    wattroff(ptr, A_BOLD | COLOR_PAIR(2));
 
-    wrefresh(hotbarPtr);
+    wrefresh(ptr);
 }
 
 void GameScreen::consoleInput(int key)
 {
-    WINDOW *consolePtr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
+    WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
+    const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
 
     if (key == 27) { /* ESC Key */
         focus = ScreenFocus::MAIN;
@@ -121,14 +126,13 @@ void GameScreen::consoleInput(int key)
     } else if (' ' <= key && key <= '~') { /* Printable ASCII Characters */
         cnsl.input.str += key;
         /* Check if current line exceeds max line length */
-        if (cnsl.input.str.size() > consoleSize.x - 5) {
-            mvwaddstr(consolePtr, consoleSize.y - 1, 4, cnsl.input.str.substr(
-                cnsl.input.str.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
-        } else {
-            mvwaddch(consolePtr, consoleSize.y - 1, cnsl.input.cursPos++ - 1,
-                static_cast<chtype>(key));
-        }
-        wrefresh(consolePtr);
+        if (cnsl.input.str.size() > size.x - 5) {
+            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.str.substr(
+                cnsl.input.str.size() - (size.x - 5), size.x - 5).c_str());
+        } else
+            mvwaddch(ptr, size.y - 1, cnsl.input.cursPos++ - 1, static_cast<chtype>(key));
+
+        wrefresh(ptr);
     } else if (key == 127 && !cnsl.input.str.empty()) { /* DEL Key */
         int del {!cnsl.input.highlight ? 1 : cnsl.input.highlight};
         int cursPos {static_cast<int>(cnsl.input.str.size())};
@@ -136,20 +140,20 @@ void GameScreen::consoleInput(int key)
         cnsl.input.str.erase(static_cast<size_t>(pos), static_cast<size_t>(del));
         cnsl.input.highlight = 0;
         /* Delete specified substring */
-        if (cnsl.input.str.size() >= consoleSize.x - 5) { /* Overlength Delete */
-            mvwaddstr(consolePtr, consoleSize.y - 1, 4, cnsl.input.str.substr(
-                cnsl.input.str.size() - (consoleSize.x - 5), consoleSize.x - 5).c_str());
+        if (cnsl.input.str.size() >= size.x - 5) { /* Overlength Delete */
+            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.str.substr(
+                cnsl.input.str.size() - (size.x - 5), size.x - 5).c_str());
         } else if (del == 1) { /* Underlength Single Delete */
-            mvwaddch(consolePtr, consoleSize.y - 1, --cnsl.input.cursPos - 1, ' ');
+            mvwaddch(ptr, size.y - 1, --cnsl.input.cursPos - 1, ' ');
             wmove(window.get(), (maxRows - 1) - 1, cnsl.input.cursPos);
         } else { /* Underlength Highlight Delete */
             cnsl.input.cursPos = static_cast<size_t>(pos) + 5;
             const auto &subStr {cnsl.input.str.substr(static_cast<size_t>(pos))};
-            mvwaddstr(consolePtr, consoleSize.y - 1, cnsl.input.cursPos - 1, subStr.c_str());
-            wclrtoeol(consolePtr);
-            wmove(consolePtr, consoleSize.y - 1, cnsl.input.cursPos - 1);
+            mvwaddstr(ptr, size.y - 1, cnsl.input.cursPos - 1, subStr.c_str());
+            wclrtoeol(ptr);
+            wmove(ptr, size.y - 1, cnsl.input.cursPos - 1);
         }
-        wrefresh(consolePtr);
+        wrefresh(ptr);
     } else if (key == control.enter) { /* ENTER Key */
         /* Reformat Current Line and Add to Console Record */
         sendToConsole(cnsl.input.str, L"➔");
@@ -158,9 +162,9 @@ void GameScreen::consoleInput(int key)
         /* Clear Current Line on Console */
         cnsl.input.str.clear();
         cnsl.input.cursPos = 5;
-        wmove(consolePtr, consoleSize.y - 1, cnsl.input.cursPos - 1);
-        wclrtoeol(consolePtr);
-        wrefresh(consolePtr);
+        wmove(ptr, size.y - 1, cnsl.input.cursPos - 1);
+        wclrtoeol(ptr);
+        wrefresh(ptr);
     } else if (key == KEY_RIGHT) {
         
     } else if (key == KEY_LEFT) {
@@ -172,67 +176,55 @@ void GameScreen::consoleInput(int key)
     }
 }
 
-// void GameScreen::sendToConsole(std::string str, const std::wstring &icon)
-// {
-//     size_t pos {0}, newPos {0};
-//     /* Place newline to prevent cutoff words at max line length */
-//     while (true) {
-//         if ((newPos = str.find(" ", newPos)) == std::string::npos) {
-//             if (pos % (consoleSize.x - 5) > (str.size() - 1) % (consoleSize.x - 5))
-//                 str.replace(pos, 1, "\n");
-//             break;
-//         } else {
-//             if (pos % (consoleSize.x - 5) > newPos % (consoleSize.x - 5))
-//                 str.replace(pos, 1, "\n");
-//             pos = newPos++;
-//         }
-//     }
-//     /* Append Line to Console Record */
-//     cnsl.record.emplace_back(std::make_pair(str, icon));
-//     /* Append Line to Console Log File */
-//     for (size_t i {0}; (i = str.find('\n', i)) != std::string::npos;)
-//         str.insert(++i, 4, ' ');
-
-//     char arr[10];
-//     wcstombs(arr, icon.c_str(), 10);
-//     cnsl.file << ' ' << arr << ' ' << str << '\n';
-// }
-
-void GameScreen::sendToConsole(std::string str, const std::wstring &icon)
+void GameScreen::sendToConsole(std::string line, const std::wstring &icon)
 {
-    /* Append Line to Console Record */
-    cnsl.record.emplace_back(std::make_pair(str, icon));
-    /* Append Line to Console Log File */
-    for (size_t i {0}; (i = str.find('\n', i)) != std::string::npos;)
-        str.insert(++i, 4, ' ');
-
+    /* Append Line & Icon to Console Record */
+    cnsl.record.emplace_back(std::make_pair(line, icon + L"  "));
+    /* Append Icon to Console Log File */
     char arr[10];
     wcstombs(arr, icon.c_str(), 10);
-    cnsl.file << ' ' << arr << ' ' << str << '\n';
+    cnsl.file << ' ' << arr << ' ';
+    /* Append Line to Console Log File */
+    for (size_t i {0}; i < line.size(); i++) {
+        cnsl.file << line[i];
+        /* Add newline when max line length reached */
+        if ((i + 5) % cnsl.size[static_cast<size_t>(cnsl.mode)].x == 0)
+            cnsl.file << '\n';
+    }
+    cnsl.file << '\n';
 }
 
 void GameScreen::updateConsole()
 {
-    WINDOW *consolePtr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
+    WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
+    const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
 
-    for (size_t i {0}, lineNum {0}, pos {}, newPos {}; i < cnsl.record.size(); i++) {
-        auto &line {cnsl.record[cnsl.record.size() - 1 - i]};
-        pos = line.first.size() - 1;
+    for (size_t i {0}, lineNum {0}, pos {}, newPos{}; i < cnsl.record.size(); i++) {
+        const auto &line {cnsl.record[cnsl.record.size() - 1 - i]};
+        pos = line.first.size();
+        size_t c {pos < 53 ? 3 : 0};
+        newPos = line.first.size() - (line.first.size() % (size.x - 2 - c));
 
-        while (lineNum < consoleSize.y - 2) {
-            newPos = line.first.find_last_of('\n', pos);
-            wmove(consolePtr, (consoleSize.y - 3) - lineNum, 1);
-            wclrtoeol(consolePtr);
+        while (true) {
+            if (lineNum == size.y - 2)
+                return;
 
-            if (newPos == std::string::npos) {
-                mvwaddwstr(consolePtr, (consoleSize.y - 3) - lineNum, 1, line.second.c_str());
-                mvwaddstr(consolePtr, (consoleSize.y - 3) - lineNum++, 4,
-                    line.first.substr(0, pos + 1).c_str());
+            if (newPos == 0) {
+                mvwaddwstr(ptr, (size.y - 3) - lineNum++, 1, line.second.c_str());
+                waddstr(ptr, line.first.substr(0, pos).c_str());
+
+                if (pos < size.x - 2)
+                    wclrtoeol(ptr);
                 break;
             } else {
-                mvwaddstr(consolePtr, (consoleSize.y - 3) - lineNum++, 4,
-                    line.first.substr(newPos + 1, pos - newPos).c_str());
-                pos = newPos - 1;
+                newPos -= c;
+                mvwaddstr(ptr, (size.y - 3) - lineNum++, 1,
+                    line.first.substr(newPos, pos - newPos).c_str());
+                
+                if (pos - newPos < size.x - 2)
+                    wclrtoeol(ptr);
+                pos = newPos;
+                newPos -= size.x - 2 - c;
             }
         }
     }

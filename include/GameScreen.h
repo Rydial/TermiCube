@@ -12,10 +12,10 @@ class GameScreen : public Screen {
     private:
         /* Member Constants */
         static constexpr size_t spriteWidth {2};
-        static constexpr Coordinate mainSize {27, 82};
-        static constexpr Coordinate statBarSize {1, 26};
-        static constexpr Coordinate hotbarSize {10, 26};
-        static constexpr Coordinate consoleSize {12, 55};
+        static constexpr Size<> mainSize {27, 82};
+        static constexpr Size<> statBarSize {1, 26};
+        static constexpr Size<> hotbarSize {10, 26};
+        static constexpr Size<> consoleSize {12, 55};
         /* Member Enums */
         enum class SubWindowType {
             MAIN, STATBAR, HOTBAR, CONSOLE, COUNT
@@ -29,8 +29,10 @@ class GameScreen : public Screen {
             size_t curHotbarSlot;
         };
         struct Console {
+            /* If possible, use std::array over C-Style Array */
+            static constexpr Size<> size[2] {{12, 55}, {0, 0}};
             enum class Mode {
-                INTEGRATED, POPUP
+                INTEGRATED, POPUP, COUNT
             } mode;
             struct Input {
                 std::string str;
@@ -51,7 +53,7 @@ class GameScreen : public Screen {
         void drawStatBar();
         void hotbarSelect(size_t slot);
         void consoleInput(int key);
-        void sendToConsole(std::string str, const std::wstring &icon); /* Intentional String Copy */
+        void sendToConsole(std::string line, const std::wstring &icon); // Intentional String Copy
         void updateConsole();
     public:
         /* Inherit Constructor from Screen */

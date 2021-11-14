@@ -10,6 +10,41 @@ int main() {
     return 0;
 }
 
+// #include <iostream>
+// #include <string>
+
+// struct Point {
+//     int x, y;
+// };
+
+
+
+// class Foo {
+//     private:
+//         struct Console {
+//             static constexpr Point c[2] {{5, 0}, {10, 0}};
+//         } cnsl {};
+//         enum Key : size_t {
+//             ZERO, ONE
+//         } key {Key::ZERO};
+//         std::string str {"Testing"};
+//         size_t index {0};
+
+//         void update()
+//         {   
+//             // size_t tempIndex {0};
+//             const auto &var {cnsl.c[static_cast<size_t>(Key::ZERO)]};
+//             for (size_t i {0}; i < var.x; i++);
+//             if (str.size() > var.x - 5) {}
+//         }
+//     public:
+//         void run() {update();}
+// };
+
+// int main() {
+//     Foo bar;
+//     bar.run();
+// }
 
 // int main()
 // {

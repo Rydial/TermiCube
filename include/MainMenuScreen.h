@@ -9,8 +9,8 @@ class MainMenuScreen : public Screen {
     private:
         /* Member Constants */
         static constexpr int titlePosY {5};
-        static constexpr Coordinate btnSize {5, 50};
-        static constexpr Coordinate btnStartPos {14, (maxCols - btnSize.x) / 2};
+        static constexpr Point<> btnSize {5, 50};
+        static constexpr Point<> btnStartPos {14, (maxCols - btnSize.x) / 2};
         /* Member Enums */
         enum class ButtonType {
             NEWGAME, LOADGAME, SETTINGS, CREDITS, COUNT
