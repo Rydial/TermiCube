@@ -202,22 +202,14 @@ void GameScreen::updateConsole()
     for (size_t i {0}, lineNum {0}, pos {}, newPos{}; i < cnsl.record.size(); i++) {
         const auto &line {cnsl.record[cnsl.record.size() - 1 - i]};
         pos = line.first.size();
-        // size_t c {static_cast<size_t>(pos < size.x - 2 ? 3 : 0)};
-        if (pos > 50) {
-            newPos = line.first.size() - ((line.first.size() - 50) % (size.x - 2));
-            std::cerr << "Multiple Lines: Pos - " << pos << " NewPos - " << newPos << '\n';
-        } else {
-            newPos = line.first.size() - (line.first.size() % (size.x - 2));
-            std::cerr << "Single Line: Pos - " << pos << " NewPos - " << newPos << '\n';
-        }
+        newPos = line.first.size() - ((line.first.size() - (
+            pos > 50 ? 50 : 0)) % (size.x - 2));
             
-
         while (true) {
             if (lineNum == size.y - 2)
                 return;
 
             if (newPos == 0) {
-                std::cerr << "When newPos == 0, Pos : " << pos << '\n';
                 mvwaddwstr(ptr, (size.y - 3) - lineNum++, 1, line.second.c_str());
                 waddstr(ptr, line.first.substr(0, pos).c_str());
 
@@ -225,7 +217,6 @@ void GameScreen::updateConsole()
                     wclrtoeol(ptr);
                 break;
             } else {
-                std::cerr << "When newPos != 0, Pos : " << pos << " NewPos : " << newPos << '\n';
                 mvwaddstr(ptr, (size.y - 3) - lineNum++, 1,
                     line.first.substr(newPos, pos - newPos).c_str());
                 
