@@ -185,10 +185,12 @@ void GameScreen::sendToConsole(std::string line, const std::wstring &icon)
     wcstombs(arr, icon.c_str(), 10);
     cnsl.file << ' ' << arr << ' ';
     /* Append Line to Console Log File */
+    const auto &xLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
+
     for (size_t i {0}; i < line.size(); i++) {
         cnsl.file << line[i];
         /* Add newline when max line length reached */
-        if ((i + 5) % cnsl.size[static_cast<size_t>(cnsl.mode)].x == 0)
+        if (((i + 3) + 1) % (xLen - 2) == 0)
             cnsl.file << '\n';
     }
     cnsl.file << '\n';
