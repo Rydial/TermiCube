@@ -11,6 +11,7 @@ Things to Remember:
 Things to do:
     - Replace deletor functor usage with pimpl-idioms
     - Reorganize entities with a sparse-set system (like EnTT)
+    - Replace as MANY Magic Numbers as possible
 */
 
 /////////////////////// Forward Declarations ///////////////////////

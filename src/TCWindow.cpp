@@ -100,7 +100,17 @@ int TCWindow::update()
                 key = KEY_UP;
             else if (key == 66)
                 key = KEY_DOWN;
-            else
+            else if (key == 49) {
+                if (wgetch(winPtr) == 59 && wgetch(winPtr) == 50) {
+                    if ((key = wgetch(winPtr)) == 67)
+                        key = KEY_SRIGHT;
+                    else if (key == 68)
+                        key = KEY_SLEFT;
+                    else
+                        return 0;
+                } else
+                    return 0;
+            } else
                 return 0;
         } else
             return 0;

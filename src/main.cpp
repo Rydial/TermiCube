@@ -10,12 +10,12 @@ int main() {
     return 0;
 }
 
-// #include <iostream>
-// #include <string>
+#include <iostream>
+#include <string>
 
-// struct Point {
-//     int x, y;
-// };
+struct Point {
+    int x, y;
+};
 
 
 
@@ -46,6 +46,9 @@ int main() {
 //     bar.run();
 // }
 
+#include <panel.h>
+#include <iostream>
+
 // int main()
 // {
 //     initscr();
@@ -56,7 +59,7 @@ int main() {
 //     auto *ptr {newwin(10, 10, 10, 10)};
 
 //     while ((key = wgetch(ptr)) != 'q') {
-//         nodelay(ptr, TRUE);
+//         // nodelay(ptr, TRUE);
 
 //         // if (wgetch(ptr) == 91) {
 //         //     if (wgetch(ptr) == 67) {
@@ -66,14 +69,14 @@ int main() {
 //         //     }
 //         // }
 
-//         if ((key = wgetch(ptr)) == ERR)
-//             key = 27;
-//         else if (key == 91) {
-//             if (65 <= (key = wgetch(ptr)) && key <= 68) /* Arrow Keys */
-//                 std::cerr << "Yay\n";
-//         }
+//         // if ((key = wgetch(ptr)) == ERR)
+//         //     key = 27;
+//         // else if (key == 91) {
+//         //     if (65 <= (key = wgetch(ptr)) && key <= 68) /* Arrow Keys */
+//         //         std::cerr << "Yay\n";
+//         // }
 //         std::cerr << "Key: " << key << '\n';
-//         nodelay(ptr, FALSE);
+//         // nodelay(ptr, FALSE);
 //     }
 
 

@@ -12,7 +12,7 @@ GameScreen::GameScreen() :
     "Eight", "Nine"},
     p{3, 1},
     focus{ScreenFocus::MAIN},
-    cnsl{Console::Mode::INTEGRATED, {"", 5, 0}, {}, {}}
+    cnsl{Console::Mode::INTEGRATED, {"", 4, 0}, {}, {}}
 {
     /* Setup Unbuffered File Stream for Console Output */
     std::string path {"build/log/test.log"};
@@ -130,9 +130,7 @@ void GameScreen::consoleInput(int key)
             mvwaddstr(ptr, size.y - 1, 4, cnsl.input.str.substr(
                 cnsl.input.str.size() - (size.x - 5), size.x - 5).c_str());
         } else
-            mvwaddch(ptr, size.y - 1, cnsl.input.cursPos++ - 1, static_cast<chtype>(key));
-
-        wrefresh(ptr);
+            mvwaddch(ptr, size.y - 1, cnsl.input.cursPos++, static_cast<chtype>(key));
     } else if (key == 127 && !cnsl.input.str.empty()) { /* DEL Key */
         int del {!cnsl.input.highlight ? 1 : cnsl.input.highlight};
         int cursPos {static_cast<int>(cnsl.input.str.size())};
@@ -144,16 +142,15 @@ void GameScreen::consoleInput(int key)
             mvwaddstr(ptr, size.y - 1, 4, cnsl.input.str.substr(
                 cnsl.input.str.size() - (size.x - 5), size.x - 5).c_str());
         } else if (del == 1) { /* Underlength Single Delete */
-            mvwaddch(ptr, size.y - 1, --cnsl.input.cursPos - 1, ' ');
-            wmove(window.get(), (maxRows - 1) - 1, cnsl.input.cursPos);
+            mvwaddch(ptr, size.y - 1, --cnsl.input.cursPos, ' ');
+            wmove(ptr, size.y - 1, cnsl.input.cursPos);
         } else { /* Underlength Highlight Delete */
-            cnsl.input.cursPos = static_cast<size_t>(pos) + 5;
+            cnsl.input.cursPos = static_cast<size_t>(pos) + 4;
             const auto &subStr {cnsl.input.str.substr(static_cast<size_t>(pos))};
-            mvwaddstr(ptr, size.y - 1, cnsl.input.cursPos - 1, subStr.c_str());
+            mvwaddstr(ptr, size.y - 1, cnsl.input.cursPos, subStr.c_str());
             wclrtoeol(ptr);
-            wmove(ptr, size.y - 1, cnsl.input.cursPos - 1);
+            wmove(ptr, size.y - 1, cnsl.input.cursPos);
         }
-        wrefresh(ptr);
     } else if (key == control.enter) { /* ENTER Key */
         /* Reformat Current Line and Add to Console Record */
         sendToConsole(cnsl.input.str, L"➔");
@@ -161,19 +158,30 @@ void GameScreen::consoleInput(int key)
         updateConsole();
         /* Clear Current Line on Console */
         cnsl.input.str.clear();
-        cnsl.input.cursPos = 5;
-        wmove(ptr, size.y - 1, cnsl.input.cursPos - 1);
+        cnsl.input.cursPos = 4;
+        wmove(ptr, size.y - 1, cnsl.input.cursPos);
         wclrtoeol(ptr);
-        wrefresh(ptr);
-    } else if (key == KEY_RIGHT) {
+    } else if (key == KEY_RIGHT && cnsl.input.cursPos < cnsl.input.str.size() + 4) {
+        if (cnsl.input.cursPos == size.x - 1) {
+            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.str.substr(
+                cnsl.input.cursPos - 4, size.x - 5).c_str());
+        } else
+            wmove(ptr, size.y - 1, ++cnsl.input.cursPos);
+    } else if (key == KEY_SRIGHT) {
         
-    } else if (key == KEY_LEFT) {
+    } else if (key == KEY_LEFT && cnsl.input.cursPos > 4) {
+        // if (cnsl.input.cursPos )
+        wmove(ptr, size.y - 1, --cnsl.input.cursPos);
+    } else if (key == KEY_SLEFT) {
         
     } else if (key == KEY_UP) {
         
     } else if (key == KEY_DOWN) {
         
-    }
+    } else
+        return;
+    
+    wrefresh(ptr);
 }
 
 void GameScreen::sendToConsole(std::string line, const std::wstring &icon)

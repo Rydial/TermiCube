@@ -36,7 +36,7 @@ class GameScreen : public Screen {
             } mode;
             struct Input {
                 std::string str;
-                size_t cursPos;
+                size_t cursPos; // Relative to console
                 int highlight;
             } input;
             std::vector<std::pair<std::string, std::wstring>> record;
