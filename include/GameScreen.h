@@ -35,7 +35,8 @@ class GameScreen : public Screen {
                 INTEGRATED, POPUP, COUNT
             } mode;
             struct Input {
-                std::string str;
+                std::string line;
+                size_t lineIndex;
                 size_t cursPos; // Relative to console
                 int highlight;
             } input;
@@ -53,7 +54,7 @@ class GameScreen : public Screen {
         void drawStatBar();
         void hotbarSelect(size_t slot);
         void consoleInput(int key);
-        void sendToConsole(std::string line, const std::wstring &icon); // Intentional String Copy
+        void sendToConsole(std::string line, const std::wstring &icon); 
         void updateConsole();
     public:
         /* Inherit Constructor from Screen */

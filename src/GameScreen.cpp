@@ -12,7 +12,7 @@ GameScreen::GameScreen() :
     "Eight", "Nine"},
     p{3, 1},
     focus{ScreenFocus::MAIN},
-    cnsl{Console::Mode::INTEGRATED, {"", 4, 0}, {}, {}}
+    cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}}
 {
     /* Setup Unbuffered File Stream for Console Output */
     std::string path {"build/log/test.log"};
@@ -124,54 +124,57 @@ void GameScreen::consoleInput(int key)
         focus = ScreenFocus::MAIN;
         curs_set(0);
     } else if (' ' <= key && key <= '~') { /* Printable ASCII Characters */
-        cnsl.input.str += key;
+        cnsl.input.line += key;
         /* Check if current line exceeds max line length */
-        if (cnsl.input.str.size() > size.x - 5) {
-            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.str.substr(
-                cnsl.input.str.size() - (size.x - 5), size.x - 5).c_str());
-        } else
-            mvwaddch(ptr, size.y - 1, cnsl.input.cursPos++, static_cast<chtype>(key));
-    } else if (key == 127 && !cnsl.input.str.empty()) { /* DEL Key */
+        if (cnsl.input.line.size() > size.x - 5) {
+            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
+                cnsl.input.line.size() - (size.x - 5), size.x - 5).c_str());
+        } else {
+            cnsl.input.cursPos++;
+            mvwaddch(ptr, size.y - 1, 4 + cnsl.input.lineIndex++,
+                static_cast<chtype>(key));
+        }
+    } else if (key == 127 && !cnsl.input.line.empty()) { /* DEL Key */
         int del {!cnsl.input.highlight ? 1 : cnsl.input.highlight};
-        int cursPos {static_cast<int>(cnsl.input.str.size())};
-        int pos {del > 0 ? cursPos - del : cursPos};
-        cnsl.input.str.erase(static_cast<size_t>(pos), static_cast<size_t>(del));
+        int lineIndex {static_cast<int>(cnsl.input.line.size())};
+        int pos {del > 0 ? lineIndex - del : lineIndex};
+        cnsl.input.line.erase(static_cast<size_t>(pos), static_cast<size_t>(del));
         cnsl.input.highlight = 0;
         /* Delete specified substring */
-        if (cnsl.input.str.size() >= size.x - 5) { /* Overlength Delete */
-            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.str.substr(
-                cnsl.input.str.size() - (size.x - 5), size.x - 5).c_str());
+        if (cnsl.input.line.size() >= size.x - 5) { /* Overlength Delete */
+            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
+                cnsl.input.line.size() - (size.x - 5), size.x - 5).c_str());
         } else if (del == 1) { /* Underlength Single Delete */
-            mvwaddch(ptr, size.y - 1, --cnsl.input.cursPos, ' ');
-            wmove(ptr, size.y - 1, cnsl.input.cursPos);
+            mvwaddch(ptr, size.y - 1, --cnsl.input.lineIndex + 4, ' ');
+            wmove(ptr, size.y - 1, cnsl.input.lineIndex + 4);
         } else { /* Underlength Highlight Delete */
-            cnsl.input.cursPos = static_cast<size_t>(pos) + 4;
-            const auto &subStr {cnsl.input.str.substr(static_cast<size_t>(pos))};
-            mvwaddstr(ptr, size.y - 1, cnsl.input.cursPos, subStr.c_str());
+            cnsl.input.lineIndex = static_cast<size_t>(pos);
+            const auto &subStr {cnsl.input.line.substr(static_cast<size_t>(pos))};
+            mvwaddstr(ptr, size.y - 1, cnsl.input.lineIndex + 4, subStr.c_str());
             wclrtoeol(ptr);
-            wmove(ptr, size.y - 1, cnsl.input.cursPos);
+            wmove(ptr, size.y - 1, cnsl.input.lineIndex + 4);
         }
     } else if (key == control.enter) { /* ENTER Key */
         /* Reformat Current Line and Add to Console Record */
-        sendToConsole(cnsl.input.str, L"➔");
+        sendToConsole(cnsl.input.line, L"➔");
         /* Update Console Display */
         updateConsole();
         /* Clear Current Line on Console */
-        cnsl.input.str.clear();
-        cnsl.input.cursPos = 4;
-        wmove(ptr, size.y - 1, cnsl.input.cursPos);
+        cnsl.input.line.clear();
+        cnsl.input.lineIndex = 0;
+        wmove(ptr, size.y - 1, cnsl.input.lineIndex + 4);
         wclrtoeol(ptr);
-    } else if (key == KEY_RIGHT && cnsl.input.cursPos < cnsl.input.str.size() + 4) {
-        if (cnsl.input.cursPos == size.x - 1) {
-            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.str.substr(
-                cnsl.input.cursPos - 4, size.x - 5).c_str());
-        } else
-            wmove(ptr, size.y - 1, ++cnsl.input.cursPos);
+    } else if (key == KEY_RIGHT && cnsl.input.lineIndex < cnsl.input.line.size()) {
+        // if (cnsl.input.lineIndex == size.x - 1) {
+        //     mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
+        //         cnsl.input.lineIndex - 4, size.x - 5).c_str());
+        // } else
+        //     wmove(ptr, size.y - 1, ++cnsl.input.lineIndex);
     } else if (key == KEY_SRIGHT) {
         
-    } else if (key == KEY_LEFT && cnsl.input.cursPos > 4) {
-        // if (cnsl.input.cursPos )
-        wmove(ptr, size.y - 1, --cnsl.input.cursPos);
+    } else if (key == KEY_LEFT && cnsl.input.lineIndex > 0) {
+        // if (cnsl.input.lineIndex )
+        // wmove(ptr, size.y - 1, --cnsl.input.lineIndex);
     } else if (key == KEY_SLEFT) {
         
     } else if (key == KEY_UP) {
@@ -258,9 +261,9 @@ void GameScreen::userInput(int key)
             else if (key == '/') {
                 focus = ScreenFocus::CONSOLE;
                 /* Highlight Current Line */
-                cnsl.input.highlight = static_cast<int>(cnsl.input.str.size());
+                cnsl.input.highlight = static_cast<int>(cnsl.input.line.size());
                 wattron(window.get(), COLOR_PAIR(3));
-                mvwaddstr(window.get(), (maxRows - 1) - 1, 5, cnsl.input.str.c_str());
+                mvwaddstr(window.get(), (maxRows - 1) - 1, 5, cnsl.input.line.c_str());
                 wattroff(window.get(), COLOR_PAIR(3));
                 /* Turn Cursor Visible */
                 curs_set(1);
