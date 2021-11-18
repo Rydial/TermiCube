@@ -71,7 +71,7 @@ void GameScreen::initScreen()
     /* Hotbar Text */
     WINDOW *hotbarPtr {subwins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
 
-    for (size_t i {0}; i < hotbar.size(); i++) {
+    for (size_t i {0}; i < hotbar.size(); ++i) {
         mvwaddstr(hotbarPtr, i, 5, hotbar[(i + 1) % 10].c_str());
         mvwprintw(hotbarPtr, i, 1, "%ld", (i + 1) % 10);
     }
@@ -89,10 +89,10 @@ void GameScreen::drawStatBar()
 { /***** Line 1 in Notes.txt *****/
     WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::STATBAR)].get()};
     /* Draw HP sprites */
-    for (size_t x {(statBarSize.x - 1) - 2}, i {0}; i < p.hp; x -= spriteWidth, i++)
+    for (size_t x {(statBarSize.x - 1) - 2}, i {0}; i < p.hp; x -= spriteWidth, ++i)
         mvwadd_wch(ptr, 0, x, &wchars[L"❤️"]);
     /* Fill right side of rightmost heart with invisible characters*/
-    for (size_t x {(statBarSize.x - 1) - 1}; x < statBarSize.x; x++)
+    for (size_t x {(statBarSize.x - 1) - 1}; x < statBarSize.x; ++x)
         mvwadd_wch(ptr, 0, x, &wchars[L" "]);
 }
 
@@ -131,7 +131,7 @@ void GameScreen::consoleInput(int key)
             mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
                 ++cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
         } else {
-            cnsl.input.cursPos++;
+            ++cnsl.input.cursPos;
             mvwaddch(ptr, size.y - 1, 4 + cnsl.input.cursIndex++,
                 static_cast<chtype>(key));
         }
@@ -144,37 +144,22 @@ void GameScreen::consoleInput(int key)
         /* Delete Target Substring */
         cnsl.input.line.erase(cnsl.input.cursIndex, static_cast<size_t>(abs(del)));
         cnsl.input.highlight = 0;
-        
-        std::cerr << "Size: " << cnsl.input.line.size() << '\n';
-        std::cerr << "cursIndex: " << cnsl.input.cursIndex << '\n';
-        std::cerr << "cursPos: " << cnsl.input.cursPos << '\n';
-
-
-        // /* Update Current Line */
-        if (cnsl.input.line.size() >= size.x - 5) {
-            /* Update cursPos */
-            if (cnsl.input.cursIndex <= cnsl.input.cursPos - 5) {
-                if (cnsl.input.cursPos < static_cast<size_t>(del))
-                    cnsl.input.cursPos = 0;
-                else
-                    cnsl.input.cursPos -= static_cast<size_t>(del);
-            }
-            std::cerr << "Overlength\n";
+        /* Update cursPos */
+        if (cnsl.input.cursIndex < size.x - 5)
+                cnsl.input.cursPos = cnsl.input.cursIndex + 4;
+        /* Update cursPos and Current Line */
+        if (cnsl.input.line.size() >= size.x - 5) { /* Overlength Delete */
             mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
                 cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
-        } else {
-            /* Update cursPos */
-            if (cnsl.input.cursIndex < size.x - 5) {
-                if (cnsl.input.cursPos < static_cast<size_t>(del))
-                    cnsl.input.cursPos = 0;
-                else
-                    cnsl.input.cursPos -= static_cast<size_t>(del);
-            }
-            std::cerr << "Underlength\n";
+        } else { /* Underlength Delete */
             mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
                 0, cnsl.input.line.size()).c_str());
-            waddnstr(ptr, " ", (size.x - 5) - cnsl.input.line.size());
-        }        
+            /* Clear remaining characters */
+            for (size_t i {0}; i < (size.x - 5) - cnsl.input.line.size(); ++i)
+                waddch(ptr, ' ');
+        }
+        std::cerr << "cursIndex: " << cnsl.input.cursIndex << '\n';
+        std::cerr << "cursPos: " << cnsl.input.cursPos << '\n';
         wmove(ptr, size.y - 1, cnsl.input.cursPos);
     /////// ENTER Key ///////
     } else if (key == control.enter) {
@@ -189,7 +174,7 @@ void GameScreen::consoleInput(int key)
         wclrtoeol(ptr);
 
     } else if (key == KEY_RIGHT && cnsl.input.cursIndex < cnsl.input.line.size()) {
-        cnsl.input.cursIndex++;
+        ++cnsl.input.cursIndex;
         
         if (cnsl.input.cursPos == size.x - 1) { /* Overlength Move */
             mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
@@ -197,8 +182,19 @@ void GameScreen::consoleInput(int key)
         } else /* Underlength move */
             wmove(ptr, size.y - 1, ++cnsl.input.cursPos);
 
-    } else if (key == KEY_SRIGHT) {
+    } else if (key == KEY_SRIGHT && cnsl.input.cursIndex < cnsl.input.line.size()) {
+        ++cnsl.input.cursIndex;
+        ++cnsl.input.highlight;
         
+        if (cnsl.input.cursPos == size.x - 1) { /* Overlength Move */
+            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
+                cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
+        } else /* Underlength move */
+            ++cnsl.input.cursPos;
+            
+        mvwchgat(ptr, size.y - 1, cnsl.input.cursPos - 1, 1, 0, 3, nullptr);
+        wmove(ptr, size.y - 1, cnsl.input.cursPos);
+
     } else if (key == KEY_LEFT && cnsl.input.cursIndex > 0) {
         cnsl.input.cursIndex--;
 
@@ -232,7 +228,7 @@ void GameScreen::sendToConsole(std::string line, const std::wstring &icon)
     /* Append Line to Console Log File */
     const auto &xLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
 
-    for (size_t i {0}; i < line.size(); i++) {
+    for (size_t i {0}; i < line.size(); ++i) {
         cnsl.file << line[i];
         /* Add newline when max line length reached */
         if (((i + 3) + 1) % (xLen - 2) == 0)
@@ -246,7 +242,7 @@ void GameScreen::updateConsole()
     WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
     const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
 
-    for (size_t i {0}, lineNum {0}, pos {}, newPos{}; i < cnsl.record.size(); i++) {
+    for (size_t i {0}, lineNum {0}, pos {}, newPos{}; i < cnsl.record.size(); ++i) {
         const auto &line {cnsl.record[cnsl.record.size() - 1 - i]};
         pos = line.first.size();
         newPos = line.first.size() - ((line.first.size() - (
