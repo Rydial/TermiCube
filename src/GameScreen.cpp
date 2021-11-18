@@ -119,12 +119,12 @@ void GameScreen::consoleInput(int key)
 {
     WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
     const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
-
-    if (key == 27) { ///* ESC Key *///
+    /////// ESC Key ///////
+    if (key == 27) {
         focus = ScreenFocus::MAIN;
         curs_set(0);
-
-    } else if (' ' <= key && key <= '~') { ///* Printable ASCII Characters *///
+    /////// Printable ASCII Characters ///////
+    } else if (' ' <= key && key <= '~') {
         cnsl.input.line += key;
         /* Check if current line exceeds max line length */
         if (cnsl.input.line.size() > size.x - 5) {
@@ -135,30 +135,34 @@ void GameScreen::consoleInput(int key)
             mvwaddch(ptr, size.y - 1, 4 + cnsl.input.cursIndex++,
                 static_cast<chtype>(key));
         }
-
-    } else if (key == 127 && !cnsl.input.line.empty()) { ///* DEL Key *///
+    /////// DEL Key ///////
+    } else if (key == 127 && !cnsl.input.line.empty() && cnsl.input.cursIndex > 0) {
         int del {!cnsl.input.highlight ? 1 : cnsl.input.highlight};
-        int cursIndex {static_cast<int>(cnsl.input.line.size())};
-        int pos {del > 0 ? cursIndex - del : cursIndex};
-        cnsl.input.line.erase(static_cast<size_t>(pos), static_cast<size_t>(del));
+        /* Update cursIndex */
+        if (del > 0)
+            cnsl.input.cursIndex -= static_cast<size_t>(del);
+        /* Delete Target Substring */
+        cnsl.input.line.erase(cnsl.input.cursIndex, static_cast<size_t>(abs(del)));
         cnsl.input.highlight = 0;
-        
-        if (cnsl.input.line.size() >= size.x - 5) { /* Overlength Delete */
-            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
-                --cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
-        } else if (del == 1) { /* Underlength Single Delete */
-            mvwaddch(ptr, size.y - 1, --cnsl.input.cursIndex + 4, ' ');
-            wmove(ptr, size.y - 1, --cnsl.input.cursPos);
-        } else { /* Underlength Highlight Delete */
-            cnsl.input.cursPos -= del > 0 ? static_cast<size_t>(del) : 0;
-            cnsl.input.cursIndex = static_cast<size_t>(pos);
-            const auto &subStr {cnsl.input.line.substr(static_cast<size_t>(pos))};
-            mvwaddstr(ptr, size.y - 1, cnsl.input.cursIndex + 4, subStr.c_str());
-            wclrtoeol(ptr);
-            wmove(ptr, size.y - 1, cnsl.input.cursPos);
+        /* Update cursPos */
+        if (cnsl.input.line.size() < size.x - 5) {
+            if (cnsl.input.cursPos < static_cast<size_t>(del))
+                cnsl.input.cursPos = 0;
+            else
+                cnsl.input.cursPos -= static_cast<size_t>(del);
         }
-
-    } else if (key == control.enter) { ///* ENTER Key *///
+        /* Update Current Line */
+        if (cnsl.input.line.size() >= size.x - 5) {
+            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
+                cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
+        } else {
+            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
+                0, cnsl.input.line.size()).c_str());
+            waddnstr(ptr, " ", (size.x - 5) - cnsl.input.line.size());
+        }        
+        wmove(ptr, size.y - 1, cnsl.input.cursPos);
+    /////// ENTER Key ///////
+    } else if (key == control.enter) {
         /* Reformat Current Line and Add to Console Record */
         sendToConsole(cnsl.input.line, L"➔");
         /* Update Console Display */
@@ -177,12 +181,6 @@ void GameScreen::consoleInput(int key)
                 cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
         } else /* Underlength move */
             wmove(ptr, size.y - 1, ++cnsl.input.cursPos);
-
-        // if (cnsl.input.cursIndex >= size.x - 4) { /* Overlength Move */
-        //     mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
-        //         cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
-        // } else /* Underlength move */
-        //     wmove(ptr, size.y - 1, ++cnsl.input.cursPos);
 
     } else if (key == KEY_SRIGHT) {
         
