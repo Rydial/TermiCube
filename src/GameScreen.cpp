@@ -136,11 +136,18 @@ void GameScreen::consoleInput(int key)
                 static_cast<chtype>(key));
         }
     /////// DEL Key ///////
-    } else if (key == 127 && !cnsl.input.line.empty() && cnsl.input.cursIndex > 0) {
+    } else if (key == 127 && !cnsl.input.line.empty()) {
+        /* Check requirements */
+        if (cnsl.input.cursIndex == 0 && !cnsl.input.highlight)
+            return;
         int del {!cnsl.input.highlight ? 1 : cnsl.input.highlight};
         /* Update cursIndex */
-        if (del > 0)
-            cnsl.input.cursIndex -= static_cast<size_t>(del);
+        if (del > 0) {
+            if (cnsl.input.cursIndex < static_cast<size_t>(del))
+                cnsl.input.cursIndex = 0;
+            else
+                cnsl.input.cursIndex -= static_cast<size_t>(del);
+        }
         /* Delete Target Substring */
         cnsl.input.line.erase(cnsl.input.cursIndex, static_cast<size_t>(abs(del)));
         cnsl.input.highlight = 0;
@@ -182,7 +189,6 @@ void GameScreen::consoleInput(int key)
 
     } else if (key == KEY_SRIGHT && cnsl.input.cursIndex < cnsl.input.line.size()) {
         ++cnsl.input.cursIndex;
-        ++cnsl.input.highlight;
         
         if (cnsl.input.cursPos == size.x - 1) { /* Overlength Move */
             mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
@@ -190,7 +196,8 @@ void GameScreen::consoleInput(int key)
         } else /* Underlength move */
             ++cnsl.input.cursPos;
             
-        mvwchgat(ptr, size.y - 1, cnsl.input.cursPos - 1, 1, 0, 3, nullptr);
+        mvwchgat(ptr, size.y - 1, cnsl.input.cursPos -
+            static_cast<size_t>(++cnsl.input.highlight), cnsl.input.highlight, 0, 3, nullptr);
         wmove(ptr, size.y - 1, cnsl.input.cursPos);
 
     } else if (key == KEY_LEFT && cnsl.input.cursIndex > 0) {
@@ -292,9 +299,10 @@ void GameScreen::userInput(int key)
                 cnsl.input.highlight = static_cast<int>(cnsl.input.line.size());
                 wattron(window.get(), COLOR_PAIR(3));
                 const auto &xLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
+                const auto &pos {cnsl.input.line.size() > (xLen - 5) ?
+                    cnsl.input.line.size() - (xLen - 5) : 0};
                 mvwaddstr(window.get(), (maxRows - 1) - 1, 5,
-                    cnsl.input.line.substr(
-                        cnsl.input.line.size() - (xLen - 5)).c_str());
+                    cnsl.input.line.substr(pos).c_str());
                 wattroff(window.get(), COLOR_PAIR(3));
                 /* Turn Cursor Visible */
                 curs_set(1);
