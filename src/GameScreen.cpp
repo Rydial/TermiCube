@@ -196,12 +196,13 @@ void GameScreen::consoleInput(int key)
         } else /* Underlength move */
             ++cnsl.input.cursPos;
             
-        mvwchgat(ptr, size.y - 1, cnsl.input.cursPos -
-            static_cast<size_t>(++cnsl.input.highlight), cnsl.input.highlight, 0, 3, nullptr);
+        mvwchgat(ptr, size.y - 1, cnsl.input.cursPos - static_cast<size_t>(
+            ++cnsl.input.highlight), cnsl.input.highlight, 0, 3, nullptr);
         wmove(ptr, size.y - 1, cnsl.input.cursPos);
+        std::cerr << "Shift_Right: " << cnsl.input.highlight << '\n';
 
     } else if (key == KEY_LEFT && cnsl.input.cursIndex > 0) {
-        cnsl.input.cursIndex--;
+        --cnsl.input.cursIndex;
 
         if (cnsl.input.cursPos == 4) { /* Overlength Move */
             mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
@@ -210,8 +211,27 @@ void GameScreen::consoleInput(int key)
         } else /* Underlength move */
             wmove(ptr, size.y - 1, --cnsl.input.cursPos);
 
-    } else if (key == KEY_SLEFT) {
+    } else if (key == KEY_SLEFT && cnsl.input.cursIndex > 0) {
+        --cnsl.input.cursIndex;
+        /* Check if underlength move */
+        if (cnsl.input.cursPos > 4)
+            --cnsl.input.cursPos;
         
+        mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
+            cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
+        /* Highlight */
+        size_t length {static_cast<size_t>(abs(--cnsl.input.highlight)) > size.x - 5 ?
+            size.x - 5 : static_cast<size_t>(abs(cnsl.input.highlight))};
+
+        if (cnsl.input.highlight < 0)
+            mvwchgat(ptr, size.y - 1, cnsl.input.cursPos, length, 0, 3, nullptr);
+        else
+            mvwchgat(ptr, size.y - 1, cnsl.input.cursPos - static_cast<size_t>(
+                cnsl.input.highlight), cnsl.input.highlight, 0, 3, nullptr);
+
+        wmove(ptr, size.y - 1, cnsl.input.cursPos);
+        std::cerr << "Shift_Left: " << cnsl.input.highlight << '\n';
+
     } else if (key == KEY_UP) {
         
     } else if (key == KEY_DOWN) {
