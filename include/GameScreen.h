@@ -36,7 +36,7 @@ class GameScreen : public Screen {
             } mode;
             struct Input {
                 std::string line;
-                size_t lineIndex;
+                size_t cursIndex; // Relative to line
                 size_t cursPos; // Relative to console
                 int highlight;
             } input;
