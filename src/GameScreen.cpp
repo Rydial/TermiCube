@@ -146,7 +146,7 @@ void GameScreen::consoleInput(int key)
         cnsl.input.highlight = 0;
         /* Update cursPos */
         if (cnsl.input.cursIndex < size.x - 5)
-                cnsl.input.cursPos = cnsl.input.cursIndex + 4;
+            cnsl.input.cursPos = cnsl.input.cursIndex + 4;
         /* Update Current Line */
         if (cnsl.input.line.size() >= size.x - 5) { /* Overlength Delete */
             mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
@@ -291,7 +291,10 @@ void GameScreen::userInput(int key)
                 /* Highlight Current Line */
                 cnsl.input.highlight = static_cast<int>(cnsl.input.line.size());
                 wattron(window.get(), COLOR_PAIR(3));
-                mvwaddstr(window.get(), (maxRows - 1) - 1, 5, cnsl.input.line.c_str());
+                const auto &xLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
+                mvwaddstr(window.get(), (maxRows - 1) - 1, 5,
+                    cnsl.input.line.substr(
+                        cnsl.input.line.size() - (xLen - 5)).c_str());
                 wattroff(window.get(), COLOR_PAIR(3));
                 /* Turn Cursor Visible */
                 curs_set(1);
