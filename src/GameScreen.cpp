@@ -144,27 +144,33 @@ void GameScreen::consoleInput(int key)
         /* Delete Target Substring */
         cnsl.input.line.erase(cnsl.input.cursIndex, static_cast<size_t>(abs(del)));
         cnsl.input.highlight = 0;
-        /* Update Current Line */
+        
+        std::cerr << "Size: " << cnsl.input.line.size() << '\n';
+        std::cerr << "cursIndex: " << cnsl.input.cursIndex << '\n';
+        std::cerr << "cursPos: " << cnsl.input.cursPos << '\n';
+
+
+        // /* Update Current Line */
         if (cnsl.input.line.size() >= size.x - 5) {
-            if (cnsl.input.cursIndex < size.x - 5) {
+            /* Update cursPos */
+            if (cnsl.input.cursIndex <= cnsl.input.cursPos - 5) {
                 if (cnsl.input.cursPos < static_cast<size_t>(del))
                     cnsl.input.cursPos = 0;
                 else
                     cnsl.input.cursPos -= static_cast<size_t>(del);
             }
             std::cerr << "Overlength\n";
-            std::cerr << "cursIndex: " << cnsl.input.cursIndex << '\n';
-            std::cerr << "cursPos: " << cnsl.input.cursPos << '\n';
-            std::cerr << "Diff: " << cnsl.input.cursIndex - (cnsl.input.cursPos - 4) << '\n';
             mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
                 cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
         } else {
             /* Update cursPos */
-            if (cnsl.input.cursPos < static_cast<size_t>(del))
-                cnsl.input.cursPos = 0;
-            else
-                cnsl.input.cursPos -= static_cast<size_t>(del);
-
+            if (cnsl.input.cursIndex < size.x - 5) {
+                if (cnsl.input.cursPos < static_cast<size_t>(del))
+                    cnsl.input.cursPos = 0;
+                else
+                    cnsl.input.cursPos -= static_cast<size_t>(del);
+            }
+            std::cerr << "Underlength\n";
             mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
                 0, cnsl.input.line.size()).c_str());
             waddnstr(ptr, " ", (size.x - 5) - cnsl.input.line.size());
