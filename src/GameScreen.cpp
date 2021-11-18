@@ -147,7 +147,7 @@ void GameScreen::consoleInput(int key)
         /* Update cursPos */
         if (cnsl.input.cursIndex < size.x - 5)
                 cnsl.input.cursPos = cnsl.input.cursIndex + 4;
-        /* Update cursPos and Current Line */
+        /* Update Current Line */
         if (cnsl.input.line.size() >= size.x - 5) { /* Overlength Delete */
             mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
                 cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
@@ -158,8 +158,6 @@ void GameScreen::consoleInput(int key)
             for (size_t i {0}; i < (size.x - 5) - cnsl.input.line.size(); ++i)
                 waddch(ptr, ' ');
         }
-        std::cerr << "cursIndex: " << cnsl.input.cursIndex << '\n';
-        std::cerr << "cursPos: " << cnsl.input.cursPos << '\n';
         wmove(ptr, size.y - 1, cnsl.input.cursPos);
     /////// ENTER Key ///////
     } else if (key == control.enter) {
