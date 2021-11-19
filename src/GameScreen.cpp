@@ -1,9 +1,9 @@
 #include <cmath>
 #include <iostream>
+#include <utility>
 #include "GameScreen.h"
 
 /////////////////////////////////////* Base Class */////////////////////////////////////
-
 
 
 GameScreen::GameScreen() :
@@ -273,16 +273,16 @@ void GameScreen::moveCursor(int side, bool highlight)
     /* Update Current Line */
     mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
         cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
-    /* Highlight Target Substring*/
+    /* Highlight Target Substring */
     if (highlight) {
-        size_t length {static_cast<size_t>(abs(cnsl.input.highlight)) > size.x - 5 ?
+        size_t len {std::cmp_greater(abs(cnsl.input.highlight), size.x - 5) ?
             size.x - 5 : static_cast<size_t>(abs(cnsl.input.highlight))};
-
+        
         if (cnsl.input.highlight < 0)
-            mvwchgat(ptr, size.y - 1, cnsl.input.cursPos, length, 0, 3, nullptr);
+            mvwchgat(ptr, size.y - 1, cnsl.input.cursPos, len, 0, 3, nullptr);
         else
             mvwchgat(ptr, size.y - 1, cnsl.input.cursPos - static_cast<size_t>(
-                cnsl.input.highlight), length, 0, 3, nullptr);
+                cnsl.input.highlight), len, 0, 3, nullptr);
     }
     wmove(ptr, size.y - 1, cnsl.input.cursPos);
 }

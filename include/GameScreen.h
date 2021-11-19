@@ -5,7 +5,6 @@
 #include <string>
 #include <array>
 #include <fstream>
-#include <utility>
 #include "Screen.h"
 
 class GameScreen : public Screen {
