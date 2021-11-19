@@ -52,13 +52,14 @@ class GameScreen : public Screen {
         ScreenFocus focus;
         Console cnsl;
         /* Private Member Methods */
-        void initScreen();
+        void consoleInput(int key);
         void drawStatBar();
         void hotbarSelect(size_t slot);
-        void consoleInput(int key);
+        void initScreen();
+        void moveCursor(int side);
         void sendToConsole(std::string line, const std::wstring &icon); 
         void updateConsole();
-        void moveCursor(int side, bool highlight=false);
+        void updateConsoleLine(bool highlight=false);
     public:
         /* Inherit Constructor from Screen */
         GameScreen();
