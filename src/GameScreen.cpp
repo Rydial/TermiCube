@@ -179,15 +179,21 @@ void GameScreen::consoleInput(int key)
         wclrtoeol(ptr);
 
     } else if (key == KEY_RIGHT && cnsl.input.cursIndex < cnsl.input.line.size()) {
+        ++cnsl.input.cursIndex;
         moveCursor(static_cast<int>(CursorMove::RIGHT));
 
     } else if (key == KEY_SRIGHT && cnsl.input.cursIndex < cnsl.input.line.size()) {
+        ++cnsl.input.cursIndex;
+        ++cnsl.input.highlight;
         moveCursor(static_cast<int>(CursorMove::RIGHT), true);
 
     } else if (key == KEY_LEFT && cnsl.input.cursIndex > 0) {
+        --cnsl.input.cursIndex;
         moveCursor(static_cast<int>(CursorMove::LEFT));
 
     } else if (key == KEY_SLEFT && cnsl.input.cursIndex > 0) {
+        --cnsl.input.cursIndex;
+        --cnsl.input.highlight;
         moveCursor(static_cast<int>(CursorMove::LEFT), true);
 
     } else if (key == KEY_UP) {
@@ -260,24 +266,15 @@ void GameScreen::moveCursor(int side, bool highlight)
     WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
     const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
     /* Update Console Input Values */
-    if (side == -1) { /* Left Move */
-        if (cnsl.input.cursPos > 4)
-            --cnsl.input.cursPos;
-        --cnsl.input.cursIndex;
-    } else { /* Right Move */
-        if (cnsl.input.cursPos < size.x - 1)
-            ++cnsl.input.cursPos;
-        ++cnsl.input.cursIndex;
-    }
+    if (side == -1 && cnsl.input.cursPos > 4)
+        --cnsl.input.cursPos;
+    else if (side == 1 && cnsl.input.cursPos < size.x - 1)
+        ++cnsl.input.cursPos;
     /* Update Current Line */
     mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
         cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
     /* Highlight Target Substring*/
     if (highlight) {
-        if (side == -1)
-            --cnsl.input.highlight;
-        else
-            ++cnsl.input.highlight;
         size_t length {static_cast<size_t>(abs(cnsl.input.highlight)) > size.x - 5 ?
             size.x - 5 : static_cast<size_t>(abs(cnsl.input.highlight))};
 
