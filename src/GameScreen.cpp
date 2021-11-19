@@ -179,58 +179,16 @@ void GameScreen::consoleInput(int key)
         wclrtoeol(ptr);
 
     } else if (key == KEY_RIGHT && cnsl.input.cursIndex < cnsl.input.line.size()) {
-        ++cnsl.input.cursIndex;
-        
-        if (cnsl.input.cursPos == size.x - 1) { /* Overlength Move */
-            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
-                cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
-        } else /* Underlength move */
-            wmove(ptr, size.y - 1, ++cnsl.input.cursPos);
+        moveCursor(static_cast<int>(CursorMove::RIGHT));
 
     } else if (key == KEY_SRIGHT && cnsl.input.cursIndex < cnsl.input.line.size()) {
-        ++cnsl.input.cursIndex;
-        
-        if (cnsl.input.cursPos == size.x - 1) { /* Overlength Move */
-            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
-                cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
-        } else /* Underlength move */
-            ++cnsl.input.cursPos;
-            
-        mvwchgat(ptr, size.y - 1, cnsl.input.cursPos - static_cast<size_t>(
-            ++cnsl.input.highlight), cnsl.input.highlight, 0, 3, nullptr);
-        wmove(ptr, size.y - 1, cnsl.input.cursPos);
-        std::cerr << "Shift_Right: " << cnsl.input.highlight << '\n';
+        moveCursor(static_cast<int>(CursorMove::RIGHT), true);
 
     } else if (key == KEY_LEFT && cnsl.input.cursIndex > 0) {
-        --cnsl.input.cursIndex;
-
-        if (cnsl.input.cursPos == 4) { /* Overlength Move */
-            mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
-                cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
-            wmove(ptr, size.y - 1, cnsl.input.cursPos);
-        } else /* Underlength move */
-            wmove(ptr, size.y - 1, --cnsl.input.cursPos);
+        moveCursor(static_cast<int>(CursorMove::LEFT));
 
     } else if (key == KEY_SLEFT && cnsl.input.cursIndex > 0) {
-        --cnsl.input.cursIndex;
-        /* Check if underlength move */
-        if (cnsl.input.cursPos > 4)
-            --cnsl.input.cursPos;
-        
-        mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
-            cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
-        /* Highlight */
-        size_t length {static_cast<size_t>(abs(--cnsl.input.highlight)) > size.x - 5 ?
-            size.x - 5 : static_cast<size_t>(abs(cnsl.input.highlight))};
-
-        if (cnsl.input.highlight < 0)
-            mvwchgat(ptr, size.y - 1, cnsl.input.cursPos, length, 0, 3, nullptr);
-        else
-            mvwchgat(ptr, size.y - 1, cnsl.input.cursPos - static_cast<size_t>(
-                cnsl.input.highlight), cnsl.input.highlight, 0, 3, nullptr);
-
-        wmove(ptr, size.y - 1, cnsl.input.cursPos);
-        std::cerr << "Shift_Left: " << cnsl.input.highlight << '\n';
+        moveCursor(static_cast<int>(CursorMove::LEFT), true);
 
     } else if (key == KEY_UP) {
         
@@ -295,6 +253,41 @@ void GameScreen::updateConsole()
             }
         }
     }
+}
+
+void GameScreen::moveCursor(int side, bool highlight)
+{
+    WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
+    const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
+    /* Update Console Input Values */
+    if (side == -1) { /* Left Move */
+        if (cnsl.input.cursPos > 4)
+            --cnsl.input.cursPos;
+        --cnsl.input.cursIndex;
+    } else { /* Right Move */
+        if (cnsl.input.cursPos < size.x - 1)
+            ++cnsl.input.cursPos;
+        ++cnsl.input.cursIndex;
+    }
+    /* Update Current Line */
+    mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
+        cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
+    /* Highlight Target Substring*/
+    if (highlight) {
+        if (side == -1)
+            --cnsl.input.highlight;
+        else
+            ++cnsl.input.highlight;
+        size_t length {static_cast<size_t>(abs(cnsl.input.highlight)) > size.x - 5 ?
+            size.x - 5 : static_cast<size_t>(abs(cnsl.input.highlight))};
+
+        if (cnsl.input.highlight < 0)
+            mvwchgat(ptr, size.y - 1, cnsl.input.cursPos, length, 0, 3, nullptr);
+        else
+            mvwchgat(ptr, size.y - 1, cnsl.input.cursPos - static_cast<size_t>(
+                cnsl.input.highlight), length, 0, 3, nullptr);
+    }
+    wmove(ptr, size.y - 1, cnsl.input.cursPos);
 }
 
 void GameScreen::drawGraphics()

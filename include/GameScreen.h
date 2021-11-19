@@ -23,6 +23,9 @@ class GameScreen : public Screen {
         enum class ScreenFocus {
             MAIN, CONSOLE, OPTIONS
         };
+        enum class CursorMove : int {
+            LEFT = -1, RIGHT = 1
+        };
         /* Member Structs */
         struct Player {
             size_t hp;
@@ -56,6 +59,7 @@ class GameScreen : public Screen {
         void consoleInput(int key);
         void sendToConsole(std::string line, const std::wstring &icon); 
         void updateConsole();
+        void moveCursor(int side, bool highlight=false);
     public:
         /* Inherit Constructor from Screen */
         GameScreen();
