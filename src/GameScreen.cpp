@@ -7,117 +7,26 @@
 
 
 GameScreen::GameScreen() :
-    subwins{},
+    cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}},
+    optMenu{std::unique_ptr<PANEL, PanelDeleter>(new_panel(newwin(
+        optMenu.size.y, optMenu.size.x,
+        (LINES - optMenu.size.y) / 2, (COLS - optMenu.size.x) / 2
+    )))},
+    subWins{},
     hotbar{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
     "Eight", "Nine"},
     p{3, 1},
-    focus{ScreenFocus::MAIN},
-    cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}}
+    focus{ScreenFocus::MAIN}
 {
-    /* Setup Unbuffered File Stream for Console Output */
-    std::string path {"build/log/test.log"};
-    cnsl.file.rdbuf()->pubsetbuf(0, 0);
-    cnsl.file.open(path); /* Write (Overwrite) Mode */
-    // cnsl.file.open(path, std::ios::app); /* Append Mode */
-
-    if (!cnsl.file)
-        std::cerr << "File " << path << " could not be opened.\n";
-    /* Generate Subwindows */
-    subwins.emplace_back(derwin(window.get(), mainSize.y, mainSize.x, 1, 1));
-    subwins.emplace_back(derwin(window.get(), statBarSize.y, statBarSize.x,
-        mainSize.y + 2, (maxCols - 1) - statBarSize.x));
-    subwins.emplace_back(derwin(window.get(), hotbarSize.y, hotbarSize.x,
-        (maxRows - 1) - hotbarSize.y, (maxCols - 1) - hotbarSize.x));
-    const auto &cnslSize {cnsl.size[static_cast<size_t>(cnsl.mode)]};
-    subwins.emplace_back(derwin(window.get(), cnslSize.y, cnslSize.x,
-        (maxRows - 1) - cnslSize.y, 1));
-
+    initOptionMenu();
+    initConsole();
+    initSubWindows();
     initScreen();
-}
-
-void GameScreen::initScreen()
-{
-    /* Screen Border */
-    drawBorder();
-    mvwadd_wch(window.get(), mainSize.y + 1, 0, &wchars[L"╠"]);
-    mvwhline_set(window.get(), mainSize.y + 1, 1, &wchars[L"═"], mainSize.x);
-    mvwadd_wch(window.get(), mainSize.y + 1, maxCols - 1, &wchars[L"╣"]);
-
-    /* Status Bar Border */
-    mvwadd_wch(window.get(), mainSize.y + 1,
-        (maxCols - 1) - statBarSize.x - 1, &wchars[L"╦"]);
-    mvwvline_set(window.get(), mainSize.y + 2,
-        (maxCols - 1) - statBarSize.x - 1, &wchars[L"║"], statBarSize.y);
-    mvwadd_wch(window.get(), (mainSize.y + 2) + statBarSize.y,
-        (maxCols - 1) - statBarSize.x - 1, &wchars[L"╠"]);
-    mvwhline_set(window.get(), (mainSize.y + 2) + statBarSize.y,
-        (maxCols - 1) - statBarSize.x, &wchars[L"═"], statBarSize.x);
-    mvwadd_wch(window.get(), (mainSize.y + 2) + statBarSize.y,
-        maxCols - 1, &wchars[L"╣"]);
-    /* Status Bar Sprites */
-    drawStatBar();
-
-    /* Hotbar Border */
-    mvwvline_set(window.get(), (maxRows - 1) - hotbarSize.y,
-        (maxCols - 1) - hotbarSize.x - 1, &wchars[L"║"], hotbarSize.y);
-    mvwadd_wch(window.get(), maxRows - 1,
-        (maxCols - 1) - hotbarSize.x - 1, &wchars[L"╩"]);
-    mvwvline_set(window.get(), (maxRows - 1) - hotbarSize.y,
-        (maxCols - 1) - hotbarSize.x + 3, &wchars[L"║"], hotbarSize.y);
-    mvwadd_wch(window.get(), (maxRows - 1) - hotbarSize.y - 1,
-        (maxCols - 1) - hotbarSize.x + 3, &wchars[L"╦"]);
-    mvwadd_wch(window.get(), maxRows - 1,
-        (maxCols - 1) - hotbarSize.x + 3, &wchars[L"╩"]);
-    /* Hotbar Text */
-    WINDOW *hotbarPtr {subwins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
-
-    for (size_t i {0}; i < hotbar.size(); ++i) {
-        mvwaddstr(hotbarPtr, i, 5, hotbar[(i + 1) % 10].c_str());
-        mvwprintw(hotbarPtr, i, 1, "%ld", (i + 1) % 10);
-    }
-
-    /* Console Border */
-    mvwadd_wch(window.get(), (maxRows - 1) - 2, 0, &wchars[L"╠"]);
-    const auto &consoleXLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
-    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &wchars[L"═"], consoleXLen);
-    mvwadd_wch(window.get(), (maxRows - 1) - 2, consoleXLen + 1, &wchars[L"╣"]);
-    /* Console Text */
-    mvwadd_wch(window.get(), (maxRows - 1) - 1, 2, &wchars[L"➔"]);
-}
-
-void GameScreen::drawStatBar()
-{ /***** Line 1 in Notes.txt *****/
-    WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::STATBAR)].get()};
-    /* Draw HP sprites */
-    for (size_t x {(statBarSize.x - 1) - 2}, i {0}; i < p.hp; x -= spriteWidth, ++i)
-        mvwadd_wch(ptr, 0, x, &wchars[L"❤️"]);
-    /* Fill right side of rightmost heart with invisible characters*/
-    for (size_t x {(statBarSize.x - 1) - 1}; x < statBarSize.x; ++x)
-        mvwadd_wch(ptr, 0, x, &wchars[L" "]);
-}
-
-void GameScreen::hotbarSelect(size_t slot)
-{ /* Select which hotbar slot to focus on (mimics keyboard arrangement) */
-    WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
-    size_t &curSlot {p.curHotbarSlot}, size {hotbar.size()};
-    /* Unhighlight current hotbar slot */
-    wattron(ptr, A_NORMAL);
-    mvwaddstr(ptr, (curSlot + (size - 1)) % size, 5, hotbar[p.curHotbarSlot].c_str());
-    mvwprintw(ptr, (curSlot + (size - 1)) % size, 1, "%ld", p.curHotbarSlot);
-    wattroff(ptr, A_NORMAL);
-    /* Highlight newly selected hotbar slot */
-    p.curHotbarSlot = slot;
-    wattron(ptr, A_BOLD | COLOR_PAIR(2));
-    mvwaddstr(ptr, (curSlot + (size - 1)) % size, 5, hotbar[p.curHotbarSlot].c_str());
-    mvwprintw(ptr, (curSlot + (size - 1)) % size, 1, "%ld", p.curHotbarSlot);
-    wattroff(ptr, A_BOLD | COLOR_PAIR(2));
-
-    wrefresh(ptr);
 }
 
 void GameScreen::consoleInput(int key)
 {
-    WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
+    WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
     const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
     /////// ESC Key ///////
     if (key == 27) {
@@ -143,7 +52,7 @@ void GameScreen::consoleInput(int key)
         int del {!cnsl.input.highlight ? 1 : cnsl.input.highlight};
         /* Update cursIndex */
         if (del > 0) {
-            if (cnsl.input.cursIndex < static_cast<size_t>(del))
+            if (std::cmp_less(cnsl.input.cursIndex, del))
                 cnsl.input.cursIndex = 0;
             else
                 cnsl.input.cursIndex -= static_cast<size_t>(del);
@@ -206,6 +115,151 @@ void GameScreen::consoleInput(int key)
     wrefresh(ptr);
 }
 
+void GameScreen::drawGraphics()
+{
+    
+}
+
+void GameScreen::drawStatBar()
+{ /***** Line 1 in Notes.txt *****/
+    WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::STATBAR)].get()};
+    /* Draw HP sprites */
+    for (size_t x {(statBarSize.x - 1) - 2}, i {0}; i < p.hp; x -= spriteWidth, ++i)
+        mvwadd_wch(ptr, 0, x, &wchars[L"❤️"]);
+    /* Fill right side of rightmost heart with invisible characters*/
+    for (size_t x {(statBarSize.x - 1) - 1}; x < statBarSize.x; ++x)
+        mvwadd_wch(ptr, 0, x, &wchars[L" "]);
+}
+
+void GameScreen::hotbarSelect(size_t slot)
+{ /* Select which hotbar slot to focus on (mimics keyboard arrangement) */
+    WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
+    size_t &curSlot {p.curHotbarSlot}, size {hotbar.size()};
+    /* Unhighlight current hotbar slot */
+    wattron(ptr, A_NORMAL);
+    mvwaddstr(ptr, (curSlot + (size - 1)) % size, 5, hotbar[p.curHotbarSlot].c_str());
+    mvwprintw(ptr, (curSlot + (size - 1)) % size, 1, "%ld", p.curHotbarSlot);
+    wattroff(ptr, A_NORMAL);
+    /* Highlight newly selected hotbar slot */
+    p.curHotbarSlot = slot;
+    wattron(ptr, A_BOLD | COLOR_PAIR(2));
+    mvwaddstr(ptr, (curSlot + (size - 1)) % size, 5, hotbar[p.curHotbarSlot].c_str());
+    mvwprintw(ptr, (curSlot + (size - 1)) % size, 1, "%ld", p.curHotbarSlot);
+    wattroff(ptr, A_BOLD | COLOR_PAIR(2));
+
+    wrefresh(ptr);
+}
+
+void GameScreen::initConsole()
+{
+    /* Setup Unbuffered File Stream for Console Output */
+    std::string path {"build/log/test.log"};
+    cnsl.file.rdbuf()->pubsetbuf(0, 0);
+    cnsl.file.open(path); /* Write (Overwrite) Mode */
+    // cnsl.file.open(path, std::ios::app); /* Append Mode */
+
+    /* Check if file stream was opened */
+    if (!cnsl.file)
+        std::cerr << "File " << path << " could not be opened.\n";
+}
+
+void GameScreen::initOptionMenu()
+{
+    /* Draw Option Menu Border */
+    box(panel_window(optMenu.panel.get()), 0, 0);
+    /* Hide Option Menu */
+    hide_panel(optMenu.panel.get());
+    
+}
+
+void GameScreen::initScreen()
+{   
+    /* Draw Screen Border */
+    drawBorder();
+    mvwadd_wch(window.get(), mainSize.y + 1, 0, &wchars[L"╠"]);
+    mvwhline_set(window.get(), mainSize.y + 1, 1, &wchars[L"═"], mainSize.x);
+    mvwadd_wch(window.get(), mainSize.y + 1, maxCols - 1, &wchars[L"╣"]);
+
+    /* Draw Status Bar Border */
+    mvwadd_wch(window.get(), mainSize.y + 1,
+        (maxCols - 1) - statBarSize.x - 1, &wchars[L"╦"]);
+    mvwvline_set(window.get(), mainSize.y + 2,
+        (maxCols - 1) - statBarSize.x - 1, &wchars[L"║"], statBarSize.y);
+    mvwadd_wch(window.get(), (mainSize.y + 2) + statBarSize.y,
+        (maxCols - 1) - statBarSize.x - 1, &wchars[L"╠"]);
+    mvwhline_set(window.get(), (mainSize.y + 2) + statBarSize.y,
+        (maxCols - 1) - statBarSize.x, &wchars[L"═"], statBarSize.x);
+    mvwadd_wch(window.get(), (mainSize.y + 2) + statBarSize.y,
+        maxCols - 1, &wchars[L"╣"]);
+    /* Draw Status Bar Sprites */
+    drawStatBar();
+
+    /* Draw Hotbar Border */
+    mvwvline_set(window.get(), (maxRows - 1) - hotbarSize.y,
+        (maxCols - 1) - hotbarSize.x - 1, &wchars[L"║"], hotbarSize.y);
+    mvwadd_wch(window.get(), maxRows - 1,
+        (maxCols - 1) - hotbarSize.x - 1, &wchars[L"╩"]);
+    mvwvline_set(window.get(), (maxRows - 1) - hotbarSize.y,
+        (maxCols - 1) - hotbarSize.x + 3, &wchars[L"║"], hotbarSize.y);
+    mvwadd_wch(window.get(), (maxRows - 1) - hotbarSize.y - 1,
+        (maxCols - 1) - hotbarSize.x + 3, &wchars[L"╦"]);
+    mvwadd_wch(window.get(), maxRows - 1,
+        (maxCols - 1) - hotbarSize.x + 3, &wchars[L"╩"]);
+    /* Draw Hotbar Text */
+    WINDOW *hotbarPtr {subWins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
+
+    for (size_t i {0}; i < hotbar.size(); ++i) {
+        mvwaddstr(hotbarPtr, i, 5, hotbar[(i + 1) % 10].c_str());
+        mvwprintw(hotbarPtr, i, 1, "%ld", (i + 1) % 10);
+    }
+
+    /* Draw Console Border */
+    mvwadd_wch(window.get(), (maxRows - 1) - 2, 0, &wchars[L"╠"]);
+    const auto &consoleXLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
+    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &wchars[L"═"], consoleXLen);
+    mvwadd_wch(window.get(), (maxRows - 1) - 2, consoleXLen + 1, &wchars[L"╣"]);
+    /* Draw Console Text */
+    mvwadd_wch(window.get(), (maxRows - 1) - 1, 2, &wchars[L"➔"]);
+}
+
+void GameScreen::initSubWindows()
+{   /* Generate Subwindows */
+    subWins.emplace_back(derwin(window.get(), mainSize.y, mainSize.x, 1, 1));
+    subWins.emplace_back(derwin(window.get(), statBarSize.y, statBarSize.x,
+        mainSize.y + 2, (maxCols - 1) - statBarSize.x));
+    subWins.emplace_back(derwin(window.get(), hotbarSize.y, hotbarSize.x,
+        (maxRows - 1) - hotbarSize.y, (maxCols - 1) - hotbarSize.x));
+    const auto &cnslSize {cnsl.size[static_cast<size_t>(cnsl.mode)]};
+    subWins.emplace_back(derwin(window.get(), cnslSize.y, cnslSize.x,
+        (maxRows - 1) - cnslSize.y, 1));
+}
+
+void GameScreen::moveCursor(int side, bool highlight)
+{
+    WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
+    const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
+    /* Update Console Input Values */
+    if (side == -1 && cnsl.input.cursPos > 4)
+        --cnsl.input.cursPos;
+    else if (side == 1 && cnsl.input.cursPos < size.x - 1)
+        ++cnsl.input.cursPos;
+    /* Update Current Line */
+    mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
+        cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
+    /* Highlight Target Substring */
+    if (highlight) {
+        size_t len {std::cmp_greater(abs(cnsl.input.highlight), size.x - 5) ?
+            size.x - 5 : static_cast<size_t>(abs(cnsl.input.highlight))};
+        
+        if (cnsl.input.highlight < 0)
+            mvwchgat(ptr, size.y - 1, cnsl.input.cursPos, len, 0, 3, nullptr);
+        else
+            mvwchgat(ptr, size.y - 1, cnsl.input.cursPos - static_cast<size_t>(
+                cnsl.input.highlight), len, 0, 3, nullptr);
+    }
+    wmove(ptr, size.y - 1, cnsl.input.cursPos);
+}
+
 void GameScreen::sendToConsole(std::string line, const std::wstring &icon)
 {
     /* Append Line & Icon to Console Record */
@@ -228,7 +282,7 @@ void GameScreen::sendToConsole(std::string line, const std::wstring &icon)
 
 void GameScreen::updateConsole()
 {
-    WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
+    WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
     const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
 
     for (size_t i {0}, lineNum {0}, pos {}, newPos{}; i < cnsl.record.size(); ++i) {
@@ -261,37 +315,6 @@ void GameScreen::updateConsole()
     }
 }
 
-void GameScreen::moveCursor(int side, bool highlight)
-{
-    WINDOW *ptr {subwins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
-    const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
-    /* Update Console Input Values */
-    if (side == -1 && cnsl.input.cursPos > 4)
-        --cnsl.input.cursPos;
-    else if (side == 1 && cnsl.input.cursPos < size.x - 1)
-        ++cnsl.input.cursPos;
-    /* Update Current Line */
-    mvwaddstr(ptr, size.y - 1, 4, cnsl.input.line.substr(
-        cnsl.input.cursIndex - (cnsl.input.cursPos - 4), size.x - 5).c_str());
-    /* Highlight Target Substring */
-    if (highlight) {
-        size_t len {std::cmp_greater(abs(cnsl.input.highlight), size.x - 5) ?
-            size.x - 5 : static_cast<size_t>(abs(cnsl.input.highlight))};
-        
-        if (cnsl.input.highlight < 0)
-            mvwchgat(ptr, size.y - 1, cnsl.input.cursPos, len, 0, 3, nullptr);
-        else
-            mvwchgat(ptr, size.y - 1, cnsl.input.cursPos - static_cast<size_t>(
-                cnsl.input.highlight), len, 0, 3, nullptr);
-    }
-    wmove(ptr, size.y - 1, cnsl.input.cursPos);
-}
-
-void GameScreen::drawGraphics()
-{
-    
-}
-
 void GameScreen::updateScreen()
 {
 
@@ -301,12 +324,17 @@ void GameScreen::userInput(int key)
 {
     switch (focus) {
         case ScreenFocus::MAIN:
-            if ('0' <= key && key <= '9')
+            if (key == 27) { /* ESC Key */
+                focus = ScreenFocus::OPTIONS;
+                show_panel(optMenu.panel.get());
+                update_panels();
+                doupdate();
+            } else if ('0' <= key && key <= '9')
                 hotbarSelect(static_cast<size_t>(key - '0'));
             else if (key == '/') {
                 focus = ScreenFocus::CONSOLE;
                 /* Highlight Current Line */
-                cnsl.input.highlight = static_cast<int>(cnsl.input.line.size());
+                cnsl.input.highlight = std::ssize(cnsl.input.line);
                 wattron(window.get(), COLOR_PAIR(3));
                 const auto &xLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
                 const auto &pos {cnsl.input.line.size() > (xLen - 5) ?
@@ -324,6 +352,12 @@ void GameScreen::userInput(int key)
             break;
 
         case ScreenFocus::OPTIONS:
+            if (key == 27) { /* ESC Key */
+                focus = ScreenFocus::MAIN;
+                hide_panel(optMenu.panel.get());
+                update_panels();
+                doupdate();
+            }
             break;
     }
 }

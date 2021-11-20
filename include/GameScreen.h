@@ -20,7 +20,7 @@ class GameScreen : public Screen {
             MAIN, STATBAR, HOTBAR, CONSOLE, COUNT
         };
         enum class ScreenFocus {
-            MAIN, CONSOLE, OPTIONS
+            MAIN, OPTIONS, CONSOLE
         };
         enum class CursorMove : int {
             LEFT = -1, RIGHT = 1
@@ -44,21 +44,28 @@ class GameScreen : public Screen {
             } input;
             std::vector<std::pair<std::string, std::wstring>> record;
             std::ofstream file;
-        };
+        } cnsl;
+        struct OptionMenu {
+            static constexpr Size<> size {20, 40};
+            std::unique_ptr<PANEL, PanelDeleter> panel;
+        } optMenu;
         /* Member Variables */
-        std::vector<std::unique_ptr<WINDOW, WindowDeleter>> subwins;
+        std::vector<std::unique_ptr<WINDOW, WindowDeleter>> subWins;
         std::array<std::string, 10> hotbar;
         Player p;
         ScreenFocus focus;
-        Console cnsl;
         /* Private Member Methods */
-        void initScreen();
+        void consoleInput(int key);
         void drawStatBar();
         void hotbarSelect(size_t slot);
-        void consoleInput(int key);
+        void initConsole();
+        void initOptionMenu();
+        void initScreen();
+        void initSubWindows();
+        void moveCursor(int side, bool highlight=false);
         void sendToConsole(std::string line, const std::wstring &icon); 
         void updateConsole();
-        void moveCursor(int side, bool highlight=false);
+        
     public:
         /* Inherit Constructor from Screen */
         GameScreen();
