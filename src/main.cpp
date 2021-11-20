@@ -5,7 +5,8 @@ int main() {
 
     TCWindow game;
 
-    while(game.update() == 0);
+    while (!game.shouldClose())
+        game.update();
 
     return 0;
 }

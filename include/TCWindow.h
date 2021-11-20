@@ -21,6 +21,7 @@ class Screen;
 /////////////////////// Transfer Data Wrappers ///////////////////////
 
 struct TCWindowData {
+    bool exit;
     size_t screen;
     std::vector<std::unique_ptr<Screen>> screenList;
 };
@@ -32,6 +33,7 @@ class TCWindowSharedData {
     public:
         TCWindowSharedData(std::shared_ptr<TCWindowData> &winData);
         void switchScreen(size_t index);
+        void terminate();
 };
 
 /////////////////////// Game Window ///////////////////////
@@ -42,12 +44,13 @@ typedef class TermiCubeWindow {
         /* Private Methods */
         void initCurses();
         void initColors();
-        void initWideChars();
+        void initExtra();
         void initScreens();
-        void terminate();
     public:
         TermiCubeWindow();
-        int update();
+        ~TermiCubeWindow();
+        bool shouldClose();
+        void update();
 } TCWindow;
 
 

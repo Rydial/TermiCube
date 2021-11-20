@@ -13,7 +13,7 @@ class MainMenuScreen : public Screen {
         static constexpr Point<> btnStartPos {14, (maxCols - btnSize.x) / 2};
         /* Member Enums */
         enum class ButtonType {
-            NEWGAME, LOADGAME, SETTINGS, CREDITS, COUNT
+            NEWGAME, LOADGAME, SETTINGS, EXIT, COUNT
         };
         /* Member Structs */
         struct ButtonManager {

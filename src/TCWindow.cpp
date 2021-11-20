@@ -26,14 +26,27 @@ void TCWindowSharedData::switchScreen(size_t index)
     }
 }
 
+void TCWindowSharedData::terminate()
+{
+    auto gwData {data.lock()};
+    /* Checks if object is still available */
+    if (gwData)
+        gwData->exit = true;
+}
+
 /////////////////////////////////////* Game Window */////////////////////////////////////
 
 TCWindow::TermiCubeWindow() :
-    data{std::make_shared<TCWindowData>(TCWindowData{0, {}})}
+    data{std::make_shared<TCWindowData>(TCWindowData{false, 0, {}})}
 {
     initCurses();
     initColors();
     initScreens();
+}
+
+TCWindow::~TermiCubeWindow()
+{
+    endwin();
 }
 
 void TCWindow::initCurses()
@@ -57,6 +70,11 @@ void TCWindow::initColors()
     init_pair(3, COLOR_WHITE, COLOR_YELLOW); /* Text Background */
 }
 
+void TCWindow::initExtra()
+{
+    // signal(SIGINT, sigint_handler);
+}
+
 void TCWindow::initScreens()
 {
     /* unique_ptr are not copyable, and initializer lists only use copy
@@ -71,11 +89,12 @@ void TCWindow::initScreens()
     doupdate();
 }
 
-void TCWindow::terminate() {
-    endwin();
+bool TCWindow::shouldClose()
+{
+    return data->exit;
 }
 
-int TCWindow::update() 
+void TCWindow::update() 
 {
     const auto &scr {data->screenList[data->screen]};
     const auto &winPtr {panel_window(scr->getPanel())};
@@ -83,8 +102,8 @@ int TCWindow::update()
     int key {wgetch(winPtr)};
 
     if (key == 'q') {
-        terminate();
-        return 1;
+        data->exit = true;
+        return;
     } else if (key == 27) { /* ESC Key */
         /* Non-Blocking Mode */
         wtimeout(winPtr, 0);
@@ -107,17 +126,15 @@ int TCWindow::update()
                     else if (key == 68)
                         key = KEY_SLEFT;
                     else
-                        return 0;
+                        return;
                 } else
-                    return 0;
+                    return;
             } else
-                return 0;
+                return;
         } else
-            return 0;
+            return;
     }
     scr->userInput(key);
     scr->updateScreen();
     scr->drawGraphics();
-
-    return 0;
 }

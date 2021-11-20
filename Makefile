@@ -115,11 +115,11 @@ help:
 	@$(DISPLAY) "\033[0;0;0mmake \033[38;5;15mrun\033[0;0;0m : Runs program.\n"
 	@$(DISPLAY) "\033[0;0;0mmake \033[38;5;15mtime\033[0;0;0m : Measures program execution time.\n"
 
-build: compile run
+build: compile run # Use when only cpp files have been modified
 
 remake: clean compile
 
-rebuild: clean compile run
+rebuild: clean compile run # Use when header files have been modified
 
 debug: # Need fixing
 	@$(CLEAR)

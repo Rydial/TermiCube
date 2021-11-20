@@ -64,7 +64,7 @@ void MainMenuScreen::initScreen()
     drawBorder();
 
     std::vector<std::string> title;
-    size_t xLen {parseUTF8(title, "resource/mainmenu/title.txt")};
+    size_t xLen {parseUTF8(title, "resource/mainmenu/Title.txt")};
 
     for (size_t i {0}, y {titlePosY}; i < title.size(); y++, i++)
         mvwaddstr(window.get(), y, (maxCols - xLen) / 2, title[i].c_str());
@@ -134,7 +134,7 @@ MainMenuScreen::ButtonManager::ButtonManager(
     int count {static_cast<int>(ButtonType::COUNT)};
     std::vector<std::string> paths {
         "resource/mainmenu/NewGameBtn.txt", "resource/mainmenu/LoadGameBtn.txt",
-        "resource/mainmenu/SettingsBtn.txt", "resource/mainmenu/CreditsBtn.txt"
+        "resource/mainmenu/SettingsBtn.txt", "resource/mainmenu/ExitBtn.txt"
     };
 
     for (int i {0}, y {0}; i < count; i++, y += 6) {
@@ -157,6 +157,10 @@ std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(
         case static_cast<int>(ButtonType::NEWGAME):
             return [winSData] () mutable {
                 winSData.switchScreen(static_cast<size_t>(ScreenType::GAME));
+            };
+        case static_cast<int>(ButtonType::EXIT):
+            return [winSData] () mutable {
+                winSData.terminate();
             };
         default:
             return nullptr;
