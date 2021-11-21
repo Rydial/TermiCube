@@ -46,7 +46,7 @@ class GameScreen : public Screen {
             std::ofstream file;
         } cnsl;
         struct OptionMenu {
-            static constexpr Size<> size {20, 40};
+            static constexpr Size<> size {27, 82};
             std::unique_ptr<PANEL, PanelDeleter> panel;
         } optMenu;
         /* Member Variables */

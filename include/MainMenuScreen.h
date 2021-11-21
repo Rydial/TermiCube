@@ -16,7 +16,7 @@ class MainMenuScreen : public Screen {
             NEWGAME, LOADGAME, SETTINGS, EXIT, COUNT
         };
         /* Member Structs */
-        struct ButtonManager {
+        class ButtonManager {
             private:
                 std::function<void()> genClickFunction(
                     TCWindowSharedData &winSData, int index);
