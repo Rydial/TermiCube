@@ -1,23 +1,36 @@
-#include "TCWindow.h"
+// #include "TCWindow.h"
 
+
+// int main() {
+
+//     TCWindow game;
+
+//     while (!game.shouldClose())
+//         game.update();
+
+//     return 0;
+// }
+
+// #include <iostream>
+// #include <string>
+
+// struct Point {
+//     int x, y;
+// };
+
+#include <vector>
+
+class Foo {
+    static auto bar() {
+        std::vector<int> ls;
+        return ls;
+    }
+    static const auto var = bar();
+};
 
 int main() {
 
-    TCWindow game;
-
-    while (!game.shouldClose())
-        game.update();
-
-    return 0;
 }
-
-#include <iostream>
-#include <string>
-
-struct Point {
-    int x, y;
-};
-
 
 
 // class Foo {

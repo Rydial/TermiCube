@@ -1,5 +1,5 @@
 # CPP Compiler
-CXX 			:= g++
+CXX 			:= clang++
 
 # Compile-time Flags
 CXXFLAGS		:= -std=c++20 -Wall -Wextra -Wvla -Weffc++ -Wsign-conversion -Werror

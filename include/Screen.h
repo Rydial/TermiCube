@@ -47,14 +47,14 @@ class Screen {
                         std::function<void()> click, std::function<void(WINDOW *)> draw);
                 void highlight(int attrs);
         };
-        class ButtonManager {
-            private:
-                std::vector<Button> list;
-                size_t btn;
-            public:
-                ButtonManager(WINDOW *win, int startY, int startX,
-                        std::shared_ptr<TCWindowData> &winData);
-        };
+        // class ButtonManager {
+        //     private:
+        //         std::vector<Button> list;
+        //         size_t btn;
+        //     public:
+        //         ButtonManager(WINDOW *win, int startY, int startX,
+        //                 std::shared_ptr<TCWindowData> &winData);
+        // };
         /* Static Member Variables */
         static EventData eData;
         static Controls control;
