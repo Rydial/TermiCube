@@ -122,7 +122,7 @@ WideChars Screen::genWideChars()
             std::getline(file, mbChr);
         else {
             /* Convert multibyte string to wide char string */
-            std::cerr << "Return: " << git(wChr, mbChr.c_str(), 10) << '\n';
+            std::cerr << "Return: " << mbstowcs(wChr, mbChr.c_str(), 10) << '\n';
             /* Store wide char in cchar_t to be usable in ncurses functions */
             cchar_t cChr {};
             setcchar(&cChr, wChr, 0, 0, nullptr);

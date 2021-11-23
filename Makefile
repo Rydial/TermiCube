@@ -46,7 +46,7 @@ ifeq ($(shell uname), Linux)
 	OUTPUTMAIN	:= $(OUTPUTDIR)/$(MAIN)
 	ERRORLOG	:= $(BUILDDIR)/$(ERROR)/err.log
     # Compiler Flags
-	LIBS		:= -lglfw -lGL -lpanelw -lncursesw
+	LIBS		:= -lpanelw -lncursesw
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
     # Commands
 	MKDIR		:= mkdir -p
@@ -66,7 +66,7 @@ ifeq ($(shell uname), Darwin)
 	OUTPUTMAIN	:= $(OUTPUTDIR)/$(MAIN)
 	ERRORLOG	:= $(BUILDDIR)/$(ERROR)/err.log
     # Compiler Flags
-	LIBS		:= -lglfw -lpanel -lncurses
+	LIBS		:= -lpanel -lncurses
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
     # Commands
 	MKDIR		:= mkdir -p
