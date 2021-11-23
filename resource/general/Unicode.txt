@@ -1,6 +1,0 @@
-║ ═ ╔ ╗ ╚ ╝ ╠ ╣ ╦ ╩ ╬   // Main Screen Border Character Set
-│ ─ ┌ ┐ └ ┘ ├ ┤ ┬ ┴ ┼   // Character Set
-                        // Invisible Character : No-Break Space
-❤️ 💔                   // Status Bar Character Set
-🌲                      // Tree Entity Character
-➔                      // Chat Bar Character Set

@@ -1,53 +1,6 @@
 #include <fstream>
 #include <iostream>
-#include <bitset>
 #include "MainMenuScreen.h"
-
-///////////////////////////////////* Local Functions *///////////////////////////////////
-
-size_t parseUTF8(std::vector<std::string> &dst, std::string path)
-{
-    std::ifstream file {path};
-
-    if (!file)
-        std::cerr << "File could not be opened: " << path << '\n';
-
-    std::string line;
-    size_t maxLen {}, len {};
-
-    while (std::getline(file, line)) {
-        len = 0;
-
-        for (size_t i {0}; i < line.length(); i++) {
-            if (line[i] == ' ')
-                len++;
-            /* In Windows a newline is represented in the CR + LF format: "\r\n" */
-            else if (line[i] != '\r') {
-                std::bitset<8> byte {static_cast<unsigned long long>(line[i])};
-                size_t bits {0};
-
-                for (size_t j {0}; j < 8 && byte.test(7 - j); j++, bits++);
-
-                if (2 <= bits && bits <= 4) {
-                    for (size_t k {0}, l {bits - 1}; k < l; k++) {
-                        std::bitset<8> nextByte {static_cast<unsigned long long>(line[++i])};
-
-                        if (!nextByte.test(7) || nextByte.test(6)) {
-                            std::cerr << "No continuation byte found\n";
-                            exit(1);
-                        }
-                    }
-                    len++;
-                }
-            }
-        }
-        dst.emplace_back(line);
-
-        if (len > maxLen)
-            maxLen = len;
-    }
-    return maxLen;
-}
 
 /////////////////////////////////////* Base Class */////////////////////////////////////
 
@@ -63,8 +16,8 @@ void MainMenuScreen::initScreen()
     /* Title Creation */
     drawBorder();
 
-    std::vector<std::string> title;
-    size_t xLen {parseUTF8(title, "resource/mainmenu/Title.txt")};
+    const auto &title {texts.at("Title").first};
+    size_t xLen {texts.at("Title").second};
 
     for (size_t i {0}, y {titlePosY}; i < title.size(); y++, i++)
         mvwaddstr(window.get(), y, (maxCols - xLen) / 2, title[i].c_str());
@@ -79,7 +32,12 @@ void MainMenuScreen::initScreen()
 
 void MainMenuScreen::initWideChars()
 {
-    std::ifstream file {"resource/general/Unicode.txt"};
+    std::ifstream file {"resource/general/Unicode"};
+
+    if (!file)
+        std::cerr << "File could not be opened\n";
+
+    std::unordered_map<std::wstring, cchar_t> temp;
     std::string mbChr;
     wchar_t wChr[10];
     /* Store file content into multibyte strings */
@@ -88,14 +46,19 @@ void MainMenuScreen::initWideChars()
         if (mbChr.compare("//") == 0)
             std::getline(file, mbChr);
         else {
+            std::cerr << mbChr << '\n';
             /* Convert multibyte string to wide char string */
-            mbstowcs(wChr, mbChr.c_str(), 10);
+            std::cerr << "Return: " << mbstowcs(wChr, mbChr.c_str(), 10) << '\n';
             /* Store wide char in cchar_t to be usable in ncurses functions */
             cchar_t cChr {};
             setcchar(&cChr, wChr, 0, 0, nullptr);
-            wchars.emplace(std::wstring{wChr}, cChr);
+            std::wcerr << wChr;
+            std::cerr << '\n';
+            temp.emplace(std::wstring{wChr}, cChr);
+            std::cerr << temp.size() << '\n';
         }
     }
+    // wchars.swap(temp);
 }
 
 void MainMenuScreen::drawGraphics() 
@@ -133,20 +96,16 @@ MainMenuScreen::ButtonManager::ButtonManager(
 {
     int count {static_cast<int>(ButtonType::COUNT)};
     std::vector<std::string> paths {
-        "resource/mainmenu/NewGameBtn.txt", "resource/mainmenu/LoadGameBtn.txt",
-        "resource/mainmenu/SettingsBtn.txt", "resource/mainmenu/ExitBtn.txt"
-    };
+        "NewGameBtn", "LoadGameBtn", "SettingsBtn", "ExitBtn"};
 
     for (int i {0}, y {0}; i < count; i++, y += 6) {
-        /* Parse Button Txt Files */
-        std::vector<std::string> txt;
-        size_t maxLineLen {parseUTF8(txt, paths[static_cast<size_t>(i)])};
+        size_t maxLen {texts.at(paths[static_cast<size_t>(i)]).second};
         /* Generate Button + Subwindow */
         TCWindowSharedData winSData {winData};
         WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
         list.emplace_back(btnWin, startY + y, startX, btnSize.y, btnSize.x,
-            genClickFunction(winSData, i), genDrawFunction(txt, maxLineLen)
-        );
+            genClickFunction(winSData, i),
+            genDrawFunction(paths[static_cast<size_t>(i)], maxLen));
     }
 }
 
@@ -168,13 +127,14 @@ std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(
 }
 
 std::function<void(WINDOW *)> MainMenuScreen::ButtonManager::genDrawFunction(
-    std::vector<std::string> &txt, size_t maxLen)
+    const std::string &txt, size_t maxLen)
 {
     return [txt, maxLen] (WINDOW *win) {
         box(win, 0, 0);
 
-        for (size_t i {0}; i < txt.size(); i++)
-            mvwaddstr(win, i + 1, (btnSize.x - maxLen) / 2, txt[i].c_str());
+        for (size_t i {0}; i < texts.at(txt).first.size(); i++)
+            mvwaddstr(win, i + 1, (btnSize.x - maxLen) / 2,
+                texts.at(txt).first[i].c_str());
         
         wrefresh(win);
     };
