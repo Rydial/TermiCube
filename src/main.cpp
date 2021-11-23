@@ -1,15 +1,15 @@
-// #include "TCWindow.h"
+#include "TCWindow.h"
 
 
-// int main() {
+int main() {
 
-//     TCWindow game;
+    TCWindow game;
 
-//     while (!game.shouldClose())
-//         game.update();
+    while (!game.shouldClose())
+        game.update();
 
-//     return 0;
-// }
+    return 0;
+}
 
 // #include <iostream>
 // #include <string>
@@ -18,19 +18,19 @@
 //     int x, y;
 // };
 
-#include <vector>
+// #include <vector>
 
-class Foo {
-    static auto bar() {
-        std::vector<int> ls;
-        return ls;
-    }
-    static const auto var = bar();
-};
+// class Foo {
+//     static auto bar() {
+//         std::vector<int> ls;
+//         return ls;
+//     }
+//     static const auto var = bar();
+// };
 
-int main() {
+// int main() {
 
-}
+// }
 
 
 // class Foo {

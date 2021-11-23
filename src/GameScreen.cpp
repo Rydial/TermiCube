@@ -125,10 +125,10 @@ void GameScreen::drawStatBar()
     WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::STATBAR)].get()};
     /* Draw HP sprites */
     for (size_t x {(statBarSize.x - 1) - 2}, i {0}; i < p.hp; x -= spriteWidth, ++i)
-        mvwadd_wch(ptr, 0, x, &wchars[L"❤️"]);
+        mvwadd_wch(ptr, 0, x, &wchars.at(L"❤️"));
     /* Fill right side of rightmost heart with invisible characters*/
     for (size_t x {(statBarSize.x - 1) - 1}; x < statBarSize.x; ++x)
-        mvwadd_wch(ptr, 0, x, &wchars[L" "]);
+        mvwadd_wch(ptr, 0, x, &wchars.at(L" "));
 }
 
 void GameScreen::hotbarSelect(size_t slot)
@@ -176,35 +176,35 @@ void GameScreen::initScreen()
 {   
     /* Draw Screen Border */
     drawBorder();
-    mvwadd_wch(window.get(), mainSize.y + 1, 0, &wchars[L"╠"]);
-    mvwhline_set(window.get(), mainSize.y + 1, 1, &wchars[L"═"], mainSize.x);
-    mvwadd_wch(window.get(), mainSize.y + 1, maxCols - 1, &wchars[L"╣"]);
+    mvwadd_wch(window.get(), mainSize.y + 1, 0, &wchars.at(L"╠"));
+    mvwhline_set(window.get(), mainSize.y + 1, 1, &wchars.at(L"═"), mainSize.x);
+    mvwadd_wch(window.get(), mainSize.y + 1, maxCols - 1, &wchars.at(L"╣"));
 
     /* Draw Status Bar Border */
     mvwadd_wch(window.get(), mainSize.y + 1,
-        (maxCols - 1) - statBarSize.x - 1, &wchars[L"╦"]);
+        (maxCols - 1) - statBarSize.x - 1, &wchars.at(L"╦"));
     mvwvline_set(window.get(), mainSize.y + 2,
-        (maxCols - 1) - statBarSize.x - 1, &wchars[L"║"], statBarSize.y);
+        (maxCols - 1) - statBarSize.x - 1, &wchars.at(L"║"), statBarSize.y);
     mvwadd_wch(window.get(), (mainSize.y + 2) + statBarSize.y,
-        (maxCols - 1) - statBarSize.x - 1, &wchars[L"╠"]);
+        (maxCols - 1) - statBarSize.x - 1, &wchars.at(L"╠"));
     mvwhline_set(window.get(), (mainSize.y + 2) + statBarSize.y,
-        (maxCols - 1) - statBarSize.x, &wchars[L"═"], statBarSize.x);
+        (maxCols - 1) - statBarSize.x, &wchars.at(L"═"), statBarSize.x);
     mvwadd_wch(window.get(), (mainSize.y + 2) + statBarSize.y,
-        maxCols - 1, &wchars[L"╣"]);
+        maxCols - 1, &wchars.at(L"╣"));
     /* Draw Status Bar Sprites */
     drawStatBar();
 
     /* Draw Hotbar Border */
     mvwvline_set(window.get(), (maxRows - 1) - hotbarSize.y,
-        (maxCols - 1) - hotbarSize.x - 1, &wchars[L"║"], hotbarSize.y);
+        (maxCols - 1) - hotbarSize.x - 1, &wchars.at(L"║"), hotbarSize.y);
     mvwadd_wch(window.get(), maxRows - 1,
-        (maxCols - 1) - hotbarSize.x - 1, &wchars[L"╩"]);
+        (maxCols - 1) - hotbarSize.x - 1, &wchars.at(L"╩"));
     mvwvline_set(window.get(), (maxRows - 1) - hotbarSize.y,
-        (maxCols - 1) - hotbarSize.x + 3, &wchars[L"║"], hotbarSize.y);
+        (maxCols - 1) - hotbarSize.x + 3, &wchars.at(L"║"), hotbarSize.y);
     mvwadd_wch(window.get(), (maxRows - 1) - hotbarSize.y - 1,
-        (maxCols - 1) - hotbarSize.x + 3, &wchars[L"╦"]);
+        (maxCols - 1) - hotbarSize.x + 3, &wchars.at(L"╦"));
     mvwadd_wch(window.get(), maxRows - 1,
-        (maxCols - 1) - hotbarSize.x + 3, &wchars[L"╩"]);
+        (maxCols - 1) - hotbarSize.x + 3, &wchars.at(L"╩"));
     /* Draw Hotbar Text */
     WINDOW *hotbarPtr {subWins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
 
@@ -214,12 +214,12 @@ void GameScreen::initScreen()
     }
 
     /* Draw Console Border */
-    mvwadd_wch(window.get(), (maxRows - 1) - 2, 0, &wchars[L"╠"]);
+    mvwadd_wch(window.get(), (maxRows - 1) - 2, 0, &wchars.at(L"╠"));
     const auto &consoleXLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
-    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &wchars[L"═"], consoleXLen);
-    mvwadd_wch(window.get(), (maxRows - 1) - 2, consoleXLen + 1, &wchars[L"╣"]);
+    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &wchars.at(L"═"), consoleXLen);
+    mvwadd_wch(window.get(), (maxRows - 1) - 2, consoleXLen + 1, &wchars.at(L"╣"));
     /* Draw Console Text */
-    mvwadd_wch(window.get(), (maxRows - 1) - 1, 2, &wchars[L"➔"]);
+    mvwadd_wch(window.get(), (maxRows - 1) - 1, 2, &wchars.at(L"➔"));
 }
 
 void GameScreen::initSubWindows()

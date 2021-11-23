@@ -21,7 +21,7 @@ class MainMenuScreen : public Screen {
                 std::function<void()> genClickFunction(
                     TCWindowSharedData &winSData, int index);
                 std::function<void(WINDOW *)> genDrawFunction(
-                    std::vector<std::string> &txt, size_t maxLen);
+                    const std::string &txt, size_t maxLen);
             public:
                 std::vector<Button> list;
                 size_t btn;
