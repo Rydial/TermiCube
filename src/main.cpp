@@ -11,44 +11,52 @@ int main() {
     return 0;
 }
 
-#include <iostream>
-#include <string>
+// #define _XOPEN_SOURCE_EXTENDED 1
 
-struct Point {
-    int x, y;
-};
+// #include <iostream>
+// #include <fstream>
+// #include <unordered_map>
+// #include <string>
+// #include <panel.h>
 
+// void func()
+// {
+//     std::ifstream file {"resource/general/Unicode"};
 
+//     if (!file)
+//         std::cerr << "File could not be opened\n";
 
-// class Foo {
-//     private:
-//         struct Console {
-//             static constexpr Point c[2] {{5, 0}, {10, 0}};
-//         } cnsl {};
-//         enum Key : size_t {
-//             ZERO, ONE
-//         } key {Key::ZERO};
-//         std::string str {"Testing"};
-//         size_t index {0};
-
-//         void update()
-//         {   
-//             // size_t tempIndex {0};
-//             const auto &var {cnsl.c[static_cast<size_t>(Key::ZERO)]};
-//             for (size_t i {0}; i < var.x; i++);
-//             if (str.size() > var.x - 5) {}
+//     std::unordered_map<std::wstring, cchar_t> temp;
+//     std::string mbChr;
+//     wchar_t wChr[1000];
+//     /* Store file content into multibyte strings */
+//     while (file >> mbChr) {
+//         /* Move to next line if comment symbol "//"" is found */
+//         if (mbChr.compare("//") == 0)
+//             std::getline(file, mbChr);
+//         else {
+//             std::cerr << mbChr << '\n';
+//             /* Convert multibyte string to wide char string */
+//             std::cerr << "Return: " << mbstowcs(wChr, mbChr.c_str(), 1000) << '\n';
+//             /* Store wide char in cchar_t to be usable in ncurses functions */
+//             cchar_t cChr {};
+//             setcchar(&cChr, wChr, 0, 0, nullptr);
+//             std::wcerr << wChr;
+//             std::cerr << '\n';
+//             temp.emplace(std::wstring{wChr}, cChr);
+//             std::cerr << temp.size() << '\n';
 //         }
-//     public:
-//         void run() {update();}
-// };
-
-// int main() {
-//     Foo bar;
-//     bar.run();
+//     }
 // }
 
-#include <panel.h>
-#include <iostream>
+// int main()
+// {
+//     setlocale(LC_ALL, "");
+//     func();
+// }
+
+// #include <panel.h>
+// #include <iostream>
 
 // int main()
 // {

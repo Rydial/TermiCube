@@ -86,8 +86,9 @@ void Screen::drawBorder()
 
 Texts Screen::genTexts()
 {
+    setlocale(LC_ALL, ""); /* Set terminal locale */
     namespace fs = std::filesystem;
-    Texts texts;
+    Texts texts {};
     std::vector<std::string> text {};
     size_t maxLen {};
     /* Recursively search "./resource" directory for .txt files */
@@ -111,26 +112,24 @@ WideChars Screen::genWideChars()
     if (!file)
         std::cerr << "File could not be opened\n";
 
-    std::unordered_map<std::wstring, cchar_t> temp;
-    std::string mbChr;
+    WideChars wchars {};
+    std::string mbChr {};
     wchar_t wChr[10] {};
+    cchar_t cChr {};
     /* Store file content into multibyte strings */
     while (file >> mbChr) {
-        std::cerr << "Size: " << temp.size() << '\n';
         /* Move to next line if comment symbol "//"" is found */
         if (mbChr.compare("//") == 0)
             std::getline(file, mbChr);
         else {
             /* Convert multibyte string to wide char string */
-            std::cerr << "Return: " << git(wChr, mbChr.c_str(), 10) << '\n';
+            mbstowcs(wChr, mbChr.c_str(), 10);
             /* Store wide char in cchar_t to be usable in ncurses functions */
-            cchar_t cChr {};
             setcchar(&cChr, wChr, 0, 0, nullptr);
-            std::wcerr << std::wstring{wChr}<< '\n';
-            temp.emplace(std::wstring{wChr}, cChr);
+            wchars.emplace(std::wstring{wChr}, cChr);
         }
     }
-    return temp;
+    return wchars;
 }
 
 ///////////////////////////////////// BUTTON /////////////////////////////////////

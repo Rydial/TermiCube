@@ -51,7 +51,6 @@ TCWindow::~TermiCubeWindow()
 
 void TCWindow::initCurses()
 {
-    setlocale(LC_ALL, ""); /* Set terminal locale */
     initscr(); /* Start curses mode */
     raw(); /* Disable line buffering */
     noecho(); /* Disable input echoing */

@@ -33,7 +33,6 @@ class MainMenuScreen : public Screen {
         ButtonManager buttons;
         /* Private Member Methods */
         void initScreen();
-        void initWideChars();
     public:
         MainMenuScreen(std::shared_ptr<TCWindowData> &winData);
         void drawGraphics();
