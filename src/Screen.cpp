@@ -64,12 +64,7 @@ using WideChars = std::unordered_map<std::wstring, cchar_t>;
 Screen::Controls Screen::control {'w', 'a', 's', 'd', '\n'};
 Screen::EventData Screen::eData {0, {}};
 const Texts Screen::texts {genTexts()};
-<<<<<<< HEAD
-WideChars Screen::wchars {};
-// const WideChars Screen::wchars {genWideChars()};
-=======
 const WideChars Screen::wchars {genWideChars()};
->>>>>>> cc90007a238e790c7d5a48b7c4f784d207f3f2f8
 
 /*==============================================================================*/
 
@@ -77,7 +72,7 @@ Screen::Screen() :
     window{newwin(maxRows, maxCols, (LINES - maxRows) / 2, (COLS - maxCols) / 2)},
     panel{new_panel(window.get())}
 {
-
+    
 }
 
 /*==============================================================================*/

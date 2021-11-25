@@ -25,7 +25,7 @@ class Screen {
         using WideChars = std::unordered_map<std::wstring, cchar_t>;
         /* Private Static Methods */
         static Texts genTexts();
-        // static WideChars genWideChars();
+        static WideChars genWideChars();
     protected:
         /* Need a custom deleter function to use unique_ptr with an incomplete type
            Later on replace these with a pimpl-idiom */
@@ -34,7 +34,7 @@ class Screen {
         /* Protected Member Constants */
         static constexpr int maxRows {42}, maxCols {84};
         static const Texts texts;
-        static WideChars wchars;
+        static const WideChars wchars;
         /* Protected Member Enums */
         enum class ScreenType {
             MAINMENU, GAME
