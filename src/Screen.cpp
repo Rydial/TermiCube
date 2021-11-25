@@ -61,8 +61,8 @@ using WideChars = std::unordered_map<std::wstring, cchar_t>;
 Screen::Controls Screen::control {'w', 'a', 's', 'd', '\n'};
 Screen::EventData Screen::eData {0, {}};
 const Texts Screen::texts {genTexts()};
-// WideChars Screen::wchars {};
-const WideChars Screen::wchars {genWideChars()};
+WideChars Screen::wchars {};
+// const WideChars Screen::wchars {genWideChars()};
 
 /*==============================================================================*/
 
@@ -104,34 +104,34 @@ Texts Screen::genTexts()
     return texts;
 }
 
-WideChars Screen::genWideChars()
-{
-    std::ifstream file {"resource/general/Unicode"};
+// WideChars Screen::genWideChars()
+// {
+    // std::ifstream file {"resource/general/Unicode"};
 
-    if (!file)
-        std::cerr << "File could not be opened\n";
+    // if (!file)
+    //     std::cerr << "File could not be opened\n";
 
-    std::unordered_map<std::wstring, cchar_t> temp;
-    std::string mbChr;
-    wchar_t wChr[10] {};
-    /* Store file content into multibyte strings */
-    while (file >> mbChr) {
-        std::cerr << "Size: " << temp.size() << '\n';
-        /* Move to next line if comment symbol "//"" is found */
-        if (mbChr.compare("//") == 0)
-            std::getline(file, mbChr);
-        else {
-            /* Convert multibyte string to wide char string */
-            std::cerr << "Return: " << mbstowcs(wChr, mbChr.c_str(), 10) << '\n';
-            /* Store wide char in cchar_t to be usable in ncurses functions */
-            cchar_t cChr {};
-            setcchar(&cChr, wChr, 0, 0, nullptr);
-            std::wcerr << std::wstring{wChr}<< '\n';
-            temp.emplace(std::wstring{wChr}, cChr);
-        }
-    }
-    return temp;
-}
+    // std::unordered_map<std::wstring, cchar_t> temp;
+    // std::string mbChr;
+    // wchar_t wChr[10] {};
+    // /* Store file content into multibyte strings */
+    // while (file >> mbChr) {
+    //     std::cerr << "Size: " << temp.size() << '\n';
+    //     /* Move to next line if comment symbol "//"" is found */
+    //     if (mbChr.compare("//") == 0)
+    //         std::getline(file, mbChr);
+    //     else {
+    //         /* Convert multibyte string to wide char string */
+    //         std::cerr << "Return: " << mbstowcs(wChr, mbChr.c_str(), 10) << '\n';
+    //         /* Store wide char in cchar_t to be usable in ncurses functions */
+    //         cchar_t cChr {};
+    //         setcchar(&cChr, wChr, 0, 0, nullptr);
+    //         std::wcerr << std::wstring{wChr}<< '\n';
+    //         temp.emplace(std::wstring{wChr}, cChr);
+    //     }
+    // }
+    // return temp;
+// }
 
 ///////////////////////////////////// BUTTON /////////////////////////////////////
 
