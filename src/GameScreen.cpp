@@ -7,13 +7,17 @@
 
 
 GameScreen::GameScreen() :
-    cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}},
-    optMenu{std::unique_ptr<PANEL, PanelDeleter>(new_panel(newwin(
-        optMenu.size.y, optMenu.size.x, ceil((maxRows - optMenu.size.y) / 2.0), 
-        ((maxCols - optMenu.size.x) / 2) + 1)))},
     subWins{},
     hotbar{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
     "Eight", "Nine"},
+    cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}},
+    optMenu{std::unique_ptr<PANEL, PanelDeleter>(new_panel(newwin(
+        optMenu.size.y, optMenu.size.x,
+        ceil((maxRows - optMenu.size.y) / 2.0), 
+        ((maxCols - optMenu.size.x) / 2) + 1))),
+        {
+            
+        }},
     p{3, 1},
     focus{ScreenFocus::MAIN}
 {

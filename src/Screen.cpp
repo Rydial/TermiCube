@@ -64,7 +64,6 @@ using WideChars = std::unordered_map<std::wstring, cchar_t>;
 Screen::Controls Screen::control {'w', 'a', 's', 'd', '\n'};
 Screen::EventData Screen::eData {0, {}};
 const Texts Screen::texts {genTexts()};
-// WideChars Screen::wchars {};
 const WideChars Screen::wchars {genWideChars()};
 
 /*==============================================================================*/

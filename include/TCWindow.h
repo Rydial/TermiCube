@@ -22,14 +22,18 @@ struct TCWindowData;
 
 typedef class TermiCubeWindow {
     private:
+        /* Private Member Variables */
         std::shared_ptr<TCWindowData> data;
         /* Private Methods */
         void initCurses();
         void initColors();
         void initScreens();
     public:
+        /* Public Constructor */
         TermiCubeWindow();
+        /* Public Destructor */
         ~TermiCubeWindow();
+        /* Public Methods */
         bool shouldClose();
         void update();
 } TCWindow;
