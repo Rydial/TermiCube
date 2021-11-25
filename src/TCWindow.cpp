@@ -1,40 +1,9 @@
 #include <locale>
 #include "TCWindow.h"
-#include "Screen.h"
+#include "TransferrableData.h"
 #include "MainMenuScreen.h"
 #include "GameScreen.h"
 
-
-//////////////////////////////////* Transferrable Data *//////////////////////////////////
-
-TCWindowSharedData::TCWindowSharedData(std::shared_ptr<TCWindowData> &gwData) :
-    data{gwData}
-{
-
-}
-
-void TCWindowSharedData::switchScreen(size_t index)
-{
-    auto gwData {data.lock()};
-    /* Checks if object is still available */
-    if (gwData) {
-        hide_panel(gwData->screenList[gwData->screen]->getPanel());
-        gwData->screen = index;
-        show_panel(gwData->screenList[gwData->screen]->getPanel());
-        update_panels();
-        doupdate();
-    }
-}
-
-void TCWindowSharedData::terminate()
-{
-    auto gwData {data.lock()};
-    /* Checks if object is still available */
-    if (gwData)
-        gwData->exit = true;
-}
-
-/////////////////////////////////////* Game Window */////////////////////////////////////
 
 TCWindow::TermiCubeWindow() :
     data{std::make_shared<TCWindowData>(TCWindowData{false, 0, {}})}
@@ -51,7 +20,6 @@ TCWindow::~TermiCubeWindow()
 
 void TCWindow::initCurses()
 {
-    setlocale(LC_ALL, ""); /* Set terminal locale */
     initscr(); /* Start curses mode */
     raw(); /* Disable line buffering */
     noecho(); /* Disable input echoing */
@@ -70,16 +38,12 @@ void TCWindow::initColors()
     init_pair(3, COLOR_WHITE, COLOR_YELLOW); /* Text Background */
 }
 
-void TCWindow::initExtra()
-{
-    // signal(SIGINT, sigint_handler);
-}
-
 void TCWindow::initScreens()
 {
     /* unique_ptr are not copyable, and initializer lists only use copy
     semantics so emplace_back had to be used instead */
-    data->screenList.emplace_back(std::make_unique<MainMenuScreen>(data));
+    TCWindowSharedData winSData {data};
+    data->screenList.emplace_back(std::make_unique<MainMenuScreen>(winSData));
     data->screenList.emplace_back(std::make_unique<GameScreen>());
     /* Hide every screen except for starting screen (Main Menu) */
     for (size_t i {1}; i < data->screenList.size(); i++)

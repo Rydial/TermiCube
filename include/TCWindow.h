@@ -1,8 +1,6 @@
 #ifndef TCWINDOW_H
 #define TCWINDOW_H
 
-#include <vector>
-#include <memory>
 
 /*
 Things to Remember:
@@ -14,41 +12,28 @@ Things to do:
     - Replace as MANY Magic Numbers as possible
 */
 
+#include <memory>
+
 /////////////////////// Forward Declarations ///////////////////////
 
-class Screen;
+struct TCWindowData;
 
-/////////////////////// Transfer Data Wrappers ///////////////////////
-
-struct TCWindowData {
-    bool exit;
-    size_t screen;
-    std::vector<std::unique_ptr<Screen>> screenList;
-};
-
-class TCWindowSharedData {
-    private:
-        /* Weak Ptr instead of Shared Ptr to prevent self-referencing */
-        std::weak_ptr<TCWindowData> data;
-    public:
-        TCWindowSharedData(std::shared_ptr<TCWindowData> &winData);
-        void switchScreen(size_t index);
-        void terminate();
-};
-
-/////////////////////// Game Window ///////////////////////
+/////////////////////// Game Window Class ///////////////////////
 
 typedef class TermiCubeWindow {
     private:
+        /* Private Member Variables */
         std::shared_ptr<TCWindowData> data;
         /* Private Methods */
         void initCurses();
         void initColors();
-        void initExtra();
         void initScreens();
     public:
+        /* Public Constructor */
         TermiCubeWindow();
+        /* Public Destructor */
         ~TermiCubeWindow();
+        /* Public Methods */
         bool shouldClose();
         void update();
 } TCWindow;
