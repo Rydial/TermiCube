@@ -2,39 +2,43 @@
 #define MAINMENUSCREEN_H
 
 #include <string>
-#include "TCWindow.h"
 #include "Screen.h" 
+
+/////////////////////// Forward Declarations ///////////////////////
+
+class TCWindowSharedData;
+
+/////////////////////// MainMenu Screen Class ///////////////////////
 
 class MainMenuScreen : public Screen {
     private:
-        /* Member Constants */
+        /* Private Member Constants */
         static constexpr int titlePosY {5};
-        static constexpr Point<> btnSize {5, 50};
+        static constexpr Size<> btnSize {5, 50};
         static constexpr Point<> btnStartPos {14, (maxCols - btnSize.x) / 2};
-        /* Member Enums */
+        /* Private Member Enums */
         enum class ButtonType {
             NEWGAME, LOADGAME, SETTINGS, EXIT, COUNT
         };
-        /* Member Structs */
-        class ButtonManager {
+        /* Private Member Structs */
+        class MMSButtonManager : public ButtonManager {
             private:
+                /* Private Methods */
                 std::function<void()> genClickFunction(
                     TCWindowSharedData &winSData, int index);
-                std::function<void(WINDOW *)> genDrawFunction(
-                    const std::string &txt, size_t maxLen);
             public:
-                std::vector<Button> list;
-                size_t btn;
-                /* Public Methods */
-                ButtonManager(WINDOW *win, int startY, int startX,
-                        std::shared_ptr<TCWindowData> &winData);
+                /* Public Constructor */
+                MMSButtonManager(WINDOW *win,
+                    TCWindowSharedData &winSData);
         };
-        /* Member Variables */
-        ButtonManager buttons;
+        /* Private Member Variables */
+        MMSButtonManager buttons;
         /* Private Member Methods */
         void initScreen();
     public:
-        MainMenuScreen(std::shared_ptr<TCWindowData> &winData);
+        /* Public Constructor*/
+        MainMenuScreen(TCWindowSharedData &winSData);
+        /* Public Methods */
         void drawGraphics();
         void updateScreen();
         void userInput(int key);

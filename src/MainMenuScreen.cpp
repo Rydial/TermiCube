@@ -1,9 +1,10 @@
 #include "MainMenuScreen.h"
+#include "TransferrableData.h"
 
 /////////////////////////////////////* Base Class */////////////////////////////////////
 
-MainMenuScreen::MainMenuScreen(std::shared_ptr<TCWindowData> &winData) :
-    buttons{window.get(), btnStartPos.y, btnStartPos.x, winData}
+MainMenuScreen::MainMenuScreen(TCWindowSharedData &winSData) :
+    buttons{window.get(), winSData}
 {
     initScreen();
 }
@@ -55,27 +56,23 @@ void MainMenuScreen::userInput(int key)
 
 ///////////////////////////////////* Button Manager *///////////////////////////////////
 
-MainMenuScreen::ButtonManager::ButtonManager(
-  WINDOW *win, int startY, int startX, std::shared_ptr<TCWindowData> &winData) :
-    list{},
-    btn{static_cast<size_t>(ButtonType::NEWGAME)}
+MainMenuScreen::MMSButtonManager::MMSButtonManager(
+        WINDOW *win, TCWindowSharedData &winSData)
 {
-    int count {static_cast<int>(ButtonType::COUNT)};
-    std::vector<std::string> paths {
-        "NewGameBtn", "LoadGameBtn", "SettingsBtn", "ExitBtn"};
-
-    for (int i {0}, y {0}; i < count; i++, y += 6) {
-        size_t maxLen {texts.at(paths[static_cast<size_t>(i)]).second};
-        /* Generate Button + Subwindow */
-        TCWindowSharedData winSData {winData};
-        WINDOW *btnWin {derwin(win, btnSize.y, btnSize.x, startY + y, startX)};
-        list.emplace_back(btnWin, startY + y, startX, btnSize.y, btnSize.x,
+    int curY {0};
+    std::vector<std::string> txts {"NewGameBtn", "LoadGameBtn", "SettingsBtn", "ExitBtn"};
+    /* Generate Button + Subwindow */
+    for (size_t i {0}; i < txts.size(); i++, curY += 6) {
+        list.emplace_back(
+            derwin(win, btnSize.y, btnSize.x, btnStartPos.y + curY, btnStartPos.x),
+            btnStartPos.y + curY, btnStartPos.x, btnSize.y, btnSize.x,
             genClickFunction(winSData, i),
-            genDrawFunction(paths[static_cast<size_t>(i)], maxLen));
+            genDrawFunction(texts.at(txts[i]).second, txts[i], btnSize)
+        );
     }
 }
 
-std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(
+std::function<void()> MainMenuScreen::MMSButtonManager::genClickFunction(
     TCWindowSharedData &winSData, int index)
 {
     switch(index) {
@@ -92,16 +89,3 @@ std::function<void()> MainMenuScreen::ButtonManager::genClickFunction(
     }
 }
 
-std::function<void(WINDOW *)> MainMenuScreen::ButtonManager::genDrawFunction(
-    const std::string &txt, size_t maxLen)
-{
-    return [txt, maxLen] (WINDOW *win) {
-        box(win, 0, 0);
-
-        for (size_t i {0}; i < texts.at(txt).first.size(); i++)
-            mvwaddstr(win, i + 1, (btnSize.x - maxLen) / 2,
-                texts.at(txt).first[i].c_str());
-        
-        wrefresh(win);
-    };
-}

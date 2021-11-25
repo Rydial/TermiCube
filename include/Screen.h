@@ -11,6 +11,11 @@
 #include <vector>
 #include <string>
 
+/////////////////////// Forward Declarations ///////////////////////
+
+class TCWindowSharedData;
+
+/////////////////////// Screen Class ///////////////////////
 
 class Screen {
     private:
@@ -32,7 +37,6 @@ class Screen {
         static const WideChars wchars;
         /* Protected Member Enums */
         enum class ScreenType {
-            /* Follow the order of emplace_back in screenList */ 
             MAINMENU, GAME
         };
         /* Protected Template Members */
@@ -56,23 +60,27 @@ class Screen {
                 std::function<void(WINDOW *)> draw;
                 /* Public Methods */
                 Button(WINDOW *win, int y, int x, int yLen, int xLen,
-                        std::function<void()> click,
-                        std::function<void(WINDOW *)> draw);
+                        const std::function<void()> &click,
+                        const std::function<void(WINDOW *)> &draw);
                 void highlight(int attrs);
         };
-        // class ButtonManager {
-        //     private:
-        //         /* Private Member Variables */
-        //         std::vector<Button> list;
-        //         size_t btn;
-        //         /* Private Member Functions */
-        //         void initButtons(WINDOW *win, int y, int x,
-        //             size_t yLen, size_t xLen, size_t n);
-        //     public:
-        //         /* Public Constructor */
-        //         ButtonManager(WINDOW *win, int y, int x,
-        //             size_t yLen, size_t xLen, size_t n);
-        // };
+        class ButtonManager { 
+            protected:
+                /* Protected Virtual Methods */
+                virtual std::function<void()> genClickFunction(
+                    TCWindowSharedData &winSData, int index) = 0;
+                /* Protected Methods */
+                std::function<void(WINDOW *)> genDrawFunction(size_t maxLen,
+                    const std::string &txt, Size<> btnSize);
+            public:
+                /* Public Member Variables */
+                std::vector<Button> list;
+                size_t btn;
+                /* Public Constructor */
+                ButtonManager();
+                /* Public Virtual Destructor */
+                virtual ~ButtonManager() = default;
+        };
         /* Protected Static Member Variables */
         static EventData eData;
         static Controls control;

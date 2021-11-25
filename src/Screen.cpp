@@ -2,10 +2,11 @@
 #include <filesystem>
 #include <bitset>
 #include <fstream>
+#include "TransferrableData.h"
 #include "Screen.h"
 
 
-/////////////////////////////////// Local Functions ///////////////////////////////////
+//////////////////////////////////* Local Functions *//////////////////////////////////
 
 size_t parseUTF8_Txt(std::vector<std::string> &dst, std::string path)
 {
@@ -14,6 +15,7 @@ size_t parseUTF8_Txt(std::vector<std::string> &dst, std::string path)
     if (!file)
         std::cerr << "File could not be opened: " << path << '\n';
 
+    using ULL = unsigned long long;
     std::string line;
     size_t maxLen {}, len {};
 
@@ -25,14 +27,14 @@ size_t parseUTF8_Txt(std::vector<std::string> &dst, std::string path)
                 len++;
             /* In Windows a newline is represented in the CR + LF format: "\r\n" */
             else if (line[i] != '\r') {
-                std::bitset<8> byte {static_cast<unsigned long long>(line[i])};
+                std::bitset<8> byte {static_cast<ULL>(line[i])};
                 size_t bits {0};
 
                 for (size_t j {0}; j < 8 && byte.test(7 - j); j++, bits++);
 
                 if (2 <= bits && bits <= 4) {
                     for (size_t k {0}, l {bits - 1}; k < l; k++) {
-                        std::bitset<8> nextByte {static_cast<unsigned long long>(line[++i])};
+                        std::bitset<8> nextByte {static_cast<ULL>(line[++i])};
 
                         if (!nextByte.test(7) || nextByte.test(6)) {
                             std::cerr << "No continuation byte found\n";
@@ -51,9 +53,10 @@ size_t parseUTF8_Txt(std::vector<std::string> &dst, std::string path)
     return maxLen;
 }
 
-///////////////////////////////////// SCREEN /////////////////////////////////////
+////////////////////////////////////* SCREEN *////////////////////////////////////
 
-using Texts = std::unordered_map<std::string, std::pair<std::vector<std::string>, size_t>>;
+using Texts = std::unordered_map<std::string, std::pair<
+    std::vector<std::string>, size_t>>;
 using WideChars = std::unordered_map<std::wstring, cchar_t>;
 
 /*==============================================================================*/
@@ -132,10 +135,11 @@ WideChars Screen::genWideChars()
     return wchars;
 }
 
-///////////////////////////////////// BUTTON /////////////////////////////////////
+////////////////////////////////////* BUTTON *////////////////////////////////////
 
 Screen::Button::Button(WINDOW *win, int y, int x, int yLen, int xLen,
-        std::function<void()> click, std::function<void(WINDOW *)> draw) :
+        const std::function<void()> &click,
+        const std::function<void(WINDOW *)> &draw) :
     ptr{win},
     yTop{y}, yBtm{y + yLen}, xLeft{x}, xRight{x + xLen},
     click{click}, draw{draw}
@@ -152,18 +156,27 @@ void Screen::Button::highlight(int attrs)
     wattroff(ptr.get(), attrs);
 }
 
-///////////////////////////////// BUTTON MANAGER /////////////////////////////////
+////////////////////////////////* BUTTON MANAGER *////////////////////////////////
 
-// Screen::ButtonManager::ButtonManager(WINDOW *win, int y, int x,
-//         size_t yLen, size_t xLen, size_t n) :
-//     list{},
-//     btn{0}
-// {
-//     initButtons(win, y, x, 0, 0, n);
-// }
+Screen::ButtonManager::ButtonManager() :
+    list{},
+    btn{0}
+{
+    
+}
 
-// void Screen::ButtonManager::initButtons(WINDOW *win, int y, int x,
-//         size_t yLen, size_t xLen, size_t n)
-// {
+/*==============================================================================*/
 
-// }
+std::function<void(WINDOW *)> Screen::ButtonManager::genDrawFunction(
+        size_t maxLen, const std::string &txt, Size<> btnSize)
+{
+    return [txt, maxLen, btnSize] (WINDOW *win) {
+        box(win, 0, 0);
+
+        for (size_t i {0}; i < texts.at(txt).first.size(); i++)
+            mvwaddstr(win, i + 1, (btnSize.x - maxLen) / 2,
+                texts.at(txt).first[i].c_str());
+        
+        wrefresh(win);
+    };
+}
