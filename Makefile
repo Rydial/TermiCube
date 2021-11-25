@@ -1,6 +1,3 @@
-# CPP Compiler
-CXX 			:= clang++
-
 # Compile-time Flags
 CXXFLAGS		:= -std=c++20 -Wall -Wextra -Wvla -Weffc++ -Wsign-conversion -Werror
 
@@ -40,11 +37,14 @@ endif
 
 # Linux OS
 ifeq ($(shell uname), Linux)
+    # Directories
 	SOURCEDIR	:= $(shell find $(SOURCE) -type d)
 	INCLUDEDIR	:= $(shell find $(INCLUDE) -type d)
 	OUTPUTDIR	:= $(BUILDDIR)/$(OUTPUT)
 	OUTPUTMAIN	:= $(OUTPUTDIR)/$(MAIN)
 	ERRORLOG	:= $(BUILDDIR)/$(ERROR)/err.log
+    # Compiler
+	CXX			:= g++
     # Compiler Flags
 	LIBS		:= -lpanelw -lncursesw
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined
@@ -59,12 +59,15 @@ endif
 
 # Mac OS - Darwin
 ifeq ($(shell uname), Darwin)
+    # Directories
 	FIXPATH 	:= $1
 	SOURCEDIR	:= $(SOURCE)
 	INCLUDEDIR	:= $(INCLUDE)
 	OUTPUTDIR	:= $(BUILDDIR)/$(OUTPUT)
 	OUTPUTMAIN	:= $(OUTPUTDIR)/$(MAIN)
 	ERRORLOG	:= $(BUILDDIR)/$(ERROR)/err.log
+    # Compiler
+	CXX			:= clang++
     # Compiler Flags
 	LIBS		:= -lpanel -lncurses
 	CXXFLAGS	+= -fsanitize=address -fsanitize=undefined

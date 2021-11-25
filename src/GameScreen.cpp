@@ -17,7 +17,8 @@ GameScreen::GameScreen() :
         ((maxCols - optMenu.size.x) / 2) + 1))),
         {
             
-        }},
+        }
+    },
     p{3, 1},
     focus{ScreenFocus::MAIN}
 {
