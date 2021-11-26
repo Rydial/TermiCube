@@ -1,13 +1,17 @@
-#include "Screen.h"
 #include "TransferrableData.h"
+#include "Screen.h"
 
-TCWindowSharedData::TCWindowSharedData(std::shared_ptr<TCWindowData> &gwData) :
+////////////////////////////* Window Shared Data Class *///////////////////////////
+
+TC::WinSData::WindowSharedData(std::shared_ptr<WinData> &gwData) :
     data{gwData}
 {
 
 }
 
-void TCWindowSharedData::switchScreen(size_t index)
+/*==============================================================================*/
+
+void TC::WinSData::switchScreen(size_t index)
 {
     auto gwData {data.lock()};
     /* Checks if object is still available */
@@ -20,7 +24,7 @@ void TCWindowSharedData::switchScreen(size_t index)
     }
 }
 
-void TCWindowSharedData::terminate()
+void TC::WinSData::terminate()
 {
     auto gwData {data.lock()};
     /* Checks if object is still available */

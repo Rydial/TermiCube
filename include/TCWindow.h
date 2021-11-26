@@ -14,16 +14,21 @@ Things to do:
 
 #include <memory>
 
-/////////////////////// Forward Declarations ///////////////////////
+namespace TC {
 
-struct TCWindowData;
+    /* Forward Declarations */
+    struct WindowData;
 
-/////////////////////// Game Window Class ///////////////////////
+
+    /* Type Alias */
+    using WinData = WindowData;
+
+}
 
 typedef class TermiCubeWindow {
     private:
         /* Private Member Variables */
-        std::shared_ptr<TCWindowData> data;
+        std::shared_ptr<TC::WinData> data;
         /* Private Methods */
         void initCurses();
         void initColors();

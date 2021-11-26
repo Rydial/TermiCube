@@ -1,21 +1,37 @@
 #include <locale>
 #include "TCWindow.h"
 #include "TransferrableData.h"
+#include "Screen.h"
+/* Find a way to avoid including the ones below if possible */
 #include "MainMenuScreen.h"
 #include "GameScreen.h"
 
+////////////////////////////* TermiCube Window Class *///////////////////////////
+
 
 TCWindow::TermiCubeWindow() :
-    data{std::make_shared<TCWindowData>(TCWindowData{false, 0, {}})}
+    data{std::make_shared<TC::WinData>(TC::WinData{false, 0, {}})}
 {
     initCurses();
     initColors();
     initScreens();
 }
 
+/*==============================================================================*/
+
 TCWindow::~TermiCubeWindow()
 {
     endwin();
+}
+
+/*==============================================================================*/
+
+void TCWindow::initColors()
+{
+    start_color(); /* Enable color functionality */
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    init_pair(2, COLOR_BLUE, COLOR_BLACK);
+    init_pair(3, COLOR_WHITE, COLOR_YELLOW); /* Text Background */
 }
 
 void TCWindow::initCurses()
@@ -30,21 +46,13 @@ void TCWindow::initCurses()
     // mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
 }
 
-void TCWindow::initColors()
-{
-    start_color(); /* Enable color functionality */
-    init_pair(1, COLOR_GREEN, COLOR_BLACK);
-    init_pair(2, COLOR_BLUE, COLOR_BLACK);
-    init_pair(3, COLOR_WHITE, COLOR_YELLOW); /* Text Background */
-}
-
 void TCWindow::initScreens()
 {
     /* unique_ptr are not copyable, and initializer lists only use copy
     semantics so emplace_back had to be used instead */
-    TCWindowSharedData winSData {data};
-    data->screenList.emplace_back(std::make_unique<MainMenuScreen>(winSData));
-    data->screenList.emplace_back(std::make_unique<GameScreen>());
+    TC::WinSData winSData {data};
+    data->screenList.emplace_back(std::make_unique<TC::MMScr>(winSData));
+    data->screenList.emplace_back(std::make_unique<TC::GScr>());
     /* Hide every screen except for starting screen (Main Menu) */
     for (size_t i {1}; i < data->screenList.size(); i++)
         hide_panel(data->screenList[i]->getPanel());

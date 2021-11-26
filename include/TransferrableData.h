@@ -5,31 +5,43 @@
 #include <vector>
 #include <memory>
 
-/////////////////////// Forward Declarations ///////////////////////
 
-class Screen;
+namespace TC {
 
-/////////////////////// Transfer Data Wrappers ///////////////////////
+    /* Forward Declarations */
+    class Screen;
 
-struct TCWindowData {
-    /* Public Member Variables */
-    bool exit;
-    size_t screen;
-    std::vector<std::unique_ptr<Screen>> screenList;
-};
 
-class TCWindowSharedData {
-    private:
-        /* Weak Ptr instead of Shared Ptr to prevent self-referencing */
-        /* Private Member Variables */
-        std::weak_ptr<TCWindowData> data;
-    public:
-        /* Public Constructor */
-        TCWindowSharedData(std::shared_ptr<TCWindowData> &winData);
-        /* Public Methods */
-        void switchScreen(size_t index);
-        void terminate();
-};
+    /* Type Aliases */
+    using Scr = Screen;
+
+
+    struct WindowData {
+        /* Public Member Variables */
+        bool exit;
+        size_t screen;
+        std::vector<std::unique_ptr<Scr>> screenList;
+    };
+    /* Type Alias */
+    using WinData = WindowData;
+
+
+    class WindowSharedData {
+        private:
+            /* Weak Ptr instead of Shared Ptr to prevent self-referencing */
+            /* Private Member Variables */
+            std::weak_ptr<WinData> data;
+        public:
+            /* Public Constructor */
+            WindowSharedData(std::shared_ptr<WinData> &winData);
+            /* Public Methods */
+            void switchScreen(size_t index);
+            void terminate();
+    };
+    /* Type Alias */
+    using WinSData = WindowSharedData;
+
+}
 
 
 #endif // TRANSFERRABLEDATA_H

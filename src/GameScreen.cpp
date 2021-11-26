@@ -1,17 +1,18 @@
 #include <cmath>
 #include <iostream>
 #include <utility>
+#include "Screen.h"
 #include "GameScreen.h"
+#include "TransferrableData.h"
 
-/////////////////////////////////////* Base Class */////////////////////////////////////
+/////////////////////////////////////* GameScreen */////////////////////////////////////
 
-
-GameScreen::GameScreen() :
+TC::GScr::GameScreen() :
     subWins{},
     hotbar{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
     "Eight", "Nine"},
     cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}},
-    optMenu{std::unique_ptr<PANEL, PanelDeleter>(new_panel(newwin(
+    optMenu{std::unique_ptr<PANEL, PanelDel>(new_panel(newwin(
         optMenu.size.y, optMenu.size.x,
         ceil((maxRows - optMenu.size.y) / 2.0), 
         ((maxCols - optMenu.size.x) / 2) + 1))),
@@ -28,7 +29,9 @@ GameScreen::GameScreen() :
     initScreen();
 }
 
-void GameScreen::consoleInput(int key)
+/*==============================================================================*/
+
+void TC::GScr::consoleInput(int key)
 {
     WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
     const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
@@ -119,12 +122,12 @@ void GameScreen::consoleInput(int key)
     wrefresh(ptr);
 }
 
-void GameScreen::drawGraphics()
+void TC::GScr::drawGraphics()
 {
     
 }
 
-void GameScreen::drawStatBar()
+void TC::GScr::drawStatBar()
 { /***** Line 1 in Notes.txt *****/
     WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::STATBAR)].get()};
     /* Draw HP sprites */
@@ -135,7 +138,7 @@ void GameScreen::drawStatBar()
         mvwadd_wch(ptr, 0, x, &wchars.at(L" "));
 }
 
-void GameScreen::hotbarSelect(size_t slot)
+void TC::GScr::hotbarSelect(size_t slot)
 { /* Select which hotbar slot to focus on (mimics keyboard arrangement) */
     WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
     size_t &curSlot {p.curHotbarSlot}, size {hotbar.size()};
@@ -154,7 +157,7 @@ void GameScreen::hotbarSelect(size_t slot)
     wrefresh(ptr);
 }
 
-void GameScreen::initConsole()
+void TC::GScr::initConsole()
 {
     /* Setup Unbuffered File Stream for Console Output */
     std::string path {"build/log/test.log"};
@@ -167,7 +170,7 @@ void GameScreen::initConsole()
         std::cerr << "File " << path << " could not be opened.\n";
 }
 
-void GameScreen::initOptionMenu()
+void TC::GScr::initOptionMenu()
 {
     /* Draw Option Menu Border */
     box(panel_window(optMenu.panel.get()), 0, 0);
@@ -176,7 +179,7 @@ void GameScreen::initOptionMenu()
     
 }
 
-void GameScreen::initScreen()
+void TC::GScr::initScreen()
 {   
     /* Draw Screen Border */
     drawBorder();
@@ -226,7 +229,7 @@ void GameScreen::initScreen()
     mvwadd_wch(window.get(), (maxRows - 1) - 1, 2, &wchars.at(L"➔"));
 }
 
-void GameScreen::initSubWindows()
+void TC::GScr::initSubWindows()
 {   /* Generate Subwindows */
     subWins.emplace_back(derwin(window.get(), mainSize.y, mainSize.x, 1, 1));
     subWins.emplace_back(derwin(window.get(), statBarSize.y, statBarSize.x,
@@ -238,7 +241,7 @@ void GameScreen::initSubWindows()
         (maxRows - 1) - cnslSize.y, 1));
 }
 
-void GameScreen::moveCursor(int side, bool highlight)
+void TC::GScr::moveCursor(int side, bool highlight)
 {
     WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
     const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
@@ -264,7 +267,7 @@ void GameScreen::moveCursor(int side, bool highlight)
     wmove(ptr, size.y - 1, cnsl.input.cursPos);
 }
 
-void GameScreen::sendToConsole(std::string line, const std::wstring &icon)
+void TC::GScr::sendToConsole(std::string line, const std::wstring &icon)
 {
     /* Append Line & Icon to Console Record */
     cnsl.record.emplace_back(std::make_pair(line, icon + L"  "));
@@ -284,7 +287,7 @@ void GameScreen::sendToConsole(std::string line, const std::wstring &icon)
     cnsl.file << '\n';
 }
 
-void GameScreen::updateConsole()
+void TC::GScr::updateConsole()
 {
     WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
     const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
@@ -319,12 +322,12 @@ void GameScreen::updateConsole()
     }
 }
 
-void GameScreen::updateScreen()
+void TC::GScr::updateScreen()
 {
 
 }
 
-void GameScreen::userInput(int key)
+void TC::GScr::userInput(int key)
 {
     switch (focus) {
         case ScreenFocus::MAIN:
@@ -363,5 +366,28 @@ void GameScreen::userInput(int key)
                 doupdate();
             }
             break;
+    }
+}
+
+/////////////////////////////////////* OptionMenu */////////////////////////////////////
+
+std::function<void()> TC::GScr::OptionMenu::genClickFunc(
+    TC::WinSData &winSData, int index)
+{
+    switch(index) {
+        case static_cast<int>(ButtonType::RESUME):
+            return [] () {
+                /* Switch to game panel */
+            };
+        case static_cast<int>(ButtonType::SETTINGS):
+            return [] () {
+                /* Switch to settings panel */
+            };
+        case static_cast<int>(ButtonType::MAINMENU):
+            return [winSData] () mutable {
+                winSData.switchScreen(static_cast<size_t>(ScreenType::MAINMENU));
+            };
+        default:
+            return nullptr;
     }
 }
