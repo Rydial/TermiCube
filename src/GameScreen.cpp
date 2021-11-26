@@ -396,8 +396,11 @@ std::function<void()> TC::GScr::OptionMenu::genClickFunc(
 {
     switch(index) {
         case static_cast<int>(ButtonType::RESUME):
-            return [] () {
-                /* Switch to game panel */
+            return [this] () {
+                resetFocus();
+                hide_panel(panel.get());
+                update_panels();
+                doupdate();
             };
         case static_cast<int>(ButtonType::SETTINGS):
             return [] () {
