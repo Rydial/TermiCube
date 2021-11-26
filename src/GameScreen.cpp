@@ -7,17 +7,21 @@
 
 /////////////////////////////////////* GameScreen */////////////////////////////////////
 
-TC::GScr::GameScreen() :
+TC::GScr::GameScreen(TC::WinSData &winSData) :
     subWins{},
     hotbar{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
     "Eight", "Nine"},
     cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}},
     optMenu{std::unique_ptr<PANEL, PanelDel>(new_panel(newwin(
         optMenu.size.y, optMenu.size.x,
-        ceil((maxRows - optMenu.size.y) / 2.0), 
+        ceil((maxRows - optMenu.size.y) / 2.0),
         ((maxCols - optMenu.size.x) / 2) + 1))),
+        [this] () {focus = ScreenFocus::MAIN;},
         {
-            
+            panel_window(optMenu.panel.get()), OptionMenu::btnSize,
+            OptionMenu::btnStartPos, 2, {"Resume", "Settings", "MainMenu"},
+            [this, winSData] (int index) mutable {
+                return optMenu.genClickFunc(winSData, index);}
         }
     },
     p{3, 1},
@@ -172,8 +176,13 @@ void TC::GScr::initConsole()
 
 void TC::GScr::initOptionMenu()
 {
-    /* Draw Option Menu Border */
-    box(panel_window(optMenu.panel.get()), 0, 0);
+    /* Draw RESUME with current focus */
+    optMenu.btns.list[optMenu.btns.btn].highlight(COLOR_PAIR(1));
+
+    /* Draw rest of the buttons */
+    for (size_t i {1}; i < optMenu.btns.list.size(); i++)
+        optMenu.btns.list[i].draw(optMenu.btns.list[i].ptr.get());
+
     /* Hide Option Menu */
     hide_panel(optMenu.panel.get());
     
@@ -364,9 +373,20 @@ void TC::GScr::userInput(int key)
                 hide_panel(optMenu.panel.get());
                 update_panels();
                 doupdate();
-            }
+            } else if (key == control.up) {
+                optMenu.btns.list[optMenu.btns.btn].highlight(A_NORMAL);
+                optMenu.btns.btn = pyMod(static_cast<int>(optMenu.btns.btn)
+                    - 1, std::ssize(optMenu.btns.list));
+                optMenu.btns.list[optMenu.btns.btn].highlight(COLOR_PAIR(1));
+            } else if (key == control.down) {
+                optMenu.btns.list[optMenu.btns.btn].highlight(A_NORMAL);
+                optMenu.btns.btn = (optMenu.btns.btn + 1) % optMenu.btns.list.size();
+                optMenu.btns.list[optMenu.btns.btn].highlight(COLOR_PAIR(1));
+            } else if (key == control.enter)
+                optMenu.btns.list[optMenu.btns.btn].click();       
             break;
     }
+    eData.key = key; /* Store key into event data */
 }
 
 /////////////////////////////////////* OptionMenu */////////////////////////////////////
@@ -384,7 +404,8 @@ std::function<void()> TC::GScr::OptionMenu::genClickFunc(
                 /* Switch to settings panel */
             };
         case static_cast<int>(ButtonType::MAINMENU):
-            return [winSData] () mutable {
+            return [this, winSData] () mutable {
+                resetFocus();
                 winSData.switchScreen(static_cast<size_t>(ScreenType::MAINMENU));
             };
         default:

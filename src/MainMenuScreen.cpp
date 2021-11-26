@@ -5,7 +5,11 @@
 ////////////////////////////////* MainMenu Screen *////////////////////////////////
 
 TC::MMScr::MainMenuScreen(TC::WinSData &winSData) :
-    btns{window.get(), btnSize, btnStartPos, winSData, genClickFunc}
+    btns{
+        window.get(), btnSize, btnStartPos, 1,
+        {"NewGame", "LoadGame", "Settings", "Exit"},
+        [this, winSData] (int index) mutable {return genClickFunc(winSData, index);}
+    }
 {
     initScreen();
 }
@@ -37,7 +41,6 @@ void TC::MMScr::initScreen()
 {
     /* Title Creation */
     drawBorder();
-
     const auto &title {texts.at("Title").first};
     size_t xLen {texts.at("Title").second};
 
@@ -61,7 +64,7 @@ void TC::MMScr::userInput(int key)
 {   
     if (key == control.up) {
         btns.list[btns.btn].highlight(A_NORMAL);
-        btns.btn = (btns.btn - 1) % btns.list.size();
+        btns.btn = pyMod(static_cast<int>(btns.btn) - 1, std::ssize(btns.list));
         btns.list[btns.btn].highlight(COLOR_PAIR(1));
     } else if (key == control.down) {
         btns.list[btns.btn].highlight(A_NORMAL);

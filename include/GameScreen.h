@@ -52,16 +52,24 @@ namespace TC {
                 std::ofstream file;
             };
             struct OptionMenu {
-                /* Private Member Enums */
+                /* Public Member Enums */
                 enum class ButtonType {
                     RESUME, SETTINGS, MAINMENU, COUNT
                 };
-                /* Public Static Methods */
-                static std::function<void()> genClickFunc(WinSData &winSData, int index);
-                /* Public Member Variables */
+                /* Public Constants */
                 static constexpr Size<> size {27, 82};
+                static constexpr Size<> btnSize {5, 48};
+                static constexpr Point<> btnStartPos {
+                    ((maxRows - Console::size[0].y - 3) - (static_cast<size_t>(
+                        ButtonType::COUNT) * btnSize.y)) / (static_cast<size_t>(
+                            ButtonType::COUNT) + 1) + 1,
+                    (maxCols - btnSize.x) / 2};
+                /* Public Methods */
+                std::function<void()> genClickFunc(WinSData &winSData, int index);
+                /* Public Member Variables */
                 std::unique_ptr<PANEL, PanelDel> panel;
-                std::vector<std::unique_ptr<WINDOW, WinDel>> subWins;
+                std::function<void()> resetFocus;
+                BtnMgr btns;
             };
             /* Private Member Variables */
             std::vector<std::unique_ptr<WINDOW, WinDel>> subWins;
@@ -81,10 +89,9 @@ namespace TC {
             void moveCursor(int side, bool highlight=false);
             void sendToConsole(std::string line, const std::wstring &icon); 
             void updateConsole();
-            
         public:
             /* Public Constructor */
-            GameScreen();
+            GameScreen(WinSData &winSData);
             /* Public Methods */
             void drawGraphics();
             void updateScreen();

@@ -108,6 +108,18 @@ namespace TC {
 
 }
 
+//////////////////////////////////* Global Functions *//////////////////////////////////
+
+size_t TC::pyMod(int n, int mod)
+{
+    /* Haven't considered when mod is negative */
+    if (n < 0)
+        return static_cast<size_t>(mod - (abs(n) % mod));
+    else
+        return static_cast<size_t>(n % mod);
+}
+
+
 ////////////////////////////////////* Screen *////////////////////////////////////
 
 TC::Scr::Controls TC::Scr::control {'w', 'a', 's', 'd', '\n'};
@@ -157,20 +169,18 @@ void TC::Btn::highlight(int attrs)
 ////////////////////////////////* BUTTON MANAGER *////////////////////////////////
 
 TC::BtnMgr::ButtonManager(
-    WINDOW *win, Size<> size, Point<> startPos, TC::WinSData &winSData,
-    std::function<std::function<void()>(TC::WinSData &, int)> genClick
+    WINDOW *win, Size<> size, Point<> startPos, int offset,
+    std::vector<std::string> txts, std::function<std::function<void()>(int)> genClick
 ) :
     list{},
     btn{0}
 {
-    int curY {0};
-    std::vector<std::string> txts {"NewGameBtn", "LoadGameBtn", "SettingsBtn", "ExitBtn"};
+    int curY {0}, verSpacing {static_cast<int>(size.y) + offset};
     /* Generate Button + Subwindow */
-    for (size_t i {0}; i < txts.size(); i++, curY += 6) {
+    for (size_t i {0}; i < txts.size(); i++, curY += verSpacing) {
         list.emplace_back(
             derwin(win, size.y, size.x, startPos.y + curY, startPos.x),
-            startPos.y + curY, startPos.x, size.y, size.x,
-            genClick(winSData, i),
+            startPos.y + curY, startPos.x, size.y, size.x, genClick(i),
             genDrawFunc(texts.at(txts[i]).second, txts[i], size)
         );
     }

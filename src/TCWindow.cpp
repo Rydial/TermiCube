@@ -52,7 +52,7 @@ void TCWindow::initScreens()
     semantics so emplace_back had to be used instead */
     TC::WinSData winSData {data};
     data->screenList.emplace_back(std::make_unique<TC::MMScr>(winSData));
-    data->screenList.emplace_back(std::make_unique<TC::GScr>());
+    data->screenList.emplace_back(std::make_unique<TC::GScr>(winSData));
     /* Hide every screen except for starting screen (Main Menu) */
     for (size_t i {1}; i < data->screenList.size(); i++)
         hide_panel(data->screenList[i]->getPanel());

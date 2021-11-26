@@ -16,7 +16,11 @@ void TC::WinSData::switchScreen(size_t index)
     auto gwData {data.lock()};
     /* Checks if object is still available */
     if (gwData) {
-        hide_panel(gwData->screenList[gwData->screen]->getPanel());
+        PANEL *ptr {};
+        /* Hide all panels associated with the current screen */
+        while ((ptr = panel_below(0)) != NULL)
+            hide_panel(ptr);
+        /* Switch screen */
         gwData->screen = index;
         show_panel(gwData->screenList[gwData->screen]->getPanel());
         update_panels();

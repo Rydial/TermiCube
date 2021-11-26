@@ -14,6 +14,10 @@
 
 namespace TC {
 
+    /* Global Functions */
+    size_t pyMod(int n, int mod);
+
+
     /* Forward Declarations */
     class WindowSharedData;
 
@@ -75,14 +79,15 @@ namespace TC {
             std::vector<Button> list;
             size_t btn;
             /* Public Constructor */
-            ButtonManager(WINDOW *win, Size<> size, Point<> startPos,
-                WinSData &winSData,
-                std::function<std::function<void()>(WinSData &, int)> genClick);
+            ButtonManager(WINDOW *win, Size<> size, Point<> startPos, int offset,
+                std::vector<std::string> txts,
+                std::function<std::function<void()>(int)> genClick);
             /* Public Virtual Destructor */
             virtual ~ButtonManager() = default;
     };
     /* Type Alias */
     using BtnMgr = ButtonManager;
+
 
     class Screen {
         protected:
