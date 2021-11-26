@@ -81,7 +81,7 @@ namespace TC {
             /* Public Constructor */
             ButtonManager(WINDOW *win, Size<> size, Point<> startPos, int offset,
                 std::vector<std::string> txts,
-                std::function<std::function<void()>(int)> genClick);
+                std::function<std::function<void()>(size_t)> genClick);
             /* Public Virtual Destructor */
             virtual ~ButtonManager() = default;
     };

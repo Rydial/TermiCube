@@ -7,26 +7,33 @@
 
 /////////////////////////////////////* GameScreen */////////////////////////////////////
 
-TC::GScr::GameScreen(TC::WinSData &winSData) :
-    subWins{},
+TC::GScr::GameScreen(PANEL *panel, WinSData &winSData)
+    : subWins{},
     hotbar{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
     "Eight", "Nine"},
     cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}},
-    optMenu{std::unique_ptr<PANEL, PanelDel>(new_panel(newwin(
-        optMenu.size.y, optMenu.size.x,
-        ceil((maxRows - optMenu.size.y) / 2.0),
-        ((maxCols - optMenu.size.x) / 2) + 1))),
+    optMenu{std::unique_ptr<PANEL, PanelDel>(panel),
         [this] () {focus = ScreenFocus::MAIN;},
         {
-            panel_window(optMenu.panel.get()), OptionMenu::btnSize,
+            panel_window(panel), OptionMenu::btnSize,
             OptionMenu::btnStartPos, 2, {"Resume", "Settings", "MainMenu"},
-            [this, winSData] (int index) mutable {
+            [this, winSData] (size_t index) mutable {
                 return optMenu.genClickFunc(winSData, index);}
         }
     },
     p{3, 1},
     focus{ScreenFocus::MAIN}
 {
+
+}
+
+TC::GScr::GameScreen(TC::WinSData &winSData)
+    : GameScreen(new_panel(newwin(optMenu.size.y, optMenu.size.x,
+        ceil((static_cast<size_t>(LINES) - maxRows) / 2.0),
+        (static_cast<size_t>(COLS) - optMenu.size.x) / 2)), winSData)
+    
+{
+    // optMenu.btns.
     initOptionMenu();
     initConsole();
     initSubWindows();
@@ -392,21 +399,21 @@ void TC::GScr::userInput(int key)
 /////////////////////////////////////* OptionMenu */////////////////////////////////////
 
 std::function<void()> TC::GScr::OptionMenu::genClickFunc(
-    TC::WinSData &winSData, int index)
+    TC::WinSData &winSData, size_t index)
 {
     switch(index) {
-        case static_cast<int>(ButtonType::RESUME):
+        case static_cast<size_t>(ButtonType::RESUME):
             return [this] () {
                 resetFocus();
                 hide_panel(panel.get());
                 update_panels();
                 doupdate();
             };
-        case static_cast<int>(ButtonType::SETTINGS):
+        case static_cast<size_t>(ButtonType::SETTINGS):
             return [] () {
                 /* Switch to settings panel */
             };
-        case static_cast<int>(ButtonType::MAINMENU):
+        case static_cast<size_t>(ButtonType::MAINMENU):
             return [this, winSData] () mutable {
                 resetFocus();
                 winSData.switchScreen(static_cast<size_t>(ScreenType::MAINMENU));

@@ -65,7 +65,7 @@ namespace TC {
                             ButtonType::COUNT) + 1) + 1,
                     (maxCols - btnSize.x) / 2};
                 /* Public Methods */
-                std::function<void()> genClickFunc(WinSData &winSData, int index);
+                std::function<void()> genClickFunc(WinSData &winSData, size_t index);
                 /* Public Member Variables */
                 std::unique_ptr<PANEL, PanelDel> panel;
                 std::function<void()> resetFocus;
@@ -78,6 +78,8 @@ namespace TC {
             OptionMenu optMenu;
             Player p;
             ScreenFocus focus;
+            /* Private Constructor */
+            GameScreen(PANEL *panel, WinSData &winSData);
             /* Private Methods */
             void consoleInput(int key);
             void drawStatBar();

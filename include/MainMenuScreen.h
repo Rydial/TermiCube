@@ -13,7 +13,7 @@ namespace TC {
             static constexpr Size<> btnSize {5, 50};
             static constexpr Point<> btnStartPos {14, (maxCols - btnSize.x) / 2};
             /* Private Static Methods */
-            std::function<void()> genClickFunc(WinSData &winSData, int index);
+            std::function<void()> genClickFunc(WinSData &winSData, size_t index);
             /* Private Member Enums */
             enum class ButtonType {
                 NEWGAME, LOADGAME, SETTINGS, EXIT, COUNT

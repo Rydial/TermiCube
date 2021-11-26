@@ -170,7 +170,7 @@ void TC::Btn::highlight(int attrs)
 
 TC::BtnMgr::ButtonManager(
     WINDOW *win, Size<> size, Point<> startPos, int offset,
-    std::vector<std::string> txts, std::function<std::function<void()>(int)> genClick
+    std::vector<std::string> txts, std::function<std::function<void()>(size_t)> genClick
 ) :
     list{},
     btn{0}

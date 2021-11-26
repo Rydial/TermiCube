@@ -8,7 +8,7 @@ TC::MMScr::MainMenuScreen(TC::WinSData &winSData) :
     btns{
         window.get(), btnSize, btnStartPos, 1,
         {"NewGame", "LoadGame", "Settings", "Exit"},
-        [this, winSData] (int index) mutable {return genClickFunc(winSData, index);}
+        [this, winSData] (size_t index) mutable {return genClickFunc(winSData, index);}
     }
 {
     initScreen();
@@ -21,14 +21,14 @@ void TC::MMScr::drawGraphics()
 
 }
 
-std::function<void()> TC::MMScr::genClickFunc(TC::WinSData &winSData, int index)
+std::function<void()> TC::MMScr::genClickFunc(TC::WinSData &winSData, size_t index)
 {
     switch(index) {
-        case static_cast<int>(ButtonType::NEWGAME):
+        case static_cast<size_t>(ButtonType::NEWGAME):
             return [winSData] () mutable {
                 winSData.switchScreen(static_cast<size_t>(ScreenType::GAME));
             };
-        case static_cast<int>(ButtonType::EXIT):
+        case static_cast<size_t>(ButtonType::EXIT):
             return [winSData] () mutable {
                 winSData.terminate();
             };
