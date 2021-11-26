@@ -99,6 +99,7 @@ namespace TC {
             void gameInput(int key);
             void hotbarSelect(size_t slot);
             void initConsole();
+            void initMap();
             void initOptionMenu();
             void initScreen();
             void initSubWindows();

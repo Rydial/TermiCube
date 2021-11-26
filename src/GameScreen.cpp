@@ -29,7 +29,7 @@ TC::GScr::GameScreen(TC::WinSData &winSData)
         (static_cast<size_t>(COLS) - OptionMenu::size.x) / 2)), winSData)
     
 {
-    // optMenu.btns.
+    initMap();
     initOptionMenu();
     initConsole();
     initSubWindows();
@@ -200,6 +200,16 @@ void TC::GScr::initConsole()
     /* Check if file stream was opened */
     if (!cnsl.file)
         std::cerr << "File " << path << " could not be opened.\n";
+}
+
+void TC::GScr::initMap()
+{
+    /* Temp Values */
+    constexpr size_t lvls {5};
+    constexpr Size<> mapSize {256, 256};
+    /* Initialize Map Vectors */
+    map.lvls = std::vector<std::vector<std::vector<EID>>>(lvls,
+        std::vector<std::vector<EID>>(mapSize.y, std::vector<EID>(mapSize.x)));
 }
 
 void TC::GScr::initOptionMenu()
