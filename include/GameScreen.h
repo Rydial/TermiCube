@@ -10,6 +10,11 @@
 
 namespace TC {
 
+    /* Type Alias */
+    using EntityID = unsigned;
+    using EID = EntityID;
+
+
     class GameScreen : public Screen {
         private:
             /* Private Member Constants */
@@ -33,6 +38,12 @@ namespace TC {
                 size_t hp;
                 size_t curHotbarSlot;
             };
+
+            struct Map {
+                std::vector<std::vector<std::vector<EID>>> lvls;
+                size_t curLvl;
+            };
+
             struct Console {
                 /* Public Member Constants */
                 static constexpr Size<> size[2] {{12, 55}, {0, 0}};
@@ -51,6 +62,7 @@ namespace TC {
                 std::vector<std::pair<std::string, std::wstring>> record;
                 std::ofstream file;
             };
+
             struct OptionMenu {
                 /* Public Member Enums */
                 enum class ButtonType {
@@ -76,13 +88,15 @@ namespace TC {
             std::array<std::string, 10> hotbar;
             Console cnsl;
             OptionMenu optMenu;
-            Player p;
             ScreenFocus focus;
+            Player p;
+            Map map;
             /* Private Constructor */
             GameScreen(PANEL *panel, WinSData &winSData);
             /* Private Methods */
             void consoleInput(int key);
             void drawStatBar();
+            void gameInput(int key);
             void hotbarSelect(size_t slot);
             void initConsole();
             void initOptionMenu();

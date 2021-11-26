@@ -8,10 +8,8 @@
 /////////////////////////////////////* GameScreen */////////////////////////////////////
 
 TC::GScr::GameScreen(PANEL *panel, WinSData &winSData)
-    : subWins{},
-    hotbar{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
-    "Eight", "Nine"},
-    cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}},
+    : subWins{}, hotbar{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
+    "Eight", "Nine"}, cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}},
     optMenu{std::unique_ptr<PANEL, PanelDel>(panel),
         [this] () {focus = ScreenFocus::MAIN;},
         {
@@ -20,17 +18,15 @@ TC::GScr::GameScreen(PANEL *panel, WinSData &winSData)
             [this, winSData] (size_t index) mutable {
                 return optMenu.genClickFunc(winSData, index);}
         }
-    },
-    p{3, 1},
-    focus{ScreenFocus::MAIN}
+    }, focus{ScreenFocus::MAIN}, p{3, 1}, map{}
 {
 
 }
 
 TC::GScr::GameScreen(TC::WinSData &winSData)
-    : GameScreen(new_panel(newwin(optMenu.size.y, optMenu.size.x,
+    : GameScreen(new_panel(newwin(OptionMenu::size.y, OptionMenu::size.x,
         ceil((static_cast<size_t>(LINES) - maxRows) / 2.0),
-        (static_cast<size_t>(COLS) - optMenu.size.x) / 2)), winSData)
+        (static_cast<size_t>(COLS) - OptionMenu::size.x) / 2)), winSData)
     
 {
     // optMenu.btns.
@@ -147,6 +143,31 @@ void TC::GScr::drawStatBar()
     /* Fill right side of rightmost heart with invisible characters*/
     for (size_t x {(statBarSize.x - 1) - 1}; x < statBarSize.x; ++x)
         mvwadd_wch(ptr, 0, x, &wchars.at(L" "));
+}
+
+void TC::GScr::gameInput(int key)
+{
+    if (key == 27) { /* ESC Key */
+        focus = ScreenFocus::OPTIONS;
+        show_panel(optMenu.panel.get());
+        update_panels();
+        doupdate();
+    } else if ('0' <= key && key <= '9')
+        hotbarSelect(static_cast<size_t>(key - '0'));
+    else if (key == '/') {
+        focus = ScreenFocus::CONSOLE;
+        /* Highlight Current Line */
+        cnsl.input.highlight = std::ssize(cnsl.input.line);
+        wattron(window.get(), COLOR_PAIR(3));
+        const auto &xLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
+        const auto &pos {cnsl.input.line.size() > (xLen - 5) ?
+            cnsl.input.line.size() - (xLen - 5) : 0};
+        mvwaddstr(window.get(), (maxRows - 1) - 1, 5,
+            cnsl.input.line.substr(pos).c_str());
+        wattroff(window.get(), COLOR_PAIR(3));
+        /* Turn Cursor Visible */
+        curs_set(1);
+    }
 }
 
 void TC::GScr::hotbarSelect(size_t slot)
@@ -347,27 +368,7 @@ void TC::GScr::userInput(int key)
 {
     switch (focus) {
         case ScreenFocus::MAIN:
-            if (key == 27) { /* ESC Key */
-                focus = ScreenFocus::OPTIONS;
-                show_panel(optMenu.panel.get());
-                update_panels();
-                doupdate();
-            } else if ('0' <= key && key <= '9')
-                hotbarSelect(static_cast<size_t>(key - '0'));
-            else if (key == '/') {
-                focus = ScreenFocus::CONSOLE;
-                /* Highlight Current Line */
-                cnsl.input.highlight = std::ssize(cnsl.input.line);
-                wattron(window.get(), COLOR_PAIR(3));
-                const auto &xLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
-                const auto &pos {cnsl.input.line.size() > (xLen - 5) ?
-                    cnsl.input.line.size() - (xLen - 5) : 0};
-                mvwaddstr(window.get(), (maxRows - 1) - 1, 5,
-                    cnsl.input.line.substr(pos).c_str());
-                wattroff(window.get(), COLOR_PAIR(3));
-                /* Turn Cursor Visible */
-                curs_set(1);
-            }
+            gameInput(key);
             break;
 
         case ScreenFocus::CONSOLE:
