@@ -88,12 +88,18 @@ namespace TC {
             std::string mbChr {};
             wchar_t wChr[10] {};
             cchar_t cChr {};
+            bool singleWidth {false};
+
             /* Store file content into multibyte strings */
             while (file >> mbChr) {
-                /* Move to next line if comment symbol "//"" is found */
-                if (mbChr.compare("//") == 0)
+                if (mbChr.compare("//") == 0) {
                     std::getline(file, mbChr);
-                else {
+                } else if (mbChr.compare("/*") == 0) {
+                    singleWidth = singleWidth == true ? false : true;
+                    std::getline(file, mbChr);
+                } else {
+                    // if (!singleWidth && mbChr.size() == 3)
+                    //     mbChr += ' ';
                     /* Convert multibyte string to wide char string */
                     mbstowcs(wChr, mbChr.c_str(), 10);
                     /* Store wide char in cchar_t to be usable in ncurses functions */

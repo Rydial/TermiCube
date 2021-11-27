@@ -1,16 +1,32 @@
 #include <cmath>
 #include <iostream>
 #include <utility>
+#include <entt/entt.hpp>
 #include "Screen.h"
 #include "GameScreen.h"
 #include "TransferrableData.h"
+#include "EntityComponents.h"
+
+namespace TC {
+
+    namespace {
+
+        entt::registry reg;
+
+    }
+
+}
+
+// using namespace TC;
+
 
 /////////////////////////////////////* GameScreen */////////////////////////////////////
 
-TC::GScr::GameScreen(PANEL *panel, WinSData &winSData)
-    : subWins{}, hotbar{"Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
-    "Eight", "Nine"}, cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}},
-    optMenu{std::unique_ptr<PANEL, PanelDel>(panel),
+TC::GScr::GameScreen(PANEL *panel, WinSData &winSData)    
+  : subWins{},    hotbar{},
+    cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}},
+    optMenu{
+        std::unique_ptr<PANEL, PanelDel>(panel),
         [this] () {focus = ScreenFocus::MAIN;},
         {
             panel_window(panel), OptionMenu::btnSize,
@@ -18,22 +34,29 @@ TC::GScr::GameScreen(PANEL *panel, WinSData &winSData)
             [this, winSData] (size_t index) mutable {
                 return optMenu.genClickFunc(winSData, index);}
         }
-    }, focus{ScreenFocus::MAIN}, p{3, 1}, map{}
+    },    focus{ScreenFocus::MAIN},    info{{255, 256}, 5, 3, 1, 0},
+    map{std::vector<std::vector<std::vector<EID>>>(info.numOfLvls,
+        std::vector<std::vector<EID>>(info.mapSize.y,
+        std::vector<EID>(info.mapSize.x)))}
 {
-
+    
 }
 
 TC::GScr::GameScreen(TC::WinSData &winSData)
-    : GameScreen(new_panel(newwin(OptionMenu::size.y, OptionMenu::size.x,
-        ceil((static_cast<size_t>(LINES) - maxRows) / 2.0),
-        (static_cast<size_t>(COLS) - OptionMenu::size.x) / 2)), winSData)
+    : GameScreen(
+        new_panel(newwin(OptionMenu::size.y, OptionMenu::size.x,
+            ((static_cast<size_t>(LINES) - maxRows) / 2.0) + 1,
+            (static_cast<size_t>(COLS) - OptionMenu::size.x) / 2)),
+        winSData
+    )
     
 {
-    initMap();
     initOptionMenu();
     initConsole();
     initSubWindows();
     initScreen();
+    initEntities();
+    drawMap();
 }
 
 /*==============================================================================*/
@@ -134,11 +157,28 @@ void TC::GScr::drawGraphics()
     
 }
 
+void TC::GScr::drawMap()
+{
+    using namespace TC::EC;
+    WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::MAIN)].get()};
+    wmove(ptr, 0, 0);
+    // const auto &pos {reg.get<TC::EC::Pos>(static_cast<entt::entity>(1))};
+    // TC::Size<> tL {pos.y - (mainSize.y / 2), pos.x - (mainSize.x / 4)};
+    /* Draw Map Centered on Player's Position */
+    // for (size_t y{0}; y < mainSize.y; ++y) {
+    //     for (size_t x{0}; x < mainSize.x / 2; ++x) {
+    //         wadd_wch(ptr, &wchars.at(reg.get<Sprite>(static_cast<entt::entity>(
+    //             map[pos.z][tL.y + y][tL.x + x])).sprite.c_str()));
+    //         // std::cerr << map[pos.z][tL.y + y][tL.x + x] << '\n';
+    //     }
+    // }
+}
+
 void TC::GScr::drawStatBar()
 { /***** Line 1 in Notes.txt *****/
     WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::STATBAR)].get()};
     /* Draw HP sprites */
-    for (size_t x {(statBarSize.x - 1) - 2}, i {0}; i < p.hp; x -= spriteWidth, ++i)
+    for (size_t x {(statBarSize.x - 1) - 2}, i {0}; i < info.hp; x -= spriteWidth, ++i)
         mvwadd_wch(ptr, 0, x, &wchars.at(L"❤️"));
     /* Fill right side of rightmost heart with invisible characters*/
     for (size_t x {(statBarSize.x - 1) - 1}; x < statBarSize.x; ++x)
@@ -173,17 +213,17 @@ void TC::GScr::gameInput(int key)
 void TC::GScr::hotbarSelect(size_t slot)
 { /* Select which hotbar slot to focus on (mimics keyboard arrangement) */
     WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
-    size_t &curSlot {p.curHotbarSlot}, size {hotbar.size()};
+    size_t &curSlot {info.hotbarSlot}, size {hotbar.size()};
     /* Unhighlight current hotbar slot */
     wattron(ptr, A_NORMAL);
-    mvwaddstr(ptr, (curSlot + (size - 1)) % size, 5, hotbar[p.curHotbarSlot].c_str());
-    mvwprintw(ptr, (curSlot + (size - 1)) % size, 1, "%ld", p.curHotbarSlot);
+    mvwaddstr(ptr, (curSlot + (size - 1)) % size, 5, hotbar[info.hotbarSlot].c_str());
+    mvwprintw(ptr, (curSlot + (size - 1)) % size, 1, "%ld", info.hotbarSlot);
     wattroff(ptr, A_NORMAL);
     /* Highlight newly selected hotbar slot */
-    p.curHotbarSlot = slot;
+    info.hotbarSlot = slot;
     wattron(ptr, A_BOLD | COLOR_PAIR(2));
-    mvwaddstr(ptr, (curSlot + (size - 1)) % size, 5, hotbar[p.curHotbarSlot].c_str());
-    mvwprintw(ptr, (curSlot + (size - 1)) % size, 1, "%ld", p.curHotbarSlot);
+    mvwaddstr(ptr, (curSlot + (size - 1)) % size, 5, hotbar[info.hotbarSlot].c_str());
+    mvwprintw(ptr, (curSlot + (size - 1)) % size, 1, "%ld", info.hotbarSlot);
     wattroff(ptr, A_BOLD | COLOR_PAIR(2));
 
     wrefresh(ptr);
@@ -202,14 +242,18 @@ void TC::GScr::initConsole()
         std::cerr << "File " << path << " could not be opened.\n";
 }
 
-void TC::GScr::initMap()
+void TC::GScr::initEntities()
 {
-    /* Temp Values */
-    constexpr size_t lvls {5};
-    constexpr Size<> mapSize {256, 256};
-    /* Initialize Map Vectors */
-    map.lvls = std::vector<std::vector<std::vector<EID>>>(lvls,
-        std::vector<std::vector<EID>>(mapSize.y, std::vector<EID>(mapSize.x)));
+    using namespace TC::EC;
+    /* Set Nonexistant/Empty Entity as EID:0 */
+    // reg.emplace<Sprite>(reg.create(), L"𝅺");
+    reg.emplace<Sprite>(reg.create(), L"🌲");
+    /* Create player as EID:1*/
+    const auto &player {reg.create()};
+    reg.emplace<Sprite>(player, L"🌲");
+    const auto &pos {reg.emplace<Pos>(player, info.curLvl,
+        ((info.mapSize.y - 1) / 2), (info.mapSize.x - 1) / 2)};
+    map[pos.z][pos.y][pos.x] = 1;
 }
 
 void TC::GScr::initOptionMenu()

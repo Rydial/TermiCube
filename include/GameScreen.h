@@ -11,8 +11,9 @@
 namespace TC {
 
     /* Type Alias */
-    using EntityID = unsigned;
+    using EntityID = uint32_t;
     using EID = EntityID;
+    using Map = std::vector<std::vector<std::vector<EID>>>;
 
 
     class GameScreen : public Screen {
@@ -34,13 +35,11 @@ namespace TC {
                 LEFT = -1, RIGHT = 1
             };
             /* Private Member Structs */
-            struct Player {
+            struct GameInfo {
+                Size<> mapSize;
+                size_t numOfLvls;
                 size_t hp;
-                size_t curHotbarSlot;
-            };
-
-            struct Map {
-                std::vector<std::vector<std::vector<EID>>> lvls;
+                size_t hotbarSlot;
                 size_t curLvl;
             };
 
@@ -89,17 +88,18 @@ namespace TC {
             Console cnsl;
             OptionMenu optMenu;
             ScreenFocus focus;
-            Player p;
+            GameInfo info;
             Map map;
             /* Private Constructor */
             GameScreen(PANEL *panel, WinSData &winSData);
             /* Private Methods */
             void consoleInput(int key);
+            void drawMap();
             void drawStatBar();
             void gameInput(int key);
             void hotbarSelect(size_t slot);
             void initConsole();
-            void initMap();
+            void initEntities();
             void initOptionMenu();
             void initScreen();
             void initSubWindows();
