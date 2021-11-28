@@ -7,18 +7,17 @@
 #include "TransferrableData.h"
 #include "EntityComponents.h"
 
+
 namespace TC {
 
     namespace {
 
         entt::registry reg;
+        entt::observer velObs {reg, entt::collector.update<Vel>()};
 
     }
 
 }
-
-// using namespace TC;
-
 
 /////////////////////////////////////* GameScreen */////////////////////////////////////
 
@@ -35,6 +34,7 @@ TC::GScr::GameScreen(PANEL *panel, WinSData &winSData)
                 return optMenu.genClickFunc(winSData, index);}
         }
     },    focus{ScreenFocus::MAIN},    info{{255, 256}, 5, 3, 1, 0},
+    player{},
     map{std::vector<std::vector<std::vector<EID>>>(info.numOfLvls,
         std::vector<std::vector<EID>>(info.mapSize.y,
         std::vector<EID>(info.mapSize.x)))}
@@ -162,15 +162,18 @@ void TC::GScr::drawMap()
     using namespace TC::EC;
     WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::MAIN)].get()};
     wmove(ptr, 0, 0);
-    const auto &pos {reg.get<TC::EC::Pos>(static_cast<entt::entity>(1))};
+    const auto &pos {reg.get<TC::EC::Pos>(player)};
+    EID ent {};
     TC::Size<> tL {pos.y - (mainSize.y / 2), pos.x - (mainSize.x / 4)};
     /* Draw Map Centered on Player's Position */
     for (size_t y{0}; y < mainSize.y; ++y) {
         for (size_t x{0}; x < mainSize.x / 2; ++x) {
-            waddstr(ptr, entCh[reg.get<Sprite>(static_cast<entt::entity>(
-                map[pos.z][tL.y + y][tL.x + x])).id].c_str());
+            ent = map[pos.z][tL.y + y][tL.x + x];
+            /* Draw non-empty characters */
+            waddstr(ptr, entCh[reg.get<Sprite>(ent).id].c_str());
         }
     }
+    wrefresh(ptr);
 }
 
 void TC::GScr::drawStatBar()
@@ -186,6 +189,8 @@ void TC::GScr::drawStatBar()
 
 void TC::GScr::gameInput(int key)
 {
+    using namespace TC::EC;
+
     if (key == 27) { /* ESC Key */
         focus = ScreenFocus::OPTIONS;
         show_panel(optMenu.panel.get());
@@ -198,14 +203,26 @@ void TC::GScr::gameInput(int key)
         /* Highlight Current Line */
         cnsl.input.highlight = std::ssize(cnsl.input.line);
         wattron(window.get(), COLOR_PAIR(3));
-        const auto &xLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
-        const auto &pos {cnsl.input.line.size() > (xLen - 5) ?
+        const auto xLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
+        const auto pos {cnsl.input.line.size() > (xLen - 5) ?
             cnsl.input.line.size() - (xLen - 5) : 0};
         mvwaddstr(window.get(), (maxRows - 1) - 1, 5,
             cnsl.input.line.substr(pos).c_str());
         wattroff(window.get(), COLOR_PAIR(3));
         /* Turn Cursor Visible */
         curs_set(1);
+    } else if (key == control.left) {
+        reg.replace<Vel>(player, 0, 0, -1);
+        reg.replace<Sprite>(player, 1);
+    } else if (key == control.right) {
+        reg.replace<Vel>(player, 0, 0, 1);
+        reg.replace<Sprite>(player, 2);
+    } else if (key == control.up) {
+        reg.replace<Vel>(player, 0, -1, 0);
+        reg.replace<Sprite>(player, 3);
+    } else if (key == control.down) {
+        reg.replace<Vel>(player, 0, 1, 0);
+        reg.replace<Sprite>(player, 4);
     }
 }
 
@@ -243,17 +260,19 @@ void TC::GScr::initConsole()
 
 void TC::GScr::initEntities()
 {
-    for (auto str : entCh)
-        std::cerr << str << "\n";
     using namespace TC::EC;
     /* Set Empty Entity as EID:0 */
-    reg.emplace<Sprite>(reg.create(), 5);
+    reg.emplace<Sprite>(reg.create(), 0);
     /* Create player as EID:1*/
-    const auto &player {reg.create()};
+    player = {reg.create()};
     reg.emplace<Sprite>(player, 3);
+    reg.emplace<Vel>(player);
     const auto &pos {reg.emplace<Pos>(player, info.curLvl,
         ((info.mapSize.y - 1) / 2), (info.mapSize.x - 1) / 2)};
-    map[pos.z][pos.y][pos.x] = 1;
+    map[pos.z][pos.y][pos.x] = player;
+    /* Tree Entity */
+    reg.emplace<Sprite>(reg.create(), 5);
+    map[pos.z][pos.y][pos.x + 8] = static_cast<EID>(2);
 }
 
 void TC::GScr::initOptionMenu()
@@ -313,9 +332,9 @@ void TC::GScr::initScreen()
 
     /* Draw Console Border */
     mvwadd_wch(window.get(), (maxRows - 1) - 2, 0, &boxCh.at(L"╠"));
-    const auto &consoleXLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
-    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &boxCh.at(L"═"), consoleXLen);
-    mvwadd_wch(window.get(), (maxRows - 1) - 2, consoleXLen + 1, &boxCh.at(L"╣"));
+    const auto cnslXLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
+    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &boxCh.at(L"═"), cnslXLen);
+    mvwadd_wch(window.get(), (maxRows - 1) - 2, cnslXLen + 1, &boxCh.at(L"╣"));
     /* Draw Console Text */
     mvwaddstr(window.get(), (maxRows - 1) - 1, 2, "➔");
 }
@@ -367,7 +386,7 @@ void TC::GScr::sendToConsole(std::string line)
 }
 
 void TC::GScr::updateConsole()
-{ /* Needs working on! */
+{ /* Outdated!!! */
     // WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
     // const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
 
@@ -403,7 +422,27 @@ void TC::GScr::updateConsole()
 
 void TC::GScr::updateScreen()
 {
-
+    using namespace TC::EC;
+    /* Iterate through living entities with updated velocities */
+    for (const auto ent : velObs) {
+        const auto &pos {reg.get<Pos>(ent)};
+        const auto &vel {reg.get<Vel>(ent)};
+        /* Check if entity is within Boundaries */
+        if (withinBoundary(pos, vel)) {
+            const auto newPos {pos + vel};
+            /* Apply displacement if no entity collision */
+            if (static_cast<size_t>(map[newPos.z][newPos.y][newPos.x]) == 0) {
+                map[pos.z][pos.y][pos.x] = static_cast<EID>(0);
+                map[newPos.z][newPos.y][newPos.x] = ent;
+                reg.replace<Pos>(ent, newPos);
+            }
+        }
+    }
+    /* Update map if changes occured on current display */
+    if (velObs.size() > 0) {
+        drawMap();
+        velObs.clear();
+    }
 }
 
 void TC::GScr::userInput(int key)
@@ -437,6 +476,18 @@ void TC::GScr::userInput(int key)
             break;
     }
     eData.key = key; /* Store key into event data */
+}
+
+bool TC::GScr::withinBoundary(const Pos &pos, const Vel &vel)
+{
+    if ((pos.z == 0 && vel.z == -1) || (pos.z == info.numOfLvls - 1 && vel.z == 1))
+        return false;
+    if ((pos.y == 0 && vel.y == -1) || (pos.y == info.mapSize.y - 1 && vel.y == 1))
+        return false;
+    if ((pos.x == 0 && vel.x == -1) || (pos.x == info.mapSize.x - 1 && vel.x == 1))
+        return false;
+
+    return true;
 }
 
 /////////////////////////////////////* OptionMenu */////////////////////////////////////

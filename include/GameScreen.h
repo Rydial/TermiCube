@@ -7,12 +7,30 @@
 #include <array>
 #include <fstream>
 
+/////////////////////////////* Forward Declarations */////////////////////////////
+
+namespace entt {
+
+    enum class entity : uint32_t;
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 
 namespace TC {
 
+    /* Forward Declarations */
+    namespace EC {
+
+        struct Position;
+        struct Velocity;
+
+    }
+
     /* Type Alias */
-    using EntityID = uint32_t;
-    using EID = EntityID;
+    using EID = entt::entity;
+    using Pos = EC::Position;
+    using Vel = EC::Velocity;
     using Map = std::vector<std::vector<std::vector<EID>>>;
 
 
@@ -89,6 +107,7 @@ namespace TC {
             OptionMenu optMenu;
             ScreenFocus focus;
             GameInfo info;
+            EID player;
             Map map;
             /* Private Constructor */
             GameScreen(PANEL *panel, WinSData &winSData);
@@ -106,6 +125,7 @@ namespace TC {
             void moveCursor(int side, bool highlight=false);
             void sendToConsole(std::string line); 
             void updateConsole();
+            bool withinBoundary(const Pos &pos, const Vel &vel);
         public:
             /* Public Constructor */
             GameScreen(WinSData &winSData);
