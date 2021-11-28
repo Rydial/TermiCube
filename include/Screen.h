@@ -26,13 +26,15 @@ namespace TC {
     using Texts = std::unordered_map<std::string, std::pair<
         std::vector<std::string>, size_t>>;
     using WideChars = std::unordered_map<std::wstring, cchar_t>;
+    using EntityChars = std::vector<std::string>;
+    using EntChars = EntityChars;
     using WinSData = WindowSharedData;
 
 
     /* External Constants */
     extern const Texts texts;
-    extern const WideChars wchars;
-
+    extern const WideChars boxCh;
+    extern const EntChars entCh;
 
     /* Need a custom deleter function to use unique_ptr with an incomplete type
        Later on replace these with a pimpl-idiom */

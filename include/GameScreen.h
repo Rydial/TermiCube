@@ -58,7 +58,7 @@ namespace TC {
                     int highlight;
                 } input;
                 /* Public Member Variables */
-                std::vector<std::pair<std::string, std::wstring>> record;
+                std::vector<std::string> record;
                 std::ofstream file;
             };
 
@@ -104,7 +104,7 @@ namespace TC {
             void initScreen();
             void initSubWindows();
             void moveCursor(int side, bool highlight=false);
-            void sendToConsole(std::string line, const std::wstring &icon); 
+            void sendToConsole(std::string line); 
             void updateConsole();
         public:
             /* Public Constructor */

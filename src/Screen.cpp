@@ -77,37 +77,50 @@ namespace TC {
             return texts;
         }
 
-        WideChars genWideChars()
+        WideChars genBoxDrawingChars()
         {
-            std::ifstream file {"resource/general/Unicode"};
+            std::ifstream file {"resource/widechar/BoxDrawing"};
 
             if (!file)
                 std::cerr << "File could not be opened\n";
 
             WideChars wchars {};
             std::string mbChr {};
-            wchar_t wChr[10] {};
+            wchar_t wChr[20] {};
             cchar_t cChr {};
-            bool singleWidth {false};
 
             /* Store file content into multibyte strings */
             while (file >> mbChr) {
-                if (mbChr.compare("//") == 0) {
+                if (mbChr.compare("//") == 0)
                     std::getline(file, mbChr);
-                } else if (mbChr.compare("/*") == 0) {
-                    singleWidth = singleWidth == true ? false : true;
-                    std::getline(file, mbChr);
-                } else {
-                    // if (!singleWidth && mbChr.size() == 3)
-                    //     mbChr += ' ';
+                else {
                     /* Convert multibyte string to wide char string */
-                    mbstowcs(wChr, mbChr.c_str(), 10);
+                    mbstowcs(wChr, mbChr.c_str(), 20);
                     /* Store wide char in cchar_t to be usable in ncurses functions */
                     setcchar(&cChr, wChr, 0, 0, nullptr);
                     wchars.emplace(std::wstring{wChr}, cChr);
                 }
             }
             return wchars;
+        }
+
+        EntChars genEntityChars()
+        {
+            std::ifstream file {"resource/widechar/Entity"};
+
+            if (!file)
+                std::cerr << "File could not be opened\n";
+
+            EntChars entChars {};
+            std::string mbChr {};
+            /* Store file content into multibyte strings vector in order */
+            while (file >> mbChr) {
+                if (mbChr.compare("//") == 0)
+                    std::getline(file, mbChr);
+                else
+                    entChars.emplace_back(mbChr);
+            }
+            return entChars;
         }
 
     }
@@ -131,7 +144,8 @@ size_t TC::pyMod(int n, int mod)
 TC::Scr::Controls TC::Scr::control {'w', 'a', 's', 'd', '\n'};
 TC::Scr::EventData TC::Scr::eData {0, {}};
 const TC::Texts TC::texts {genTexts()};
-const TC::WideChars TC::wchars {genWideChars()};
+const TC::WideChars TC::boxCh {genBoxDrawingChars()};
+const TC::EntChars TC::entCh {genEntityChars()};
 
 /*==============================================================================*/
 
@@ -146,9 +160,9 @@ TC::Scr::Screen() :
 
 void TC::Scr::drawBorder()
 {
-    wborder_set(window.get(), &wchars.at(L"║"), &wchars.at(L"║"),
-        &wchars.at(L"═"), &wchars.at(L"═"), &wchars.at(L"╔"),
-        &wchars.at(L"╗"), &wchars.at(L"╚"), &wchars.at(L"╝"));
+    wborder_set(window.get(), &boxCh.at(L"║"), &boxCh.at(L"║"),
+        &boxCh.at(L"═"), &boxCh.at(L"═"), &boxCh.at(L"╔"),
+        &boxCh.at(L"╗"), &boxCh.at(L"╚"), &boxCh.at(L"╝"));
 }
 
 ////////////////////////////////////* BUTTON *////////////////////////////////////

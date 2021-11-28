@@ -115,7 +115,7 @@ void TC::GScr::consoleInput(int key)
     /////// ENTER Key ///////
     } else if (key == control.enter) {
         /* Reformat Current Line and Add to Console Record */
-        sendToConsole(cnsl.input.line, L"➔");
+        sendToConsole("➔" + cnsl.input.line);
         /* Update Console Display */
         updateConsole();
         /* Clear Current Line on Console */
@@ -162,16 +162,15 @@ void TC::GScr::drawMap()
     using namespace TC::EC;
     WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::MAIN)].get()};
     wmove(ptr, 0, 0);
-    // const auto &pos {reg.get<TC::EC::Pos>(static_cast<entt::entity>(1))};
-    // TC::Size<> tL {pos.y - (mainSize.y / 2), pos.x - (mainSize.x / 4)};
+    const auto &pos {reg.get<TC::EC::Pos>(static_cast<entt::entity>(1))};
+    TC::Size<> tL {pos.y - (mainSize.y / 2), pos.x - (mainSize.x / 4)};
     /* Draw Map Centered on Player's Position */
-    // for (size_t y{0}; y < mainSize.y; ++y) {
-    //     for (size_t x{0}; x < mainSize.x / 2; ++x) {
-    //         wadd_wch(ptr, &wchars.at(reg.get<Sprite>(static_cast<entt::entity>(
-    //             map[pos.z][tL.y + y][tL.x + x])).sprite.c_str()));
-    //         // std::cerr << map[pos.z][tL.y + y][tL.x + x] << '\n';
-    //     }
-    // }
+    for (size_t y{0}; y < mainSize.y; ++y) {
+        for (size_t x{0}; x < mainSize.x / 2; ++x) {
+            waddstr(ptr, entCh[reg.get<Sprite>(static_cast<entt::entity>(
+                map[pos.z][tL.y + y][tL.x + x])).id].c_str());
+        }
+    }
 }
 
 void TC::GScr::drawStatBar()
@@ -179,10 +178,10 @@ void TC::GScr::drawStatBar()
     WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::STATBAR)].get()};
     /* Draw HP sprites */
     for (size_t x {(statBarSize.x - 1) - 2}, i {0}; i < info.hp; x -= spriteWidth, ++i)
-        mvwadd_wch(ptr, 0, x, &wchars.at(L"❤️"));
+        mvwaddstr(ptr, 0, x, "❤️"); /* 💔 */
     /* Fill right side of rightmost heart with invisible characters*/
     for (size_t x {(statBarSize.x - 1) - 1}; x < statBarSize.x; ++x)
-        mvwadd_wch(ptr, 0, x, &wchars.at(L" "));
+        mvwaddstr(ptr, 0, x, "⠀");
 }
 
 void TC::GScr::gameInput(int key)
@@ -244,13 +243,14 @@ void TC::GScr::initConsole()
 
 void TC::GScr::initEntities()
 {
+    for (auto str : entCh)
+        std::cerr << str << "\n";
     using namespace TC::EC;
-    /* Set Nonexistant/Empty Entity as EID:0 */
-    // reg.emplace<Sprite>(reg.create(), L"𝅺");
-    reg.emplace<Sprite>(reg.create(), L"🌲");
+    /* Set Empty Entity as EID:0 */
+    reg.emplace<Sprite>(reg.create(), 5);
     /* Create player as EID:1*/
     const auto &player {reg.create()};
-    reg.emplace<Sprite>(player, L"🌲");
+    reg.emplace<Sprite>(player, 3);
     const auto &pos {reg.emplace<Pos>(player, info.curLvl,
         ((info.mapSize.y - 1) / 2), (info.mapSize.x - 1) / 2)};
     map[pos.z][pos.y][pos.x] = 1;
@@ -274,35 +274,35 @@ void TC::GScr::initScreen()
 {   
     /* Draw Screen Border */
     drawBorder();
-    mvwadd_wch(window.get(), mainSize.y + 1, 0, &wchars.at(L"╠"));
-    mvwhline_set(window.get(), mainSize.y + 1, 1, &wchars.at(L"═"), mainSize.x);
-    mvwadd_wch(window.get(), mainSize.y + 1, maxCols - 1, &wchars.at(L"╣"));
+    mvwadd_wch(window.get(), mainSize.y + 1, 0, &boxCh.at(L"╠"));
+    mvwhline_set(window.get(), mainSize.y + 1, 1, &boxCh.at(L"═"), mainSize.x);
+    mvwadd_wch(window.get(), mainSize.y + 1, maxCols - 1, &boxCh.at(L"╣"));
 
     /* Draw Status Bar Border */
     mvwadd_wch(window.get(), mainSize.y + 1,
-        (maxCols - 1) - statBarSize.x - 1, &wchars.at(L"╦"));
+        (maxCols - 1) - statBarSize.x - 1, &boxCh.at(L"╦"));
     mvwvline_set(window.get(), mainSize.y + 2,
-        (maxCols - 1) - statBarSize.x - 1, &wchars.at(L"║"), statBarSize.y);
+        (maxCols - 1) - statBarSize.x - 1, &boxCh.at(L"║"), statBarSize.y);
     mvwadd_wch(window.get(), (mainSize.y + 2) + statBarSize.y,
-        (maxCols - 1) - statBarSize.x - 1, &wchars.at(L"╠"));
+        (maxCols - 1) - statBarSize.x - 1, &boxCh.at(L"╠"));
     mvwhline_set(window.get(), (mainSize.y + 2) + statBarSize.y,
-        (maxCols - 1) - statBarSize.x, &wchars.at(L"═"), statBarSize.x);
+        (maxCols - 1) - statBarSize.x, &boxCh.at(L"═"), statBarSize.x);
     mvwadd_wch(window.get(), (mainSize.y + 2) + statBarSize.y,
-        maxCols - 1, &wchars.at(L"╣"));
+        maxCols - 1, &boxCh.at(L"╣"));
     /* Draw Status Bar Sprites */
     drawStatBar();
 
     /* Draw Hotbar Border */
     mvwvline_set(window.get(), (maxRows - 1) - hotbarSize.y,
-        (maxCols - 1) - hotbarSize.x - 1, &wchars.at(L"║"), hotbarSize.y);
+        (maxCols - 1) - hotbarSize.x - 1, &boxCh.at(L"║"), hotbarSize.y);
     mvwadd_wch(window.get(), maxRows - 1,
-        (maxCols - 1) - hotbarSize.x - 1, &wchars.at(L"╩"));
+        (maxCols - 1) - hotbarSize.x - 1, &boxCh.at(L"╩"));
     mvwvline_set(window.get(), (maxRows - 1) - hotbarSize.y,
-        (maxCols - 1) - hotbarSize.x + 3, &wchars.at(L"║"), hotbarSize.y);
+        (maxCols - 1) - hotbarSize.x + 3, &boxCh.at(L"║"), hotbarSize.y);
     mvwadd_wch(window.get(), (maxRows - 1) - hotbarSize.y - 1,
-        (maxCols - 1) - hotbarSize.x + 3, &wchars.at(L"╦"));
+        (maxCols - 1) - hotbarSize.x + 3, &boxCh.at(L"╦"));
     mvwadd_wch(window.get(), maxRows - 1,
-        (maxCols - 1) - hotbarSize.x + 3, &wchars.at(L"╩"));
+        (maxCols - 1) - hotbarSize.x + 3, &boxCh.at(L"╩"));
     /* Draw Hotbar Text */
     WINDOW *hotbarPtr {subWins[static_cast<size_t>(SubWindowType::HOTBAR)].get()};
 
@@ -312,12 +312,12 @@ void TC::GScr::initScreen()
     }
 
     /* Draw Console Border */
-    mvwadd_wch(window.get(), (maxRows - 1) - 2, 0, &wchars.at(L"╠"));
+    mvwadd_wch(window.get(), (maxRows - 1) - 2, 0, &boxCh.at(L"╠"));
     const auto &consoleXLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
-    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &wchars.at(L"═"), consoleXLen);
-    mvwadd_wch(window.get(), (maxRows - 1) - 2, consoleXLen + 1, &wchars.at(L"╣"));
+    mvwhline_set(window.get(), (maxRows - 1) - 2, 1, &boxCh.at(L"═"), consoleXLen);
+    mvwadd_wch(window.get(), (maxRows - 1) - 2, consoleXLen + 1, &boxCh.at(L"╣"));
     /* Draw Console Text */
-    mvwadd_wch(window.get(), (maxRows - 1) - 1, 2, &wchars.at(L"➔"));
+    mvwaddstr(window.get(), (maxRows - 1) - 1, 2, "➔");
 }
 
 void TC::GScr::initSubWindows()
@@ -358,59 +358,47 @@ void TC::GScr::moveCursor(int side, bool highlight)
     wmove(ptr, size.y - 1, cnsl.input.cursPos);
 }
 
-void TC::GScr::sendToConsole(std::string line, const std::wstring &icon)
+void TC::GScr::sendToConsole(std::string line)
 {
-    /* Append Line & Icon to Console Record */
-    cnsl.record.emplace_back(std::make_pair(line, icon + L"  "));
-    /* Append Icon to Console Log File */
-    char arr[10];
-    wcstombs(arr, icon.c_str(), 10);
-    cnsl.file << ' ' << arr << ' ';
+    /* Append Line to Console Record */
+    cnsl.record.emplace_back(line);
     /* Append Line to Console Log File */
-    const auto &xLen {cnsl.size[static_cast<size_t>(cnsl.mode)].x};
-
-    for (size_t i {0}; i < line.size(); ++i) {
-        cnsl.file << line[i];
-        /* Add newline when max line length reached */
-        if (((i + 3) + 1) % (xLen - 2) == 0)
-            cnsl.file << '\n';
-    }
-    cnsl.file << '\n';
+    cnsl.file << line << '\n';   
 }
 
 void TC::GScr::updateConsole()
-{
-    WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
-    const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
+{ /* Needs working on! */
+    // WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
+    // const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
 
-    for (size_t i {0}, lineNum {0}, pos {}, newPos{}; i < cnsl.record.size(); ++i) {
-        const auto &line {cnsl.record[cnsl.record.size() - 1 - i]};
-        pos = line.first.size();
-        newPos = line.first.size() - ((line.first.size() - (
-            pos > 50 ? 50 : 0)) % (size.x - 2));
+    // for (size_t i {0}, lineNum {0}, pos {}, newPos{}; i < cnsl.record.size(); ++i) {
+    //     const auto &line {cnsl.record[cnsl.record.size() - 1 - i]};
+    //     pos = line.first.size();
+    //     newPos = line.first.size() - ((line.first.size() - (
+    //         pos > 50 ? 50 : 0)) % (size.x - 2));
             
-        while (true) {
-            if (lineNum == size.y - 2)
-                return;
+    //     while (true) {
+    //         if (lineNum == size.y - 2)
+    //             return;
 
-            if (newPos == 0) {
-                mvwaddwstr(ptr, (size.y - 3) - lineNum++, 1, line.second.c_str());
-                waddstr(ptr, line.first.substr(0, pos).c_str());
+    //         if (newPos == 0) {
+    //             mvwaddwstr(ptr, (size.y - 3) - lineNum++, 1, line.second.c_str());
+    //             waddstr(ptr, line.first.substr(0, pos).c_str());
 
-                if (pos < size.x - 2)
-                    wclrtoeol(ptr);
-                break;
-            } else {
-                mvwaddstr(ptr, (size.y - 3) - lineNum++, 1,
-                    line.first.substr(newPos, pos - newPos).c_str());
+    //             if (pos < size.x - 2)
+    //                 wclrtoeol(ptr);
+    //             break;
+    //         } else {
+    //             mvwaddstr(ptr, (size.y - 3) - lineNum++, 1,
+    //                 line.first.substr(newPos, pos - newPos).c_str());
                 
-                if (pos - newPos < size.x - 2)
-                    wclrtoeol(ptr);
-                pos = newPos;
-                newPos -= newPos == 50 ? 50 : size.x - 2;
-            }
-        }
-    }
+    //             if (pos - newPos < size.x - 2)
+    //                 wclrtoeol(ptr);
+    //             pos = newPos;
+    //             newPos -= newPos == 50 ? 50 : size.x - 2;
+    //         }
+    //     }
+    // }
 }
 
 void TC::GScr::updateScreen()
