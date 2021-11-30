@@ -106,20 +106,21 @@ namespace TC {
 
         EntChars genEntityChars()
         {
+            /* Prepare file stream */
             std::ifstream file {"resource/widechar/Entity"};
 
             if (!file)
                 std::cerr << "File could not be opened\n";
-
+        
             EntChars entChars {};
             std::string mbChr {};
+            size_t index {};
             /* Store file content into multibyte strings vector in order */
-            while (file >> mbChr) {
-                if (mbChr.compare("//") == 0)
-                    std::getline(file, mbChr);
-                else
-                    entChars.emplace_back(mbChr);
+            while (std::getline(file, mbChr)) {
+                index = mbChr.find_last_of('[') + 1;
+                entChars.emplace_back(mbChr.substr(index, mbChr.size() - index - 2));
             }
+
             return entChars;
         }
 
@@ -130,8 +131,7 @@ namespace TC {
 //////////////////////////////////* Global Functions *//////////////////////////////////
 
 size_t TC::pyMod(int n, int mod)
-{
-    /* Haven't considered when mod is negative */
+{   /* Haven't considered when mod is negative */
     if (n < 0)
         return static_cast<size_t>(mod - (abs(n) % mod));
     else

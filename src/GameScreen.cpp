@@ -437,6 +437,7 @@ void TC::GScr::updateScreen()
                 reg.replace<Pos>(ent, newPos);
             }
         }
+        std::cerr << "Y:" << pos.y << " X:" << pos.x << '\n';
     }
     /* Update map if changes occured on current display */
     if (velObs.size() > 0) {
