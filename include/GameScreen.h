@@ -65,6 +65,10 @@ namespace TC {
                 /* Public Member Constants */
                 static constexpr Size<> size[2] {{12, 55}, {0, 0}};
                 /* Public Member Enums */
+                enum class Format {
+                    NORMAL, TERMINAL
+                } fmt;
+
                 enum class Mode {
                     INTEGRATED, POPUP, COUNT
                 } mode;

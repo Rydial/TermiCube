@@ -23,7 +23,11 @@ namespace TC {
 
 TC::GScr::GameScreen(PANEL *panel, WinSData &winSData)    
   : subWins{},    hotbar{},
-    cnsl{Console::Mode::INTEGRATED, {"", 0, 4, 0}, {}, {}},
+    cnsl{
+        Console::Format::NORMAL,
+        Console::Mode::INTEGRATED,
+        {"", 0, 4, 0}, {}, {}
+    },
     optMenu{
         std::unique_ptr<PANEL, PanelDel>(panel),
         [this] () {focus = ScreenFocus::MAIN;},
@@ -115,7 +119,7 @@ void TC::GScr::consoleInput(int key)
     /////// ENTER Key ///////
     } else if (key == control.enter) {
         /* Reformat Current Line and Add to Console Record */
-        sendToConsole("➔" + cnsl.input.line);
+        sendToConsole("➔  " + cnsl.input.line);
         /* Update Console Display */
         updateConsole();
         /* Clear Current Line on Console */
@@ -386,38 +390,42 @@ void TC::GScr::sendToConsole(std::string line)
 }
 
 void TC::GScr::updateConsole()
-{ /* Outdated!!! */
-    // WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
-    // const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
+{
+    WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
+    const auto &size {cnsl.size[static_cast<size_t>(cnsl.mode)]};
+    const Size<> max {size.y - 2, size.x - 2};
+    std::vector<std::string> ls {};
 
-    // for (size_t i {0}, lineNum {0}, pos {}, newPos{}; i < cnsl.record.size(); ++i) {
-    //     const auto &line {cnsl.record[cnsl.record.size() - 1 - i]};
-    //     pos = line.first.size();
-    //     newPos = line.first.size() - ((line.first.size() - (
-    //         pos > 50 ? 50 : 0)) % (size.x - 2));
-            
-    //     while (true) {
-    //         if (lineNum == size.y - 2)
-    //             return;
-
-    //         if (newPos == 0) {
-    //             mvwaddwstr(ptr, (size.y - 3) - lineNum++, 1, line.second.c_str());
-    //             waddstr(ptr, line.first.substr(0, pos).c_str());
-
-    //             if (pos < size.x - 2)
-    //                 wclrtoeol(ptr);
-    //             break;
-    //         } else {
-    //             mvwaddstr(ptr, (size.y - 3) - lineNum++, 1,
-    //                 line.first.substr(newPos, pos - newPos).c_str());
-                
-    //             if (pos - newPos < size.x - 2)
-    //                 wclrtoeol(ptr);
-    //             pos = newPos;
-    //             newPos -= newPos == 50 ? 50 : size.x - 2;
-    //         }
-    //     }
-    // }
+    for (size_t i {0}, curI {}, newI {}, y {0}; i < cnsl.record.size(); ++i) {
+        const auto &line {cnsl.record[(cnsl.record.size() - 1) - i]};
+        curI = 0;
+        /* Normal Formatting */
+        while (true) {
+            /* Substring is shorter than max length */
+            if (max.x + curI >= line.size() - 2) {
+                ls.emplace_back(line.substr(curI));
+                break;
+            } else {
+                /* Check if substring consists of spaces */
+                if ((newI = line.find_last_of(' ', curI + max.x)) == line.npos) {
+                    ls.emplace_back(line.substr(curI, max.x));
+                    curI += max.x;
+                } else {
+                    ls.emplace_back(line.substr(curI, newI - curI));
+                    curI = newI + 1;
+                }
+            }
+        }
+        /* Print lines to console until line limit reached */
+        while (!ls.empty()) {
+            if (y > max.y)
+                return;
+            mvwaddstr(ptr, (max.y - 1) - y++, 1, ls.back().c_str());
+            waddnstr(ptr, std::string(max.x, ' ').c_str(),
+                max.x - (static_cast<size_t>(getcurx(ptr)) - 1));
+            ls.pop_back();
+        }       
+    }
 }
 
 void TC::GScr::updateScreen()
@@ -437,7 +445,7 @@ void TC::GScr::updateScreen()
                 reg.replace<Pos>(ent, newPos);
             }
         }
-        std::cerr << "Y:" << pos.y << " X:" << pos.x << '\n';
+        // std::cerr << "Y:" << pos.y << " X:" << pos.x << '\n';
     }
     /* Update map if changes occured on current display */
     if (velObs.size() > 0) {
