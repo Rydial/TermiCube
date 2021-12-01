@@ -39,9 +39,13 @@ TC::GScr::GameScreen(PANEL *panel, WinSData &winSData)
         }
     },    focus{ScreenFocus::MAIN},    info{{255, 256}, 5, 3, 1, 0},
     player{},
-    map{std::vector<std::vector<std::vector<EID>>>(info.numOfLvls,
-        std::vector<std::vector<EID>>(info.mapSize.y,
-        std::vector<EID>(info.mapSize.x)))}
+    map{
+        {
+            std::vector<std::vector<std::vector<EID>>>(info.numOfLvls,
+            std::vector<std::vector<EID>>(info.mapSize.y + (Map::offset.y * 2),
+            std::vector<EID>(info.mapSize.x + (Map::offset.x * 2))))
+        }
+    }
 {
     
 }
@@ -168,11 +172,10 @@ void TC::GScr::drawMap()
     wmove(ptr, 0, 0);
     const auto &pos {reg.get<TC::EC::Pos>(player)};
     EID ent {};
-    TC::Size<> tL {pos.y - (mainSize.y / 2), pos.x - (mainSize.x / 4)};
     /* Draw Map Centered on Player's Position */
     for (size_t y{0}; y < mainSize.y; ++y) {
         for (size_t x{0}; x < mainSize.x / 2; ++x) {
-            ent = map[pos.z][tL.y + y][tL.x + x];
+            ent = map.imdtAt(pos.z, pos.y + y, pos.x + x);
             /* Draw non-empty characters */
             waddstr(ptr, entCh[reg.get<Sprite>(ent).id].c_str());
         }
@@ -273,10 +276,10 @@ void TC::GScr::initEntities()
     reg.emplace<Vel>(player);
     const auto &pos {reg.emplace<Pos>(player, info.curLvl,
         ((info.mapSize.y - 1) / 2), (info.mapSize.x - 1) / 2)};
-    map[pos.z][pos.y][pos.x] = player;
+    map.at(pos) = player;
     /* Tree Entity */
     reg.emplace<Sprite>(reg.create(), 5);
-    map[pos.z][pos.y][pos.x + 8] = static_cast<EID>(2);
+    map.at(pos.z, pos.y, pos.x + 8) = static_cast<EID>(2);
 }
 
 void TC::GScr::initOptionMenu()
@@ -439,13 +442,16 @@ void TC::GScr::updateScreen()
         if (withinBoundary(pos, vel)) {
             const auto newPos {pos + vel};
             /* Apply displacement if no entity collision */
-            if (static_cast<size_t>(map[newPos.z][newPos.y][newPos.x]) == 0) {
-                map[pos.z][pos.y][pos.x] = static_cast<EID>(0);
-                map[newPos.z][newPos.y][newPos.x] = ent;
+            if (static_cast<size_t>(map.at(newPos)) == 0) {
+                map.at(pos) = static_cast<EID>(0);
+                map.at(newPos) = ent;
                 reg.replace<Pos>(ent, newPos);
             }
         }
-        // std::cerr << "Y:" << pos.y << " X:" << pos.x << '\n';
+        sendToConsole("➔  Y: " + std::to_string(pos.y) + " X: " + std::to_string(pos.x));
+        updateConsole();
+        WINDOW *ptr {subWins[static_cast<size_t>(SubWindowType::CONSOLE)].get()};
+        wrefresh(ptr);
     }
     /* Update map if changes occured on current display */
     if (velObs.size() > 0) {
@@ -497,6 +503,23 @@ bool TC::GScr::withinBoundary(const Pos &pos, const Vel &vel)
         return false;
 
     return true;
+}
+
+/////////////////////////////////////* Map */////////////////////////////////////
+
+TC::EID & TC::GScr::Map::at(const TC::EC::Pos &pos)
+{
+    return vec[pos.z][pos.y + offset.y][pos.x + offset.x];
+}
+
+TC::EID & TC::GScr::Map::at(size_t z, size_t y, size_t x)
+{
+    return vec[z][y + offset.y][x + offset.x];
+}
+
+TC::EID & TC::GScr::Map::imdtAt(size_t z, size_t y, size_t x)
+{
+    return vec[z][y][x];
 }
 
 /////////////////////////////////////* OptionMenu */////////////////////////////////////

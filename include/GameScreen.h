@@ -31,8 +31,6 @@ namespace TC {
     using EID = entt::entity;
     using Pos = EC::Position;
     using Vel = EC::Velocity;
-    using Map = std::vector<std::vector<std::vector<EID>>>;
-
 
     class GameScreen : public Screen {
         private:
@@ -53,14 +51,6 @@ namespace TC {
                 LEFT = -1, RIGHT = 1
             };
             /* Private Member Structs */
-            struct GameInfo {
-                Size<> mapSize;
-                size_t numOfLvls;
-                size_t hp;
-                size_t hotbarSlot;
-                size_t curLvl;
-            };
-
             struct Console {
                 /* Public Member Constants */
                 static constexpr Size<> size[2] {{12, 55}, {0, 0}};
@@ -82,6 +72,24 @@ namespace TC {
                 /* Public Member Variables */
                 std::vector<std::string> record;
                 std::ofstream file;
+            };
+
+            struct GameInfo {
+                Size<> mapSize;
+                size_t numOfLvls;
+                size_t hp;
+                size_t hotbarSlot;
+                size_t curLvl;
+            };
+
+            struct Map {
+                /* Public Member Variables */
+                static constexpr Size<> offset {mainSize.y / 2, mainSize.x / 4};
+                std::vector<std::vector<std::vector<EID>>> vec;
+                /* Public Methods */
+                EID & at(const Pos &pos);
+                EID & at(size_t z, size_t y, size_t x);
+                EID & imdtAt(size_t z, size_t y, size_t x);
             };
 
             struct OptionMenu {
